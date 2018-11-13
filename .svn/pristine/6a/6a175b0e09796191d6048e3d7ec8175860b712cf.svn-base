@@ -1,0 +1,229 @@
+<?php
+/*
+资质管理
+*/
+
+namespace Home\Controller;
+
+use Think\Db;
+use Think\Model;
+
+class WealthController extends BackController
+{
+    //部门列表
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;         //每页条数
+            $data = M('weal_table')->limit($page, $num * $page)->select();
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('weal_table as rg')->count();
+            echo json_encode($list, true);
+        }
+    }
+
+    /**
+     * 动态数据表添加
+     */
+    public function add()
+    {
+
+        $table = 'wealth_' . strtolower(I('param.table'));
+        $where['table'] = array('eq', $table);
+        $check = M('weal_table')->where($where)->find();
+        if (!$check) {
+            $data['table'] = $table;
+            $data['name'] = I('post.name');
+            $id = M('weal_table')->add($data);
+            $field = $_POST['field'];
+            $field_name = $_POST['field_name'];
+            if (count($field) != count($field_name)) {
+                echo json_encode(["code" => "error", "msg" => "字段名与字段别名数目不匹配"], true);
+                exit;
+            }
+            //不能为空
+            for ($i = 0; $i < count($field); $i++) {
+                if ($field[$i] == null) {
+                    echo json_encode(['code' => 'error', 'msg' => '不能为空'], true);
+                    exit;
+                }
+            }
+            for ($i = 0; $i < count($field_name); $i++) {
+                if ($field_name[$i] == null) {
+                    echo json_encode(['code' => 'error', 'msg' => "不能为空"], true);
+                    exit;
+                }
+            }
+            //不能重复
+            for ($i = 0; $i < count($field_name); $i++) {
+                $is_repeat = array_count_values($field_name);
+                if ($is_repeat[$i] > 1) {
+                    echo json_encode(['code' => 'error', 'msg' => "存在重复字段"], true);
+                    exit;
+                }
+            }
+            for ($i = 0; $i < count($field); $i++) {
+                $is_repeats = array_count_values($field);
+                if ($is_repeats[$i] > 1) {
+                    echo json_encode(['code' => 'error', 'msg' => "存在重复字段"], true);
+                    exit;
+                }
+            }
+            //下面SQL执行失败 则删除总表中的记录数据
+            $sql = ' CREATE TABLE ' . $table . '(';
+            $sql .= ' id int(10) unsigned NOT NULL AUTO_INCREMENT,';
+            for ($i = 0; $i < count($field); $i++) {
+                $sql .= strtolower($field[$i]) . " varchar(255) DEFAULT NULL COMMENT '" . $field_name[$i] . "', ";
+
+                $data['table'] = $table;
+                $data['field'] = $field[$i];
+                $data['field_name'] = $field_name[$i];
+                $field_arr[] = $data;
+            }
+            $sql .= "creat_time timestamp NULL DEFAULT CURRENT_TIMESTAMP,";
+            $sql .= "PRIMARY KEY (id)";
+            $sql .= ") ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;";
+            $Model = M();
+            $Model->execute($sql);
+            M('weal_field')->addAll($field_arr);
+        } else {
+            //表存在
+            echo json_encode(['code' => 'error', 'msg' => "已经存在的表名"], true);
+            die;
+        }
+    }
+
+    /**
+     * 详情
+     */
+    public function details()
+    {
+
+        $id = 1;
+        $table_id['id'] = array('eq', $id);
+        $table = M('weal_table')->where($table_id)->find();
+        $where['table'] = array('eq', $table['table']);
+        $data = M('weal_field')->where($where)->select();
+        $this->assign('data', $data);
+        $this->assign('table', $table);
+        $this->display();
+    }
+
+    /**
+     * 修改表名
+     */
+    public function edit_table()
+    {
+
+        //ALTER TABLE `wealth_daw`
+        //ADD COLUMN `s`  varchar(255) NULL AFTER `k`
+        $update['table'] = I('param.table_name');
+        $id['id'] = array('eq', I('param.id'));
+        $original = M('weal_table')->where($id)->find();
+        M('weal_table')->where($id)->save($update);
+        $table_name = M('weal_table')->where($id)->find();
+        M('weal_field')->where(['table' => $table_name['table']])->save($update);
+        $sql = "ALTER TABLE `{$original['table']}` RENAME `{$update}`";
+        M()->execute($sql);
+        echo json_encode(['code' => 200, 'msg' => '修改表成功'],true);
+        die;
+    }
+
+    /**
+     * 删除表
+     */
+    public function delete_table()
+    {
+        $id['id'] = array('eq', I('param.id'));
+        $table_name = M('weal_table')->where($id)->find();
+        M('weal_table')->where($id)->delete();
+        M('weal_field')->where(['table' => $table_name['table']])->delete();
+        $sql = "DROP TABLE {$table_name['table']}";
+        M()->execute($sql);
+        echo json_encode(['code' => 200, 'msg' => '删除数据表成功'],true);
+        die;
+    }
+
+    /**
+     * 修改字段
+     */
+    public function edit_field()
+    {
+        $id = I('param.id');
+        $this_field = M('weal_field')->where(['id' => $id])->find();
+        $field = strtolower(I('param.field'));
+        $filed_name = I('param.field_name');
+        $where['table'] = array('eq', $this_field['table']);
+        $where['field'] = array('eq', $field);
+        $check = M('weal_field')->where($where)->find();
+        $data['field'] = $field;
+        $data['field_name'] = $filed_name;
+        if ($check) {
+            if ($check['id'] == $id) {
+                M('weal_field')->where("id=$id")->save($data);
+                echo json_encode(['code' => 200, 'msg' => '修改成功'], true);
+                die;
+            } else {
+                echo json_encode(['code' => 200, 'msg' => '字段存在'], true);
+                die;
+            }
+        } else {
+
+            $sql = "ALTER TABLE `wealth_daw`
+                CHANGE COLUMN `{$this_field['field']}` `{$field}`
+                  varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci 
+                  NULL DEFAULT NULL
+                   COMMENT '" . $filed_name . "' 
+";
+            M()->execute($sql);
+            M('weal_field')->where("id=$id")->save($data);
+            echo json_encode(['code' => 200, 'msg' => '修改成功'], true);
+            die;
+        }
+
+    }
+
+    /**
+     * 添加字段
+     */
+    public function add_field()
+    {
+        $table_name = I('param.table');
+        $field = I('param.field');
+        $field_name = I('param.field_name');
+        for ($i = 0; $i < count($field); $i++) {
+            $sql = "ALTER TABLE `{$table_name}`ADD COLUMN `{$field[$i]}` varchar(255) NULL COMMENT {$field_name[$i]}";
+            M()->execute($sql);
+            $data['table'] = $table_name;
+            $data['field'] = $field[$i];
+            $data['field_name'] = $field_name[$i];
+            M('weal_field')->where(['table' => $table_name])->save($data);
+        }
+          echo json_encode(['code' => 200, 'msg' => '添加字段成功'],true);
+        die;
+    }
+
+    /**
+     * 删除字段
+     */
+    public function delete_field()
+    {
+        $table_name = I('param.table');
+        $field_name = I('param.field_name');
+        $field = I('param.field');
+        for ($i = 0; $i < count($field); $i++) {
+            $sql = "  ALTER TABLE `{$table_name}`
+    DROP COLUMN `{$field[$i]}`";
+            M()->execute($sql);
+            M('weal_field')->where(['table' => $table_name])->where(['filed' => $field[$i]])->where(['field' => $field_name[$i]])->delete();
+        }
+        echo json_encode(['code' => 200, 'msg' => '删除字段成功'],true);
+        die;
+    }
+}

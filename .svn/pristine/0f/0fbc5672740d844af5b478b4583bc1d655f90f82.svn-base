@@ -1,0 +1,276 @@
+<?php
+/**
+ *商机类型管理
+ */
+
+namespace Home\Controller;
+class FinanceController extends BackController
+{
+	public $page;
+    public $num;
+    public $where;
+    public $see_tel;
+    public $now_time;
+   
+    public function _initialize()
+    {
+        parent::_initialize();
+        $this->page = (I('get.page') != '') ? I('get.page') - 1 : 0;
+        $this->num = (I('get.limit') != '') ? I('get.limit') : 10;
+        $this->now_time = date('Y-m-d H:i:s',time());
+      
+	  //所属商机
+	  	if(I('get.sj')){
+			$w['code']=array('eq',I('get.sj'));
+			$res_id=M('resources')->where($w)->getField('id');
+			if(!$res_id){
+				$res_id=0;
+			}
+			$param['res_id']=array('eq',$res_id);
+		}
+		
+		//所属订单
+		if(I('get.order')){
+			$wx['code']=array('eq',I('get.order'));
+			$order_id=M('orders')->where($wx)->getField('id');
+			if(!$order_id){
+				$order_id=0;
+			}
+			$where['order_id']=array('eq',$order_id);
+		}
+		
+		//所属商务
+		if(I('get.user')){
+			$wxd['name']=array('like',"%".I('get.user')."%");
+			$user_id=M('user')->where($wxd)->getField('id');
+			if(!$user_id){
+				$user_id=0;
+			}
+			$where['user_id']=array('eq',$user_id);
+		}
+		
+        //公共筛选条件
+        //所属部门
+        if (I('get.part_id')) {
+            $param['part_id'] = array('eq', I('get.part_id'));
+        }
+        //审核阶段
+        if (I('get.step')) {
+			$param['step'] = array('eq', I('get.step'));
+        }
+
+        //认款金额
+        if (I('get.money_start')) {
+			$param['money'] = array('egt', I('get.money_start'));
+		}
+		if (I('get.money_end')) {
+			$param['money'] = array('elt', I('get.money_end'));
+		}
+        //编号
+        if (I('get.code')) {
+            $param['code'] = array('like', "%" . I('get.code') . "%");
+        }
+
+        //创建时间
+        if (I('get.creat_time_start')) {
+            $s_time = I('get.creat_time_start');
+            $e_time = I('get.creat_time_end');
+            $param['creat_time'] = array('between', array($s_time, $e_time));
+        }
+		
+		//审核时间
+		if (I('get.check_time_start')) {
+			$s_time = I('get.check_time_start');
+			$e_time = I('get.check_time_end');
+			$param['check_time'] = array('between', array($s_time, $e_time));
+		}
+
+        $this->where = $param;
+
+    }
+	
+	public function rk_log(){
+		if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+			$where = $this->where;
+			$where['type'] = array('eq', 1);//1收入  2支出 
+			session('where',$where);
+            $data = M('money_apply_log')->where($where)->order('id DESC')->select();
+			$data=$this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('money_apply_log')->where($where)->count();
+            echo json_encode($list, true);
+        }
+		
+		if($_GET['count']){
+			$where=session('where');
+            $money = M('money_apply_log')->where($where)->count('money'); //认款总和
+            $cb_nei = M('money_apply_log')->where($where)->count('cb_nei'); //内部成本总和
+            $cb_wai = M('money_apply_log')->where($where)->count('cb_wai'); //外部成本总和
+			$yj=$money-$cb_wai;
+			$lr=$money-$cb_wai-$cb_wai;
+			$list['code'] = 200;
+            $list['data'] = array(
+				'money'=>$money,
+				'cb_wai'=>$cb_wai,
+				'cb_nei'=>$cb_nei,
+				'yj'=>$yj,
+				'lr'=>$lr
+			);
+			foreach($list['data'] as $key=>$val){
+				if(!$val){
+					$list['data'][$key]=0;
+				}
+			}
+            echo json_encode($list, true);
+			exit;
+		}
+		
+	}
+	
+	public function money_out(){
+		if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+			$where = $this->where;
+			$where['type'] = array('eq', 2);//1收入  2支出 
+            $data = M('money_apply_log')->where($where)->order('id DESC')->select();
+			$data=$this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('money_apply_log')->where($where)->count();
+            echo json_encode($list, true);
+        }
+		
+	}
+	//初审
+	public function check_first(){
+		$id=I('param.id');
+		if(IS_POST){
+			$apply = M('money_apply_log')->where('id=' . $id)->find();
+			if ($order['step'] != 1) {
+				$list['code'] = "error";
+				$list['msg'] = '请勿重复审核';
+				echo json_encode($list, true);
+				exit;
+			}
+			$res_id =$apply['res_id'];
+			$demd_id =$apply['demand_id'];
+			if (I('param.status') == 1) {
+				$data['step'] = 2;
+				$content = "初审通过";
+				$data['cb_nei'] = I('param.cb_nei');
+				$data['cb_wai'] = I('param.cb_wai');
+			}else{
+				$data['step'] = 3;
+				$msg_content = "您的财务申请被拒绝";
+				$content = "初审被拒".I('param.check_remark');
+				//A('Workerman')->send_msg($apply['creat_user'],'personal',$msg_content);
+			}
+			$data['over_user']=session('user');
+			$data['check_remark'] = I('param.check_remark');
+			$data['check_time']=$this->now_time;
+			M('money_apply_log')->where('id=' . $id)->save($data);
+			$this->res_op_log($res_id, $content);
+			$this->dmd_op_log($demd_id, $content);
+			$list['code'] = 200;
+			$list['msg'] = '操作成功';
+			echo json_encode($list, true);
+			die;
+		}else{
+			$data=M('money_apply_log')->where('id='.$id)->find();
+			$this->assign('data',$data);
+			$this->display();
+		}
+	}
+	
+	//复审
+	public function check_last(){
+		$id = I('param.id'); 
+		if(IS_POST){                     
+			$apply = M('money_apply_log')->where('id=' . $id)->find();
+			if ($order['step'] != 2) {
+				$list['code'] = "error";
+				$list['msg'] = '请勿重复审核';
+				echo json_encode($list, true);
+				exit;
+			}
+			$res_id =$apply['res_id'];
+			if (I('param.status') == 1) {
+				$data['step'] = 5;
+				$msg_content = "您的财务申请已通过";
+				$content = "审核通过";
+				//分别计算 商务 和后台的业绩
+				
+				
+				
+			} else {
+				$data['status'] = 4;
+				$msg_content = "您的财务申请被拒绝";
+				$content = "审核拒绝".I('param.check_remark');
+			}
+			$data['check_user']=session('user');
+			$data['check_time']=$this->now_time;
+			$data['check_remark'] = I('param.check_remark');
+			M('money_apply_log')->where('id=' . $id)->save($data);
+			$this->res_op_log($res_id, $content);
+			//A('Workerman')->send_msg($apply['creat_user'],'personal',$msg_content);
+			$list['code'] = 200;
+			$list['msg'] = '操作成功';
+			echo json_encode($list, true);
+			die;
+		}else{
+			$data=M('money_apply_log')->where('id='.$id)->find();
+			$arr[]=$data;
+			$data=$this->all($arr)[0];
+		
+			$demand=M('demand')->where('id='.$data['demand_id'])->find();
+			$wh['res_id']=array('eq',$data['res_id']);
+			$wh['id']=array('neq',$id);
+			$apply_log=M('money_apply_log')->where($wh)->select();
+			$apply_log=$this->all($apply_log);
+			$this->assign('apply_log',$apply_log);
+			$this->assign('data',$data);
+			$this->assign('demand',$demand);
+			$res=M('resources')->where('id='.$data['res_id'])->find();
+			$res['res_type'] = M('restype')->field('name')->where('id=' . $res['res_type_id'])->getField('name');
+			$where['phone']=array('eq',$res['phone']);
+			$cus=M('customer')->where($where)->find();
+			$this->assign('res',$res);
+			$this->assign('cus',$cus);
+			$this->display();
+		}
+	
+	}
+	
+	public function all($data){
+		foreach ($data as $key => $val) {
+			$res=M('resources')->where('id='.$val['res_id'])->find();
+			$data[$key]['res']=$res['code'];
+			$data[$key]['cus']=$res['name'];
+			$data[$key]['order']=M('orders')->where('id='.$val['order_id'])->getField('code');
+			$data[$key]['demand']=M('demand')->where('id='.$val['demand_id'])->find();
+			$data[$key]['user']=M('user')->where('uid='.$val['user_id'])->getField('name');
+			$data[$key]['part']=M('part')->where('id='.$val['part_id'])->getField('name');
+			$data[$key]['ht_user']=M('user')->where('uid='.$val['accept_user'])->getField('name');
+			$data[$key]['creat_user']=M('user')->where('uid='.$val['creat_user'])->getField('name');
+			$data[$key]['over_user']=M('user')->where('uid='.$val['over_user'])->getField('name');
+			$data[$key]['check_user']=M('user')->where('uid='.$val['check_user'])->getField('name');
+			$data[$key]['yj']=$val['money']-$val['cb_wai'];
+			$data[$key]['lr']=$val['money']-$val['cb_wai']-$val['cb_nei'];
+			$data[$key]['step']=$this->apply_step($val['step']);
+		}
+		return $data;
+	}
+	
+	//查询这个商机所有的 申请记录
+	public function details(){
+		$id=I('param.id');
+		$apply_log=M('money_apply_log')->where('res_id='.$id);
+		$this->display();
+	}
+}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>{$basic.index_title}</title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta http-equiv="Access-Control-Allow-Origin" content="*">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+	<link rel="icon" href="favicon.ico">
+	<link rel="stylesheet" href="__ACOM__/layui/css/layui.css" media="all" />
+</head>
+<body class="childrenBody">
+	<div class="add_box">
+		<div class="layui-form">
+			<div class="layui-form-item">
+			    <label class="layui-form-label" style="font-weight:bold;">标题：</label>
+			    <div class="layui-input-block">
+			      <input type="text" name="title" required  lay-verify="required" value="{$data.title}" maxlength="20" autocomplete="off" class="layui-input">
+			    </div>
+			</div>
+			<div class="layui-form-item">
+			    <label class="layui-form-label" style="font-weight:bold;">内容：</label>
+			    <div class="layui-input-block">
+			    	<textarea id="text" style="display: none;">{$data.content}</textarea>
+			    </div>
+			</div>
+			<div class="layui-form-item">
+			    <div class="layui-input-block">
+			      <button class="layui-btn  layui-btn-primary" lay-submit lay-filter="get_add">发布</button>
+			    </div>
+			</div>
+			<input type="hidden" name="id" value="{$data.id}">
+		</div>
+	</div>	
+</body>
+<script src="__ACOM__/layui/layui.js"></script>
+<script src="__ACOM__/js/jquery-3.2.1.min.js"></script>
+<script>
+		$("body").bind("keydown",function(event){  
+           if (event.keyCode == 116) {  
+	         event.preventDefault(); //阻止默认刷新  
+	         location=location;  
+            }  
+        })
+</script>
+<!--操作-->
+<script id="cz" type="text/html">
+    <a class="layui-btn" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger" lay-event="del">删除</a>
+</script>
+<script>
+	var post_img = "__WWW__"+"/uploader/fileupload.php";	
+	layui.use(['table','layedit','form','layer','jquery'], function(){
+		var table = layui.table,layedit = layui.layedit,form = layui.form,layer=layui.layer,$=layui.jquery;
+		layedit.set({
+		  uploadImage: {
+			url: post_img, //接口url
+		  }
+		});
+		var edit = layedit.build('text',{
+			tool: ['strong', 'italic', 'underline', 'del','|', 'left','center','right','image'],
+			height:480
+		});
+		form.on('submit(get_add)', function(data){
+			content = layedit.getContent(edit);
+			if(content==''){
+				layer.msg('内容不能为空！')
+				return false;
+			}
+			data.field.content = content;
+			var index_o = layer.load();
+			$.ajax({
+				url:"edit.html",
+				type:"post", 
+				data:data.field,
+				dataType:"json",
+				success:function(res){
+					layer.close(index_o);
+					top.layer.msg(res.msg);
+					if(res.code==200){
+						setTimeout(function(){
+							var page = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+							parent.layer.close(page); //再执行关闭   
+							parent.location.reload();
+						},500)
+					}	
+				}
+			})
+		  	return false; 
+		});
+	});
+</script>
+</html>

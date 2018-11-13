@@ -1,0 +1,53 @@
+<?php
+/**
+ * 订单
+ */
+namespace Home\Controller;
+class OrdersController extends BackController
+{
+    //操作
+    public function confirm()
+    {
+        $order_id = I('post.order_id');
+        //拒收
+        if (I('post.no')) {
+            $data['status'] = 3;
+            $data['accept_user'] = session('user');
+            $order_status['order_status'] = 3;
+            M('orders')->where(['id' => $order_id])->save($data);
+            $res_orders = M('res_orders')->where(['id' => $order_id])->find();
+            M('resources')->where(['id' => $res_orders['res_id']])->save($order_status);
+
+            $order = M('orders')->where(['id' => $order_id])->find();
+            $user = M('user')->where(['id' => session('user')])->find();
+            $content = "{$user['name']}" . ',' . "拒收订单:" . "{$order['code']}";
+            $res = M('resources')->where(['id' => $res_orders['res_id']])->find();
+            $this->op_log($content);
+            $msg_content = "您的订单已经被拒收";
+            //A('Workerman')->send_msg($res['user_id'],'personal',$msg_content);
+            $list['code'] = 200;
+            $list['msg'] = '拒收成功';
+            echo json_encode($list, true);
+            die;
+        }
+        //受理订单
+        if (I('post.yes')) {
+            $data['status'] = 2;
+            $data['accept_user'] = session('user');
+            $order_status['order_status'] = 2;
+            M('orders')->where(['id' => $order_id])->save($data);
+            $res_orders = M('res_orders')->where(['id' => $order_id])->find();
+            M('resources')->where(['id' => $res_orders['res_id']])->save($order_status);
+            $order = M('orders')->where(['id' => $order_id])->find();
+            //$msg_content = "你的订单已经受理";
+            // A('Workerman')->send_msg($res['user_id'],'personal',$msg_content);
+            $res = M('resources')->where(['id' => $res_orders['res_id']])->find();
+            $content = "{$res['name']}" . ',' . '已经受理了你的订单' . '单号:' . "{$order['code']}";
+            $this->op_log($content);
+            $list['code'] = 200;
+            $list['msg'] = '受理成功';
+            echo json_encode($list, true);
+            die;
+        }
+    }
+}

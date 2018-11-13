@@ -1,0 +1,189 @@
+<?php
+
+namespace Home\Controller;
+class MsgController extends BackController
+{
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;         //每页条数
+            
+			if(I('get.time_start')){
+				$s_time = I('get.time_start');
+				$e_time = strtotime(I('get.time_end'));
+				$e_time = date('Y-m-d',$e_time+86400);
+				$where['creat_time'] =array('between',array($s_time,$e_time));
+			}
+			if(I('get.title')){
+				$where['title'] =array('like',"%".I('get.title')."%");
+			}
+			if(I('get.status')){
+				$where['status'] =array('eq',I('get.status'));
+			}
+			$where['type']=array('eq',2);//这里不需要查找 自动发送的消息
+            $data = M('msg')->where($where)->limit($page, $num * $page)->select();
+            foreach ($data as $k => $v) {
+				$arr=explode(',',$v['accept_user']);
+				$wh['user_id']=array('in',$arr);
+				$data[$k]['accept_user']=M('user')->field('name')->where($wh)->select();
+				$user = M('user')->where(['id' => $v['user_id']])->field('name')->find();
+                $data[$k]['username'] =$user['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('msg')->where($where)->count();
+            echo json_encode($list, true);
+        }
+    }
+	
+	public function add()
+    {
+        if (IS_POST) {
+            $data['user_id'] = session('user');
+            $data['title'] = trim(I('post.title'));
+            $data['content'] = I('post.content');
+            $data['status'] = I('post.status');
+			if($data['status']==1){
+				$msg='并发送';
+				$msgx='发送';
+			}else{
+				$msg='草稿';
+				$msgx='保存草稿';
+			}
+            $msg_id=M('msg')->add($data);
+			$this->op_log('添加站内信:'.$data['title'].$msg);
+			//执行发送消息
+			if($data['status']==1){
+				$accept_type=I('post.accept_type');
+				switch($accept_type){
+					case 1:
+						$part_code=M('part')->where('id='.I('post.accept_id'))->getField('code');
+						$where['p.code']=array('like',"%".$part_code."%");
+						$user=M('user as u')->field('u.uid')->join('part as p on p.id=u.part_id')->where($where)->select();
+						break;
+					case 2:
+						$user_arr=explode(',',I('post.accept_id'));
+						foreach($user_arr as $key=>$val){
+							$user=array('uid'=>$val);
+						}
+						break;
+					case 3:
+						$user=M('user')->select();
+						break;
+				}
+				
+				foreach($user as $key=>$val){
+					$user_msg['type']=2;
+					$user_msg['msg_id']=$msg_id;
+					$user_msg['user_id']=$val['uid'];
+					$arr[]=$user_msg;
+					$ids[]=$val['uid'];
+				}
+				M('msg_user')->addAll($arr);
+				$up['accept_user']=implode(',',$ids);
+				M('msg')->where('id='.$msg_id)->save($up);
+			}
+			
+            $list['code'] = 200;
+            $list['msg'] = $msgx.'成功';
+            echo json_encode($list, true);
+            exit;
+        }else{
+			$this->display();
+		}
+    }
+	
+	public function edit()
+    {
+        if (IS_POST) {
+			$id=I('post.id');
+            $data['user_id'] = session('user');
+            $data['title'] = trim(I('post.title'));
+            $data['content'] = I('post.content');
+            $data['status'] = I('post.status');
+			if($data['status']==1){
+				$msg='并发送';
+				$accept_type=I('post.accept_type');
+				switch($accept_type){
+					case 1:
+						$part_code=M('part')->where('id='.I('post.accept_id'))->getField('code');
+						$where['p.code']=array('like',"%".$part_code."%");
+						$user=M('user as u')->field('u.uid')->join('part as p on p.id=u.part_id')->where($where)->select();
+						break;
+					case 2:
+						$user_arr=explode(',',I('post.accept_id'));
+						foreach($user_arr as $key=>$val){
+							$user=array('uid'=>$val);
+						}
+						break;
+					case 3:
+						$user=M('user')->select();
+						break;
+				}
+				
+				foreach($user as $key=>$val){
+					$user_msg['type']=2;
+					$user_msg['msg_id']=$id;
+					$user_msg['user_id']=$val['uid'];
+					$arr[]=$user_msg;
+					$ids[]=$val['uid'];
+				}
+				M('msg_user')->addAll($arr);
+				$data['accept_user']=implode(',',$ids);
+			}
+			$re=M('msg')->where('id='.$id)->find();
+            M('msg')->where('id='.$id)->save($data);
+			$this->op_log("修改".$msg."草稿:ID:$id;".$re['title']."=>".$data['title']);
+            $list['code'] = 200;
+            $list['msg'] = '修改'.$msg.'成功';
+            echo json_encode($list, true);
+            exit;
+        }else{
+			$this->display();
+		}
+    }
+	
+	
+	//发送站内信
+	public function send(){
+		$accept_type=I('post.accept_type');
+		switch($accept_type){
+			case 1:
+				$part_code=M('part')->where('id='.I('post.accept_id'))->getField('code');
+				$where['p.code']=array('like',"%".$part_code."%");
+				$user=M('user as u')->field('u.uid')->join('part as p on p.id=u.part_id')->where($where)->select();
+				break;
+			case 2:
+				$user_arr=explode(',',I('post.accept_id'));
+				foreach($user_arr as $key=>$val){
+					$user=array('uid'=>$val);
+				}
+				break;
+			case 3:
+				$user=M('user')->select();
+				break;
+		}
+		
+		foreach($user as $key=>$val){
+			$user_msg['type']=2;
+			$user_msg['msg_id']=$id;
+			$user_msg['user_id']=$val['uid'];
+			$arr[]=$user_msg;
+			$ids[]=$val['uid'];
+		}
+		M('msg_user')->addAll($arr);
+		$data['accept_user']=implode(',',$ids);
+		$data['status']=1;
+		$re=M('msg')->where('id='.$id)->find();
+		M('msg')->where('id='.$id)->save($data);
+		$this->op_log("发送站内信:ID:$id;".$re['title']."=>".$data['title']);
+		$list['code'] = 200;
+		$list['msg'] = '发送成功';
+		echo json_encode($list, true);
+		exit;
+	}
+}

@@ -1,0 +1,20 @@
+<script src="__COMMON__/layui/layui.js"></script>
+<script src="__COMMON__/js/jquery.js"></script>
+<script>
+		$("body").bind("keydown",function(event){  
+           if (event.keyCode == 116) {  
+	         event.preventDefault(); //阻止默认刷新  
+	         location=location;  
+            }  
+        })
+		var path = "__COMMON__";
+		function Ajax(url,type,datas,fun){
+			$.ajax({
+				url:url,
+				type:type,
+				data:datas,
+				dataType:'json',
+				success:fun
+			})
+		}
+</script>

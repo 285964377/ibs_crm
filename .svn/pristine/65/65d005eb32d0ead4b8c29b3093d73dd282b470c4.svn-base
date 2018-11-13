@@ -1,0 +1,151 @@
+<?php
+//公告管理
+namespace Home\Controller;
+class ArticleController extends BackController
+{
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;         //每页条数
+			
+			if(I('get.time_start')){
+				$s_time = I('get.time_start');
+				$e_time = strtotime(I('get.time_end'));
+				$e_time = date('Y-m-d',$e_time+86400);
+				$where['creat_time'] =array('between',array($s_time,$e_time));
+			}
+			if(I('get.title')){
+				$where['title'] =array('like',"%".I('get.title')."%");
+			}
+			if(I('get.status')){
+				$where['status'] =array('eq',I('get.status'));
+			}	
+				
+            $data = M('article')->where($where)->order('id DESC')->limit($num*$page,$num)->select();
+            foreach ($data as $k => $v) {
+                $user = M('user')->where(['id' => $v['user_id']])->field('name')->find();
+                $data[$k]['username'] =$user['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('article')->where($where)->count();
+            echo json_encode($list, true);
+        }
+    }
+
+    public function add()
+    {
+        if (IS_POST) {
+            $data['user_id'] = session('user');
+            $data['title'] = trim(I('post.title'));
+            $data['content'] = I('post.content');
+            $data['type'] = trim(I('post.type'));
+            $check = M('article')->where(['title' => $data['title']])->find();
+            if ($check) {
+                $list['code'] = 'error';
+                $list['msg'] = '重复的标题';
+                echo json_encode($list, true);
+                exit;
+            }
+            M('article')->add($data);
+			$this->op_log('添加系统公告:'.$data['title']);
+            $list['code'] = 200;
+            $list['msg'] = '添加系统公告成功';
+            echo json_encode($list, true);
+            exit;
+        }else{
+			$this->display();
+		}
+
+    }
+
+    /**
+     * 详情
+     */
+    public function details()
+    {
+        $id = I('get.id');
+        $data = M('article')->where(['id' => $id])->find();
+		$data['content'] =  htmlspecialchars_decode(html_entity_decode($data['content']));
+        $this->assign('data', $data);
+		$this->display();
+    }
+
+    /**
+     * 修改
+     */
+    public function edit()
+    {
+        if (IS_POST) {
+            $id = I('post.id');
+            $data['title'] = trim(I('post.title'));
+            $data['content'] = I('post.content');
+            $data['type'] = trim(I('post.title'));
+            $check = M('article')->where(['id' => $id])->find();
+            if ($check && $check['id'] != $id) {
+                $list['code'] = 'error';
+                $list['msg'] = '重复的标题';
+                echo json_encode($list, true);
+                exit;
+            }
+			$re= M('article')->where('id=' . $id)->find();
+			$this->op_log("修改系统公告:ID:$id;".$re['title']."=>".$data['title']);
+            M('article')->where('id=' . $id)->save($data);
+            $list['code'] = 200;
+            $list['msg'] = '修改成功';
+            echo json_encode($list, true);
+            exit;
+        }else{
+			$id = I('get.id');
+			$data = M('article')->where(['id' => $id])->find();
+			$data['content'] =  htmlspecialchars_decode(html_entity_decode($data['content']));
+			$this->assign('data', $data);
+			$this->display();
+		}
+    }
+
+    /**
+     * 删除
+     */
+    public function delete()
+    {
+        $id = I('get.id');
+        if ($id) {
+			$re= M('article')->where('id=' . $id)->find();
+            M('article')->where('id=' . $id)->delete();
+			$this->op_log('删除系统公告:'.$re['title']);
+            $list['code'] = 200;
+            $list['msg'] = '删除成功';
+            echo json_encode($list, true);
+            exit;
+        } else {
+            $list['code'] = 'error';
+            $list['msg'] = '参数不存在';
+            echo json_encode($list, true);
+            exit;
+        }
+    }
+
+
+	// 上下架
+	public function status(){
+		$id = I('post.id');
+		$data['status']  =I('post.status');
+		if($data['status'] == 1){
+			$msg="发布系统公告";
+		}else{
+			$msg="下架系统公告";
+		}
+        $article = M('article')->where(['id'=>$id])->find();
+        $content = "{$msg}".":"."{$article['title']}";
+        $this->op_log($content);
+		M('article')->where('id='.$id)->save($data);
+		echo json_encode(["code"=>200,"msg"=>$msg.'成功'],true);
+		
+	}
+    
+}

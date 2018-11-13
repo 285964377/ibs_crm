@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<include file="Public:header"/>
+<style>
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+
+    .layui-view-body {
+        background: #fff;
+    }
+
+    .layui-table {
+        margin-top: 0
+    }
+
+    .layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row] {
+        border-width: 1px;
+        border-style: solid;
+        border-color: #c6d1d6;
+    }
+
+    .layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even) {
+        background: url(__COMMON__/images/t_bck.png) repeat-x;
+        background-size: 100% 100%;
+    }
+
+    .layui-table td, .layui-table th {
+        padding: 0;
+        text-align: center;
+        line-height: 28px;
+        font-size: 12px;
+        color: #000
+    }
+
+    .layui-form-item {
+        clear: none;
+    }
+
+    .layui-form-mid {
+        line-height: 12px;
+    }
+
+    .layui-form-label {
+        width: auto;
+    }
+
+    .layui-table-view .layui-table {
+        width: 100%;
+    }
+
+    .my_fj_list img {
+        width: 100%;
+        height: 138px;
+        cursor: pointer;
+    }
+
+    .my_fj_list li {
+        margin-bottom: 20px;
+    }
+
+    .my_fj_list li > div {
+        border: 1px solid #eee;
+        position: relative;
+    }
+
+    .my_fj_list p {
+        font-size: 12px;
+        padding: 10px 6px;
+        background: #eff3f5;
+        color: #000;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .my_fj_list li > div span {
+        cursor: pointer;
+
+        display: block;
+        width: 36px;
+        height: 36px;
+        background: url(/crm/Application/Home/Common/images/del.png) no-repeat;
+        background-size: 100% 100%;
+        position: absolute;
+        right: -18px;
+        top: -15px;
+    }
+</style>
+<body class="layui-view-body">
+<div class="layui-content">
+    <ul class="head_top_table">
+        <li><p><span class="fwt">客户</span>：{$data.res.name}</p></li>
+        <li><p><span class="fwt">订单编号</span>：{$data.order.code}</p></li>
+        <li><p><span class="fwt">下单时间</span>：{$data.order.creat_time}</p></li>
+        <li><p><span class="fwt">签单人</span>：{$data.order.creat_user_name}</p></li>
+        <!--<li><p><span class="fwt">判断</span>：<if condition="$res['allot_time']">{$res.allot_time}<else />未分配</if></p></li>-->
+    </ul>
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p>
+                <span class="fwt">基础信息</span>
+                <!--<a style="margin-left:10px;" id="edit_base" href="javascript:;" class="layui-btn layui-btn-xs layui-btn-blue">编辑</a>-->
+                <!--<a style="margin-left:10px;" id="send_msg" href="javascript:;" class="layui-btn layui-btn-xs layui-btn-blue">发短信</a>-->
+                <!--<a style="margin-left:10px;" id="remark" href="javascript:;" class="layui-btn layui-btn-xs layui-btn-blue">备注</a>-->
+            </p></li>
+        </div>
+        <ul class="my_style_table_body">
+            <li class="layui-row">
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户名称：</span>
+                        <span>{$customer.name}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户电话：</span>
+                        <if condition="$data['res']['tel']">
+                            <span>{$customer.phone}</span>
+                            <a id="see_tel" class="layui-btn layui-btn-blue layui-btn-xs"
+                               style="position:relative;top:-2px;left:4px" href="javascript:;">查看</a>
+                            <else/>
+                            <span>{$customer.phone}</span>
+                        </if>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>星级：</span>
+                        <span>暂无</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户身份证号码：</span>
+                        <span>{$customer.idcard}</span>
+                </div>
+            </li>
+            <li>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户性别：</span>
+                        <span>{$customer.sex}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户年龄：</span>
+                        <span>{$customer.age}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户婚姻状况：</span>
+                        <span>{$customer.marriage}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户子女个数：</span>
+                        <span>{$customer.child}</span>
+                    </p>
+                </div>
+            </li>
+            <li>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户学历：</span>
+                        <span>无</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>商机来源：</span>
+                        <span>{$data.origin.name}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>商机：</span>
+                        <span>{$data.res_type}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>业务区域：</span>
+                        <span>无??</span>
+                    </p>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p><span class="fwt">客户属性</span></p></li>
+        </div>
+        <ul class="my_style_table_body">
+
+            <volist name="wealth" id="wealths">
+                <li class="layui-row">
+                    <div class="layui-col-xs1" style="text-align: right;padding-right:20px;">
+                        <p>
+                            <span>{$wealths.table}</span>
+                        </p>
+                    </div>
+                    <div class="layui-col-xs11" style="text-align: left;padding-left:20px;position:relative;">
+                        <p>
+							<span>
+							<volist name="wealths.fields" id="field">
+								<if condition="$field.value">
+								{$field.field_name}：{$field.value};
+								</if>
+							</volist>
+							</span>
+                        </p>
+                    </div>
+                </li>
+            </volist>
+            <if condition="!$wealth">
+                <li class="layui-row">
+                    <div class="layui-col-xs12" style="text-align: center;">
+                        <p>
+                            <span>暂无</span>
+                        </p>
+                    </div>
+
+                </li>
+            </if>
+        </ul>
+    </div>
+    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+        <ul class="layui-tab-title">
+            <li class="layui-this">订单详情</li>
+            <li>生产订单</li>
+        </ul>
+        <div class="layui-tab-content">
+            <!-- 订单详情 -->
+            <div class="layui-tab-item layui-show">
+                <!-- 借贷人 -->
+                <div class="my_style_table">
+                    <div class="head_top_table">
+                        <li><p><span class="fwt">借贷人</span></p></li>
+                    </div>
+                    <table class="layui-table">
+                        <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>身份证号</th>
+                            <th>联系电话</th>
+                            <th>婚姻状况</th>
+                            <th>子女数量</th>
+                            <th>家人是否知晓</th>
+                            <!--<th>与主借贷人关系</th>-->
+                            <th>是否客户本人</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <volist name="borrow" id="borrows">
+                            <tr>
+                                <td>{$borrows.name}</td>
+                                <td>{$borrows.id_number}</td>
+                                <td>{$borrows.tel}</td>
+                                <td>{$borrows.marriage}</td>
+                                <td>{$borrows.child}</td>
+                                <td>{$borrows.ships}</td>
+                                <td>{$borrows.is_self}</td>
+                            </tr>
+                        </volist>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="my_style_table">
+                    <div class="head_top_table">
+                        <li><p><span class="fwt">客户意向</span></p></li>
+                    </div>
+                    <table class="layui-table">
+                        <thead>
+                        <tr>
+                            <th>产品编号</th>
+                            <th>产品名称</th>
+                            <th>渠道名称</th>
+                            <th>贷款金额</th>
+                            <th>贷款利率</th>
+                            <th>贷款年限</th>
+                            <th>放款周期</th>
+                            <th>年龄要求</th>
+                            <th>进件条件</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        <?php   foreach ($goods as $k=>$v):?>
+                        <tr>
+                            <td><?=$v['code']?></td>
+                            <td><?=$v['name']?></td>
+                            <td><?=$v['origin']?></td>
+                            <td><?=$v['money_start']?>~<?=$v['money_end']?>万元</td>
+                            <td><?=$v['ratio_start']?>%~ <?=$v['ratio_end']?>%(<?=$v['ratio_type']?>息)</td>
+                            <td><?=$v['dk_time_start']?> ~<?=$v['dk_time_end']?> (<?=$v['dk_time_type']?>)</td>
+                            <td><?=$v['loan_time_start']?>~<?=$v['loan_time_end']?> (<?=$v['loan_time_type']?>)</td>
+                            <td><?=$v['age_start']?>~<?=$v['age_end']?> </td>
+                            <td><?=$v['jinjian']?></td>
+                        </tr>
+                        <?php  endforeach; ?>
+
+                        <if condition="!$goods">
+                            <tr>
+                                <td style="border-right:none;"></td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-right:none;border-left:none;text-align:right;padding-right:25px;">
+                                    暂无
+                                </td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-right:none;border-left:none;"></td>
+                                <td style="border-left:none;"></td>
+                            </tr>
+                        </if>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- 贷款合同 -->
+                <div class="my_style_table">
+                    <div class="head_top_table">
+                        <li><p><span class="fwt">贷款合同</span></p></li>
+                    </div>
+                    <table class="layui-table">
+                        <tbody>
+                        <tr style="background: #FFFFFF">
+                            <td style="padding: 16px">
+                                <ul class="head_top_table" style="border: none;background: none;margin-bottom: -20px">
+                                    <li><p>合同编号：{$data.order.contract}</p></li>
+                                    <li><p>贷款金额：{$data.order.dk_money}万</p></li>
+                                    <li><p>贷款时长：{$data.order.dk_time}{$data.order.dk_time_type}</p></li>
+                                    <li><p>贷款利率：{$data.order.dk_ratio}{$data.order.dk_ratio_type}</p></li>
+                                    <li><p>定金：{$data.order.ding_money}元</p></li>
+                                    <li><p>服务费：{$data.order.fuwu_money}%</p></li>
+                                    </br>
+                                    <li style="margin-top:20px;" id="imgs"><p>合同文件：<img style="cursor: pointer;"
+                                                                                        src="__WWW__/{$data.order.contract_img}"/>
+                                    </p></li>
+                                </ul>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+
+                </div>
+                <!-- 借贷人 -->
+
+            </div>
+            <!--工单-->
+            <div class="layui-tab-item">
+                <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                    <ul class="layui-tab-title">
+                        <volist name="demand" id="item">
+                            <if condition="$i eq 1">
+                                <li class="layui-this">{$item.code}_{$item.dk_type}</li>
+                                <else />
+                                <li>{$item.code}_{$item.dk_type}</li>
+                            </if>
+                        </volist>
+                    </ul>
+
+                    <div class="layui-tab-content">
+                        <volist name="demand" id="item">
+                        <div class="layui-tab-item <if condition="$i eq 1">  layui-show </if>" >
+                            <!-- 生产订单 -->
+                            <div class="my_style_table">
+                                <div class="head_top_table">
+                                    <li><p><span class="fwt">工单基础信息</span></p></li>
+                                </div>
+                                <ul class="my_style_table_body">
+                                    <li class="layui-row">
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p>
+                                                <span>编号：</span>
+                                                <span>{$item.code}</span>
+                                            </p>
+                                        </div>
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p>
+                                                <span>贷款金额：</span>
+                                                <span>{$item.money}</span>
+                                            </p>
+                                        </div>
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p>
+                                                <span>利息：</span>
+                                                <span>{$item.lixi_way}</span>
+                                            </p>
+                                        </div>
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p>
+                                                <span>业务类型：</span>
+                                                <span>{$item.business}</span>
+                                            </p>
+                                        </div>
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p>
+                                                <span>贷款类型：</span>
+                                                <span>{$item.dk_type}</span>
+                                            </p>
+                                        </div>
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p>
+                                                <span>手续费：</span>
+                                                <span>{$item.recharge}</span>
+                                            </p>
+                                        </div>
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p>
+                                                <span>渠道：</span>
+                                                <span>{$item.channel}</span>
+                                            </p>
+                                        </div>
+                                        <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                                            <p></p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <!--备注和添加附件-->
+                            <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                                <ul class="layui-tab-title">
+                                    <li class="layui-this">操作记录</li>
+                                    <li>财务核款信息</li>
+                                    <li>添加备注</li>
+                                    <li>添加附件</li>
+                                </ul>
+                                <div class="layui-tab-content">
+                                    <div class="layui-tab-item layui-show">
+                                        <!--操作记录-->
+                                        <div class="form-box">
+                                            <div class="layui-form" action="">
+                                                <div class="layui-form-item">
+                                                    <label class="layui-form-label">操作时间</label>
+                                                    <div class="layui-input-inline">
+                                                        <input type="text" value="" class="layui-input" id="times"
+                                                               name=""/>
+                                                    </div>
+                                                    <button class="layui-btn layui-btn-blue search_btn " id="get_serch">
+                                                        <i
+                                                                class="layui-icon">&#xe615;</i>查询
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <table id="hostry" lay-filter="hostry"></table>
+                                    </div>
+                                    <div class="layui-tab-item">
+                                        <!--财务核款信息-->
+                                        <div class="my_style_table">
+                                            <div class="head_top_table">
+                                                <li><p><span class="fwt">财务核款信息</span></p></li>
+                                            </div>
+                                            <table class="layui-table">
+                                                <thead>
+                                                <tr>
+                                                    <th>类型</th>
+                                                    <th>款项</th>
+                                                    <th>金额</th>
+                                                    <th>申请时间</th>
+                                                    <th>审核时间</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <volist name="item.log" id="log">
+                                                    <tr>
+                                                    <td>{$log.type}</td>
+                                                    <td>{$log.rk_type}</td>
+                                                    <td>{$log.money}</td>
+                                                    <td>{$log.creat_time}</td>
+                                                    <td>{$log.check_time}</td>
+                                                    </tr>
+                                                </volist>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="layui-tab-item">
+                                        <div class="form-box" style="padding: 16px">
+                                            <div class="layui-form" action="">
+                                                <div class="layui-form-item">
+                                                    <div class="layui-input-inline" style="width: 500px">
+                                                        <textarea name="desc" style="height: 300px" placeholder=""
+                                                                  class="layui-textarea"></textarea>
+                                                    </div>
+                                                </div>
+                                                <ul class="head_top_table"
+                                                    style="border: none;background: none;margin-bottom: -20px">
+                                                    <li>
+                                                        <button class="layui-btn layui-btn-blue search_btn "
+                                                                id="get_serch">提交备注
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="layui-tab-item">
+                                        <ul class="head_top_table"
+                                            style="border: none;background: none;margin-bottom: -20px">
+                                            <li>
+                                                <button href="javascript:;" class="layui-btn layui-btn-blue"
+                                                        id="add_img" style="margin-bottom:10px;">添加附件
+                                                </button>
+                                            </li>
+                                        </ul>
+                                        <ul class="my_fj_list layui-row layui-col-space30" style="" id="people_list_fj">
+                                            <volist name="fujian" id="fujians">
+                                                <li class="layui-col-md2 layui-col-xs4">
+                                                    <div>
+                                                        <img src="__WWW__/{$fujians.url}" alt=""/>
+                                                        <p>{$fujians.title}</p>
+                                                        <span onclick="del_fj(this)" data-id="{$fujians.id}"></span>
+                                                    </div>
+                                                </li>
+                                            </volist>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </volist>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 商机类型 -->
+<div id="sj_lx" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="res_type_id" value="{$res.res_type_id}" id="get_lx" lay-filter="get_lx"
+                       required lay-verify="required" placeholder="请选择商机类型" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}" name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_sjlx">修改</button>
+        </div>
+    </div>
+</div>
+<!-- 商机来源 -->
+<div id="sj_ly" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="origin_id" value="{$res.origin_id}" id="get_ly" lay-filter="get_ly" required
+                       lay-verify="required" placeholder="请选择商机来源" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}" name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_sjly">修改</button>
+        </div>
+    </div>
+</div>
+<!-- 内部成本 -->
+<div id="sj_nbcb" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="cb_nei" onkeyup="je(this)" value="{$res.cb_nei}" required
+                       lay-verify="required" placeholder="请输入内部成本" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}" name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_nei">修改</button>
+        </div>
+    </div>
+</div>
+<!-- 外部成本 -->
+<div id="sj_wbcb" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="cb_wai" onkeyup="je(this)" value="{$res.cb_wai}" required
+                       lay-verify="required" placeholder="请输入外部成本" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}" name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_wai">修改</button>
+        </div>
+    </div>
+</div>
+<include file="Public:footer"/>
+<script type="text/html" id="cz_lxr">
+    <a href="javascript:;" class='layui-btn layui-btn-danger layui-btn-xs' lay-event="del_lxr">删除</a>
+</script>
+<script>
+
+    var tc_o, tc_t, tc_r, tc_f, add_box, Machine;
+    var Ids = "{$id}";
+    var telID = "{$res_id}";
+    layui.config({
+        base: path + '/modules/treeSelect/',
+    })
+    layui.use(['table', 'layer', 'jquery', 'form', 'element', 'treeSelect', 'laydate'], function () {
+        var table = layui.table, layer = layui.layer, form = layui.form, $ = layui.jquery, laypage = layui.laypage,
+            element = layui.element, treeSelect = layui.treeSelect, laydate = layui.laydate;
+        laydate.render({
+            elem: '#times',
+            range: '~',
+            type: 'datetime'
+        });
+        layer.photos({
+            photos: '#imgs'
+            , anim: 5
+        });
+        $('.search_btn').click(function () {
+            var times = $('#times').val().split('~');
+            data = {'controler': $("#cz_lx").val(), 'time_start': times[0], 'time_end': times[1]};
+            cz_table.reload({
+                where: data,
+                page: {
+                    curr: 1
+                }
+            });
+        })
+        $('#add_img').click(function () {
+            layui.layer.open({
+                title: "添加附件",
+                type: 2,
+                content: 'add_fujian.html?id=' + Ids,
+                area: ["420px", "380px"]
+            })
+        })
+        //查看电话号码
+        var off = true;
+        $('#see_tel').click(function () {
+            if (off) {
+                off = false;
+                $.ajax({
+                    url: "{:U('orders/phone')}",
+                    type: 'GET',
+                    data: {'id': telID},
+                    dataType: 'json',
+                    success: function (res) {
+                        layer.msg(res.phone, {
+                            icon: 4,
+                            time: 5000
+                        }, function () {
+                            off = true;
+                        });
+                    }
+                })
+            }
+        })
+        var cz_table = table.render({
+            elem: '#hostry'
+            , height: 312
+            , url: "operator?&id={$res.id}"
+            , page: true
+            , response: {
+                statusCode: 200
+            }
+            , cols: [[
+                {field: 'user_name', title: '操作人'}
+                , {field: 'code', title: '工号'}
+                , {field: 'controller_name', title: '操作类型'}
+                , {field: 'content', title: '内容/备注'}
+                , {field: 'creat_time', title: '操作时间'}
+            ]]
+        });
+        layer.photos({
+            photos: '#people_list_fj'
+            , anim: 5
+        });
+        var lxr_table = table.render({
+            elem: '#contacts'
+            , height: 312
+            , url: "details?contacts=1&id={$res.id}"
+            , page: true
+            , response: {
+                statusCode: 200
+            }
+            , cols: [[
+                {field: 'name', title: '联系人'}
+                , {field: 'tel', title: '电话'}
+                , {field: 'type', title: '联系人类型'}
+                , {field: 'ship', title: '与客户关系'}
+                , {field: 'job', title: '工作'}
+                , {field: 'address', title: '住址'}
+                , {title: '操作', toolbar: '#cz_lxr', width: 100, fixed: 'right'}
+            ]]
+        });
+    })
+
+
+    function del_fj(obj) {
+        var ids = $(obj).attr('data-id');
+        layer.confirm('是否删除该附件?', {icon: 3, title: '提示'}, function (index) {
+            var index_o = layer.load();
+            $.ajax({
+                url: 'delete_fujian.html',
+                type: 'GET',
+                data: {'id': ids},
+                dataType: 'json',
+                success: function (res) {
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if (res.code == 200) {
+                        setTimeout(function () {
+                            location.reload()
+                        }, 500)
+                    }
+                }
+            })
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,1283 @@
+<?php
+/*
+商机管理
+*/
+
+namespace Home\Controller;
+class ResourcesController extends BackController
+{
+
+
+    public $page;
+    public $num;
+    public $where;
+    public $see_tel;
+
+    public function _initialize()
+    {
+        parent::_initialize();
+        $this->page = (I('get.page') != '') ? I('get.page') - 1 : 0;
+        $this->num = (I('get.limit') != '') ? I('get.limit') : 10;
+        //查看当前用户的数据查看权限
+        $role = M('group_access')->where('uid=' . session('user'))->getField('group_id');
+        $power = M('group_role')->where('id=' . $role)->getField('show_data');
+        if ($power == 'self') {  //只能查看自己的数据
+            $param['user_id'] = array('eq', session('user'));
+        }
+        if ($power == 'part') {//查看部门数据
+            $part_id = M('user')->where('uid=' . session('user'))->getField('part_id');
+            $my_part_code = M('part')->where('id=' . $part_id)->getField('code');
+            $param['part_code'] = array('like', "%" . $my_part_code . "%");
+        }
+        //公共筛选条件
+        //类型
+        if (I('get.res_type_id')) {
+            $param['res_type_id'] = array('eq', I('get.res_type_id'));
+        }
+        //来源渠道
+        if (I('get.res_type_id')) {
+            $param['origin_id'] = array('eq', I('get.origin_id'));
+        }
+        //客户号码
+        if (I('get.phone')) {
+            $param['phone'] = array('like', "%" . I('get.phone') . "%");
+        }
+        //客户姓名
+        if (I('get.name')) {
+            $param['name'] = array('like', "%" . I('get.name') . "%");
+        }
+        //所属部门
+        if (I('get.patr_id')) {
+            $param['patr_id'] = array('eq', I('get.patr_id'));
+        }
+        //销售阶段
+        if (I('get.stage')) {
+            $param['stage'] = array('eq', I('get.stage'));
+        }
+
+        //贷款金额
+        if (I('get.dk_money_start')) {
+            $param['dk_money'] = array('glt', I('get.dk_money_start'));
+        }
+        if (I('get.dk_money_end')) {
+            $param['dk_money'] = array('elt', I('get.dk_money_end'));
+        }
+        //商机编号
+        if (I('get.code')) {
+            $param['code'] = array('eq', I('get.code'));
+        }
+
+        //创建时间
+        if (I('get.creat_time_start')) {
+            $s_time = I('get.creat_time_start');
+            $e_time = strtotime(I('get.creat_time_end'));
+            $e_time = date('Y-m-d', $e_time + 86400);
+            $where['left(creat_time,10)'] = array('between', array($s_time, $e_time));
+        }
+        $this->where = $param;
+        $power = M('group_role')->where('id=' . $role)->getField('show_tel');
+        if ($power == 1) {
+            $this->see_tel = 1;
+        } else {
+            $this->see_tel = 2;
+        }
+
+    }
+
+    //跟进中商机
+    public function ing()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('ELT', 2);
+            //今日待根跟进
+            if (I('get.today_gj')) {
+                $param['left(next_time,10)'] = array('eq', date('Y-m-d', time()));
+            }
+            //今日预约上门
+            if (I('get.today_sm')) {
+                $param['left(next_time,10)'] = array('eq', date('Y-m-d', time()));
+                $param['left(next_step)'] = array('eq', 4);
+            }
+            //分配时间
+            if (I('get.allot_time_start')) {
+                $s_time = I('get.allot_time_start');
+                $e_time = strtotime(I('get.allot_time_end'));
+                $e_time = date('Y-m-d', $e_time + 86400);
+                $where['left(allot_time,10)'] = array('between', array($s_time, $e_time));
+            }
+            //下次跟进时间
+            if (I('get.next_time_start')) {
+                $s_time = I('get.next_time_start');
+                $e_time = strtotime(I('get.next_time_end'));
+                $e_time = date('Y-m-d', $e_time + 86400);
+                $where['left(next_time,10)'] = array('between', array($s_time, $e_time));
+            }
+
+            $data = M('resources')->where($where)->limit($this->num * $this->page, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+    }
+
+    //已成单商机
+    public function over()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('eq', 3);
+
+            //最后跟进时间
+            if (I('get.last_time')) {
+                $star = I('get.last_time');
+                $end = strtolower(I('get.last_time'));
+                $end = date('Y-m-d', $end);
+                $where['left(last_time,10)'] = array('between', array($star, $end));
+            }
+            // 签单时间
+//            if (){
+//
+//            }
+
+            $data = M('resources')->where($where)->limit($this->num * $this->page, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+
+
+    }
+
+    //待审核商机
+    public function checking()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('eq', 5);
+            //商机编号
+            if (I('get.code')) {
+                $where['code'] = array('eq', I('get.code'));
+            }
+            //下次跟进时间
+            if (I('get.next_time_start')) {
+                $s_time = I('get.next_time_start');
+                $e_time = strtotime(I('get.next_time_end'));
+                $e_time = date('Y-m-d', $e_time + 86400);
+                $where['left(next_time,10)'] = array('between', array($s_time, $e_time));
+            }
+
+            //审核备注
+            if (I('get.check_remark')) {
+                $where['check_remark'] = array('eq', I('get.check_remark'));
+            }
+            $data = M('resources')->where($where)->limit($this->num * $this->page, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+
+    }
+
+    //白名单商机
+    public function white()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            //贷款金额
+            if (I('get.dk_money')) {
+                $where['dk_money'] = array('eq', I('get.dk_money'));
+            }
+            //商机编号
+            if (I('get.code')) {
+                $where['code'] = array('eq', I('get.code'));
+            }
+            $where['status'] = array('eq', 6);
+            $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+    }
+
+    /**
+     * 商机掉库
+     */
+    public function out()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('eq', 7);
+            $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+
+    }
+
+//查询关联数据全部
+    public function all($data)
+    {
+        foreach ($data as $ke => $values) {
+            if ($this->see_tel == 2) {
+                $data[$ke]['phone'] = substr_replace($values['phone'], '****', 3, 4);
+            }
+            //1通用字段    资质   商机类型 商机来源 来源渠道      商机所属人	所属部门  最新跟进人	最新跟进时间	最新跟进类型 	最新跟进备注
+            /*商机类型*/
+            $res_type = M('restype')->field('name')->where('id=' . $values['res_type_id'])->find();
+            $data[$ke]['res_type'] = $res_type['name'];
+
+			
+			/*商机资质*/
+			$zz = M('gr_res_wealth')->field('wealth_table')->where('res_id='.$values['id'])->group('wealth_table')->select();
+			foreach($zz as $key=>$val){
+				$wx['table']=array('eq',$val['wealth_table']);
+				$wx['status']=array('eq',1);
+				$zz=M('weal_table')->where($wx)->getField('name');
+				$data[$ke]['zz'] .= ' ' . $zz;
+			}
+			
+            /*商机所属人*/
+            if ($values['user_id']) {
+                $user_name = M('user')->where('uid=' . $values['user_id'])->find();
+                $data[$ke]['user_name'] = $user_name['name'];
+                $data[$ke]['user_code'] = $user_name['code'];
+            }
+            /*部门*/
+            if ($values['part_id']) {
+                $part = M('part')->where('id=' . $values['part_id'])->find();
+                $data[$ke]['part'] = $part['name'];
+            }
+            /*商机来源*/
+            $origin = M('origin')->where('id=' . $values['origin_id'])->find();
+            $data[$ke]['origin'] = $origin['name'];
+			
+            /*商机类型*/
+
+            /*(最新跟进)*/
+            $res_op_log = M('res_op_log')->where(['res_id' => $values['id']])->order('id DESC')->select();//操作记录
+            if ($res_op_log) {
+                $data[$ke]['resop_time'] = $res_op_log[0]['creat_time'];
+                $user = M('user')->where('uid=' . $res_op_log[0]['user_id'])->find(); //操作人
+                $data[$ke]['resop_user_name'] = $user['name'];
+                $data[$ke]['resop_user_code'] = $user['code'];
+                $data[$ke]['resop_type'] = $this->op_log_trans($res_op_log[0]['controler']);
+                $data[$ke]['resop_content'] = $res_op_log[0]['content'];
+            }
+            /*待审核*/
+            if ($values['status'] == 5) {
+                $apply_user = M('user')->where(['id' => $values['apply_user']])->find();
+                $data[$ke]['apply_user'] = $apply_user['name'];
+                switch ($data[$ke]['apply_type']) {
+                    case 1;
+                        $data[$ke]['apply_type'] = "剔除";
+                        break;
+                    case 2;
+                        $data[$ke]['apply_type'] = "反无效";
+                        break;
+                }
+            } else {
+                unset($values['apply_type']);
+                unset($values['apply_time']);
+                unset($values['apply_user']);
+            }
+            //跟进中
+            /*分配人*/
+            if ($values['allot_user_id']) {
+                $allot_user = M('user')->where('uid=' . $values['allot_user_id'])->find();
+                $data[$ke]['allot_name'] = $allot_user['name'];
+                $data[$ke]['allot_code'] = $allot_user['code'];
+            }
+            /*跟进阶段*/
+			$data[$ke]['stage']=$this->res_step($values['stage']);	//销售阶段
+			$data[$ke]['next_step']=$this->res_next_step($values['next_step']);//下次跟进阶段
+			
+			
+            $wl['res_id'] = array('eq', $values['id']);
+            $wl['controler'] = array('eq', 'Resources/go_in');
+            $res_op_log = M('res_op_log')->where($wl)->order('id DESC')->select();//跟进记录
+            if ($res_op_log) {
+                //总跟进次数
+                $count = count($res_op_log);
+                //第一次跟进
+                $first = strtotime($res_op_log[$count - 1]['creat_time']);
+                //最后一次跟进
+                $end = strtotime($res_op_log[0]['creat_time']);
+                //算出跟进率
+                $times = ($end - $first) / (7 * 86400);
+                $frequ = ceil($times) . '周/' . $count . '次';
+                //跟进率
+                $data[$ke]['frequ'] = $frequ;
+                $data[$ke]['resop_time'] = $res_op_log[0]['creat_time'];
+                $user = M('user')->where('uid=' . $res_op_log[0]['user_id'])->find(); //操作人
+                $data[$ke]['resop_user_name'] = $user['name'];
+                $data[$ke]['resop_user_code'] = $user['code'];
+                $data[$ke]['resop_type'] = $res_op_log[0]['type'];
+                $data[$ke]['resop_content'] = $res_op_log[0]['content'];
+            }
+            //订单
+            if ($values['order_id']) {
+                $order = M('orders')->where('id=' . $values['order_id'])->find();
+                $data[$ke]['order'] = $order['code'];
+                $data[$ke]['order_status'] = $order['status'];
+                switch ($data[$ke]['order_status']) {
+                    case 1;
+                        $data[$ke]['order_status'] = "草稿";
+                        break;
+                    case 2;
+                        $data[$ke]['order_status'] = "待审核 ";
+                        break;
+                    case 3;
+                        $data[$ke]['order_status'] = "已驳回";
+                        break;
+                    case 4;
+                        $data[$ke]['order_status'] = "办理中";
+                        break;
+                }
+                $order_user = M('user')->where(['id' => $order['creat_user']])->field('name')->find();
+                $accept_user = M('user')->where(['id' => $order['accept_user']])->field('name')->find();
+                $data[$ke]['order_creat_time'] = $order['creat_time'];
+                $data[$ke]['order_creat_user'] = $order_user['name'];
+                $data[$ke]['order_accept_user'] = $accept_user['name'];
+            }
+			if($values['status']==1){
+				$data[$ke]['stage'] = "待首电";
+			}
+          
+            switch ($values['out_type']) {
+                case 1;
+                    $data[$ke]['out_type'] = '超期未首电';
+                    break;
+                case 2;
+                    $data[$ke]['out_type'] = '超期未跟进';
+                    break;
+                case 3;
+                    $data[$ke]['out_type'] = '反无效掉库';
+                    break;
+                case 4;
+                    $data[$ke]['out_type'] = '退单掉库';
+                    break;
+                case 5;
+                    $data[$ke]['out_type'] = '保护过期';
+                    break;
+            }
+        }
+        return $data;
+    }
+
+    /*
+     * 剔除审核->进入白名单
+    */
+    public function tcheck()
+    {
+        $id = I('post.id');
+        $data['check_uer'] = session('user');
+        $data['check_remark'] = I('post.check_remark');
+        $data['check_time'] = date('Y-m-d H:i:s');
+        $res = M('resources')->where(['id' => $id])->find();
+        $apply_user = M('user')->where(['uid' => $res['apply_user']])->find();//申请人
+        $user = M('user')->where(['uid' => session('user')])->find();//操作人
+        $type = '商机剔除审核';
+        //Workmerman
+        $user_msg['user_id'] = $res['apply_user'];
+        $user_msg['title'] = "审核结果通知";
+        if (I('post.status') == 1) {
+            $data['status'] = 6;
+            $data['user_id'] = 0;
+            $data['guess_out_time'] = null;
+            $data['next_step'] = null;
+            $data['next_time'] = null;
+            $data['last_time'] = null;
+            $data['stage'] = 0;
+            $data['allot_user_id'] = 0;
+            $data['allot_time'] = null;
+            $data['white_time'] = date('Y-m-d H:i:s', time());
+            //  xx 审核了 XX 的商机剔除申请
+            $content = "{$user['name']}" . '通过:' . "{$apply_user['name']}" . "的商机剔除申请。商机编号{$res['code']}";
+            $list['msg'] = '已同意';
+            $user_msg['content'] = "你申请的商机剔除审核已经通过。商机编号{$res['code']}";
+        } else {
+            //审核未通过 商机修改为跟进中
+            $data['status'] = 2;
+            $content = "{$user['name']}" . '拒绝:' . "{$apply_user['name']}" . "的商机剔除申请。商机编号{$res['code']}";
+            $list['msg'] = '已拒绝';
+            $user_msg['content'] = "你申请的商机剔除审核已经被拒。商机编号{$res['code']}";
+
+        };
+        M('resources')->where(['id' => $id])->save($data);
+        $this->res_op_log($id, $content);
+        // A('Workerman')->send_msg($user_msg['user_id'],$user_msg['title'], $user_msg['content']);
+        $list['code'] = 200;
+        echo json_encode($list, true);
+        die();
+    }
+
+    /**
+     * 反无效 ->掉库
+     */
+    public function fcheck()
+    {
+        $id = I('post.id');
+        $data['check_remark'] = I('post.check_remark');
+        $data['check_time'] = date('Y-m-d H:i:s');
+        $res = M('resources')->where(['id' => $id])->find();
+        $apply_user = M('user')->where(['uid' => $res['apply_user']])->find();//申请人
+        $user = M('user')->where(['uid' => session('user')])->find();//操作人
+        $type = '商机反无效审核';
+        if (I('post.status') == 1) {
+            $data['status'] = 7;
+            $data['out_type'] = 3;// 反无效掉库
+            $data['user_id'] = 0;
+            $data['real_out_time'] = date('Y-m-d H:i:s', time());
+            $data['next_step'] = null;
+            $data['next_time'] = null;
+            $data['origin_id'] = null;
+            $data['order_id'] = null;
+            $data['stage'] = null;
+            $data['allot_user_id'] = null;
+            $data['allot_time'] = null;
+            $data['user_id'] = null;
+            $data['white_time'] = null;
+            $content = "{$user['name']}" . '同意:' . "{$apply_user['name']}" . "的反无效申请。商机编号{$res['code']}";
+            $list['msg'] = '已同意';
+            $user_msg['content'] = "你申请的反无效已经通过审核。商机编号{$res['code']}";
+        } else {
+            $data['status'] = 2;
+            $content = "{$user['name']}" . '拒绝了:' . "{$apply_user['name']}" . "的反无效申请。商机编号{$res['code']}";
+            $list['msg'] = '已拒绝';
+            $user_msg['content'] = "你申请的反无效审核已经拒绝。商机编号{$res['code']}";
+        }
+        M('resources')->where(['id' => $id])->save($data);
+        $this->res_op_log($id, $content);
+        // A('Workerman')->send_msg($user_msg['user_id'],$user_msg['title'], $user_msg['content']);
+        $list['code'] = 200;
+        echo json_encode($list, true);
+        die();
+    }
+
+    /**
+     * 剔除
+     */
+    public function tichu_res()
+    {
+        $id = I('post.id');
+        $data['status'] = 5;
+        $data['apply_type'] = 1;
+        $data['check_time'] = null;
+        $data['user_id'] = session('user');
+        $res = M('resources')->where(['id' => $id])->find();
+        $name = M('user')->where(['id' => $res['user_id']])->find();
+        $content = $name['name'] . "({$name['code']})" . '申请剔除商机:' . "{$res['code']}";
+        M('resources')->where(['id' => $id])->save($data);
+        $type = '申请剔除';
+        $this->res_op_log($id, $content);
+        $list['code'] = 200;
+        $list['msg'] = '申请成功';
+        echo json_encode($list, true);
+        die();
+        //"王伟 (201654)生申请 剔除商机:SJ2153435445"
+    }
+
+    /**
+     * 反无效
+     */
+    public function fan_res()
+    {
+        $id = I('post.id');
+        $data['user_id'] = session('user');
+        $data['status'] = 4;
+        $data['check_time'] = null;
+        $data['apply_type'] = 2;
+        $data['white_time'] = null;
+        M('resources')->where(['id' => $id])->save($data);
+        $res = M('resources')->where(['id' => $id])->find();
+        $name = M('user')->where(['id' => $res['user_id']])->find();
+        M('resources')->where(['id' => $id])->save($data);
+        $content = $name['name'] . "({$name['code']})" . '申请反无效:' . "{$res['code']}";
+        $type = '反无效申请';
+        $this->res_op_log($id, $content);
+        $list['code'] = 200;
+        $list['msg'] = '申请成功';
+		echo json_encode($list, true);
+        die();
+    }
+	
+	//下单
+	public function xd(){
+		 $contract = M('contract')->where("code=" . I('param.code'))->find();
+        if ($contract) {
+            $list['code'] = 'ParamRepeat:code';
+            $list['msg'] = '参数错误:重复的合同编号';
+            echo json_encode($list, true);
+            die;
+        }
+        //验证同意商机是否重复下单
+        $where['res_id'] = array('eq', I('param.res_id'));
+        $g = M('res_contract')->where($where)->find();
+        if ($g) {
+            $list['code'] = 'ParamRepeat:res_id';
+            $list['msg'] = '参数错误:一个商机只能提交一个订单';
+            echo json_encode($list, true);
+            die;
+        }
+        //验证 借贷人材料
+        for ($i = 0; $i < count($_POST['name']); $i++) {
+            $res['name'] = $_POST['name'][$i];
+            $res['id_number'] = $_POST['id_number'][$i];
+            $res['tel'] = $_POST['tel'][$i];
+            $res['marriage'] = $_POST['marriage'][$i];
+            $res['child'] = $_POST['child'][$i];
+            $res['family'] = $_POST['family'][$i];
+            $res['id_fy'] = $_POST['id_fy'][$i];
+            $res['id_yj'] = $_POST['id_yj'][$i];
+            $res['jhz_fy'] = $_POST['jhz_fy'][$i];
+            $res['jhz_yj'] = $_POST['jhz_yj'][$i];
+            $res['gtz_fy'] = $_POST['gtz_fy'][$i];
+            $res['gtz_yj'] = $_POST['gtz_yj'][$i];
+            $res['fcz_yj'] = $_POST['fcz_yj'][$i];
+            $res['fcz_fy'] = $_POST['fcz_fy'][$i];
+            $res['bank_fy'] = $_POST['bank_fy'][$i];
+            $res['bank_yj'] = $_POST['bank_yj'][$i];
+            $res['type'] = $_POST['type'][$i];
+            $res['ships'] = $_POST['ships'][$i];
+        }
+
+        //验证 工单字段
+        for ($i = 0; $i < count($_POST['money_x']); $i++) {
+            $demand['money'] = $_POST['money_x'][$i];                        //贷款额度
+            $demand['lixi_way'] = $_POST['lixi_way'][$i];                    //利息计算方式
+            $demand['business_type'] = $_POST['business_type'][$i];        //业务类型
+            $demand['dk_type'] = $_POST['dk_type'][$i];                    //贷款方式
+            if (I('param.order_recharge')) {
+                $demand['recharge'] = I('param.order_recharge');                    //手续费 传参2位小数
+            } else {
+                $demand['recharge'] = $_POST['recharge'][$i];                    //手续费 传参2位小数
+            }
+            $demand['channel'] = $_POST['channel'][$i];                    //渠道
+            //$demand['product'] = $_POST['product'][$i];					//产品
+
+            foreach ($demand as $key => $val) {
+                if (!$val) {
+                    $list['code'] = "ParamLose:" . $key;
+                    $list['msg'] = "缺少参数:" . $key;
+                    echo json_encode($list, true);
+                    die;
+                }
+            }
+        }
+
+
+        if ($_FILES['img']['name']) {
+            $end_file = strrchr($_FILES['img']['name'], '.');
+            $files = mt_rand(0, 99) . $end_file;
+            $path = 'uploader/upload/contract/' . date('YmdHis') . '/';
+            if (!file_exists($path)) {
+                mkdir($path, 777);
+            }
+            chmod($path, 0777);
+            $path = $path . date('YmdHis') . '_' . $files;
+            $resoult = move_uploaded_file($_FILES['img']['tmp_name'], $path);
+            if ($resoult) {
+                $contract['url'] = $path;
+            } else {
+                echo json_encode(["code" => "ERROR", "msg" => "图片上传失败"], true);
+                exit;
+            }
+        } else {
+            /*
+            echo json_encode(["code"=>"ERROR","msg"=>"请上传合同截图"],true);
+            exit;
+            */
+        }
+        //数据写入
+
+        //订单表
+        $order['uid'] = session('user');
+        $order['code'] = 'DD' . date('Ymd', $_SERVER['REQUEST_TIME']) . str_pad(mt_rand(0, 999), 3, "0", STR_PAD_LEFT) . session('uid');
+        $id = M('orders')->add($order);
+        $msg_content = "您收到了一个新订单，快去处理吧！";
+        //A('Workerman')->send_msg(I('param.accept_id'),'personal',$msg_content);
+        //创建合同
+        $contract['code'] = I('param.code');
+        $contract['uid'] = session('uid');
+        $crt_id = M('contract')->add($contract);
+
+        //合同绑定商机
+        $crt_gtoup['res_id'] = I('param.res_id');
+        $crt_gtoup['contract_id'] = $crt_id;
+        M('res_contract')->add($crt_gtoup);
+        //订单绑定商机
+        $ord_gtoup['res_id'] = I('param.res_id');
+        $ord_gtoup['order_id'] = $id;
+        M('res_orders')->add($ord_gtoup);
+
+        //修改客户为已成单客户
+        $cus_id = M('group_cus_resources')->where('resources_id=' . I('param.res_id'))->getField('cus_id');
+        M('customer')->where('id=' . $cus_id)->save(array('cus_type_id' => 2));
+        //主借人---次借贷人--入库
+        for ($i = 0; $i < count($_POST['name']); $i++) {
+            $res['name'] = $_POST['name'][$i];
+            $res['id_number'] = $_POST['id_number'][$i];
+            $res['tel'] = $_POST['tel'][$i];
+            $res['marriage'] = $_POST['marriage'][$i];
+            $res['child'] = $_POST['child'][$i];
+            $res['family'] = $_POST['family'][$i];
+            $res['id_fy'] = $_POST['id_fy'][$i];
+            $res['id_yj'] = $_POST['id_yj'][$i];
+            $res['jhz_fy'] = $_POST['jhz_fy'][$i];
+            $res['jhz_yj'] = $_POST['jhz_yj'][$i];
+            $res['gtz_fy'] = $_POST['gtz_fy'][$i];
+            $res['gtz_yj'] = $_POST['gtz_yj'][$i];
+            $res['fcz_yj'] = $_POST['fcz_yj'][$i];
+            $res['fcz_fy'] = $_POST['fcz_fy'][$i];
+            $res['bank_fy'] = $_POST['bank_fy'][$i];
+            $res['bank_yj'] = $_POST['bank_yj'][$i];
+            $res['order_id'] = $id;
+            $res['type'] = $_POST['type'][$i];
+            foreach ($res as $key => $val) {
+                if (!$val) {
+                    $res[$key] = 2;
+                }
+            }
+            $data[] = $res;
+        }
+        M('borrow')->addAll($data);
+
+        //生产单-入库
+        for ($i = 0; $i < count($_POST['money']); $i++) {
+            $demand['money'] = $_POST['money'][$i];                        //贷款额度
+            $demand['lixi_way'] = $_POST['lixi_way'][$i];                    //利息计算方式
+            $demand['business_type'] = $_POST['business_type'][$i];        //业务类型
+            $demand['dk_type'] = $_POST['dk_type'][$i];                    //贷款方式
+            if (I('param.order_recharge')) {
+                $demand['recharge'] = I('param.order_recharge');                    //手续费 传参2位小数
+            } else {
+                $demand['recharge'] = $_POST['recharge'][$i];                    //手续费 传参2位小数
+            }
+            $demand['channel'] = $_POST['channel'][$i];                    //渠道
+            //	$demand['product'] = $_POST['product'][$i];					//产品
+            $demand['code'] = 'GD' . date('Ymd', $_SERVER['REQUEST_TIME']) . str_pad(mt_rand(0, 999), 3, "0", STR_PAD_LEFT) . session('uid');
+            $demand['order_id'] = $id;
+            $demand_id = M('demand')->add($demand);
+            $log['op_id'] = session('uid');
+            $log['demand_id'] = $demand_id;
+            $log['order_id'] = $id;
+            $log['step'] = 1;
+            M('demand_goin')->add($log);
+        }
+        $list['code'] = 200;
+        $list['msg'] = "下单成功";
+        echo json_encode($list, true);
+        die;
+    }
+	
+
+	//创建商机
+    public function add()
+    {
+		if(IS_POST){
+			$tel=I('param.phone');
+			$resources=M('resources')->where($where)->select();
+			if ($phone) {
+				$list['code'] = "Error";
+				$list['msg'] = '商机已存在';
+				echo json_encode($list, true);
+				die;
+			}
+			
+			$where['phone']=array('eq',$tel);
+			$customer=M('customer')->where($where)->find();
+			$data=$_POST;
+			if(!$customer){
+				$data['code'] = 'KH' . date('Ymd', $_SERVER['REQUEST_TIME']) . str_pad(mt_rand(0, 999), 3, "0", STR_PAD_LEFT) . session('user');
+				M('customer')->add($data);
+			}
+			$data['code'] = 'SJ' . date('Ymd', $_SERVER['REQUEST_TIME']) . str_pad(mt_rand(0, 999), 3, "0", STR_PAD_LEFT) . session('user');
+			$user = M('user')->where(['uid' => session('user')])->find();
+			$part=M('part')->where('id='.$user['part_id'])->find();
+			$data['part_id'] = $part['id'];
+			$data['part_code'] = $part['code'];
+			$data['user_id'] = $user['uid'];
+			$data['creat_user'] = session('user');
+			$id=M('resources')->add($data);
+			
+			
+			//添加资质
+			if($_POST['weal_table']){
+				for($i=0;$i<count($_POST['weal_table']);$i++){
+					$wh['table']=array('eq',$_POST['weal_table'][$i]);
+					$fields=M('weal_field')->where($wh)->order('id ASC')->select();
+					$fiel_lenth=count($_POST[$_POST['weal_table'][$i].'_'.$fields[0]['field']]);	//获取提交字段数组长度  1 某一类资质只添加了一个，2如果是添加的车，就是两个车
+					for($j=0;$j<$fiel_lenth;$j++){
+						$file_arr=array();
+						foreach($fields as $key=>$val){
+							$file_arr[$val['field']]=$_POST[$_POST['weal_table'][$i].'_'.$val['field']][$j];
+						}
+						$wealth_id=M($_POST['weal_table'][$i])->add($file_arr);
+						if($wealth_id){
+							$g['res_id']=$id;
+							$g['wealth_id']=$wealth_id;
+							$g['wealth_table']=$_POST['weal_table'][$i];
+							$group[]=$g;
+						}
+					}
+				}
+				//写入商机资质 关联表
+				M('gr_res_wealth')->addAll($group);
+			}
+			
+			$type = '创建商机';
+			$this->res_op_log($id, $content);
+			$list['code'] = 200;
+			$list['msg'] = '添加成功';
+			echo json_encode($list, true);
+			die();
+		}else{
+			$tel=I('param.tel');
+			$where['phone']=array('eq',$tel);
+			$customer=M('customer')->where($where)->find();
+			if($customer){
+				if ($customer['sex'] == 1) {
+					$customer['sex'] = '男';
+				}
+				if($customer['sex'] == 2){
+					$customer['sex'] = '女';
+				}
+				if(!$customer['sex']){
+					$customer['sex'] = '未知';
+				}
+			}
+			$res=M('resources')->where($where)->find();
+			if($res){
+				$res['origin'] = M('origin')->where('id=' . $res['origin_id'])->getField('name');
+				$res['res_type'] = M('restype')->field('name')->where('id=' . $res['res_type_id'])->getField('name');
+				$user=M('user')->where('uid='.$res['user_id'])->find();
+				$part=M('part')->where('id='.$res['part_id'])->find();
+				$res['user_name']=$user['name'];
+				$res['user_code']=$user['code'];
+				$res['part_name']=$part['name'];
+				$res['stage']=$this->res_step($res['stage']);	//销售阶段
+			}
+			
+			$this->assign('cus',$customer);
+			$this->assign('res',$res);
+			//需要填写的资质
+			$tables=M('weal_table')->where('status=1')->select();
+			foreach($tables as $key=>$val){
+				$where['table']=array('eq',$val['table']);
+				$tables[$key]['fields']=M('weal_field')->where($where)->order('id ASC')->select();
+			}
+			$this->assign('tables',$tables);
+			$this->display();
+		}
+    }
+	
+	
+	//分配/移交
+	public function allot(){
+		//接收人
+		$accept_id=I('param.accept_id');		
+		$ac_user=M('user')->where('uid='.$accept_id)->find();
+		$part=M('part')->where('id='.$ac_user['part_id'])->find();
+		$op_user=M('user')->where('uid='.session('user'))->find();
+		/*商机*/
+		$res_id=I('param.id');
+		$we['id']=array('in',$res_id);
+		$res=M('resources')->where($we)->select();
+		/*首电时间*/
+		$first_time=M('config_change')->where('id=1')->find()['first_time'];
+		foreach($res as $key=>$val){
+			/*原所属人*/
+			$re_user=M('user')->where('uid='.$val['user_id'])->find();
+			
+			/*分配情况*/
+			$data['part_id'] = $part['id'];
+			$data['part_code'] = $part['code'];
+			$data['user_id'] = $accept_id;
+			$data['allot_time'] =date('Y-m-d H:i:s',time());
+			$data['allot_user_id'] = session('user');
+			
+			/*计算掉库时间*/
+			$data['guess_out_time']=date('Y-m-d H:i:s',time()+60*$first_time);
+			
+			/*修改商机字段*/
+			M('resources')->where('id='.$val['id'])->save($data);
+			
+			/*操作日志*/
+			$content = "原所属人：".$re_user['name']."（".$re_user['code']."）;"."现所属人：".$ac_user['name']."（".$ac_user['code']."）;";
+			$this->res_op_log($res_id, $content);
+			
+		}
+		
+		//workerman提醒
+		//A('Workerman')->send_msg($accept_id,'商机移交通知', '您获得了'.count($res).'个新商机,赶快去查看吧');
+		$list['code'] = 200;
+		$list['msg'] = '移交成功';
+		echo json_encode($list, true);
+		die();
+	}
+	
+	public function details(){
+		$id=I('param.id');
+		
+		if(I('param.op_log')){
+			//操作记录
+			$wl['lg.res_id'] = array('eq',$id);
+			//操作类型
+			if(I('param.controler')){
+				$wl['lg.controler'] = array('eq',I('param.controler'));
+			}
+			//操作时间
+			if(I('get.time_start')){
+                $s_time = I('get.time_start');
+                $e_time = strtotime(I('get.time_end'));
+                $e_time = date('Y-m-d',$e_time+86400);
+                $wl['l.creat_time'] =array('between',array($s_time,$e_time));
+            }
+
+			$data = M('res_op_log as lg')
+				->field('lg.*,u.name,u.code')
+				->join('user as u on u.uid=lg.user_id')
+				->where($wl)->order('id DESC')
+				->limit($this->num * $this->page, $this->num)
+				->select();
+			foreach($data as $key=>$val){
+				$data[$key]['controler']=$this->op_log_trans($val['controler']);
+			}
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('res_op_log as lg')->join('user as u on u.uid=lg.user_id')->where($wl)->count();
+            echo json_encode($list, true);
+			exit;
+		}
+		
+		//联系人
+		if(I('param.contacts')){
+			$where['rc.res_id']=array('eq',$id);
+			$data=M('contacts as c')
+					->field('c.*')
+					->join('left join gr_res_contacts as rc on rc.contact_id=c.id')
+					->where($where)
+					->order('rc.id DESC')
+					->limit($this->num * $this->page, $this->num)
+					->select();
+			$list['code']  = 200;
+			$list['msg']   = '';
+			$list['count'] = M('contacts as c')->join('left join gr_res_contacts as rc on rc.contact_id=c.id')->where($where)->count();
+			$list['data']  = $data;
+			echo json_encode($list, true);
+			exit;
+		}
+		
+		if(I('param.index')){
+			//基础信息
+			$res=M('resources')->where('id='.$id)->find();
+            $res['origin'] = M('origin')->where('id=' . $res['origin_id'])->getField('name');
+            $res['res_type'] = M('restype')->field('name')->where('id=' . $res['res_type_id'])->getField('name');
+			$user=M('user')->where('uid='.$res['user_id'])->find();
+			$part=M('part')->where('id='.$res['part_id'])->find();
+			$res['user_name']=$user['name'];
+			$res['user_code']=$user['code'];
+			$res['part_name']=$part['name'];
+			$creat=M('user')->where('uid='.$res['creat_user'])->find();
+			if($creat){
+				$res['creat_user']=$creat['name'].'（'.$creat['code'].'）';
+			}
+			
+			if(!$res['guess_out_time']){
+				$res['guess_out_time']='暂无';
+			}
+			
+			$where['phone']=array('eq',$res['phone']);
+			$cus=M('customer')->where($where)->find();
+			if ($cus['sex'] == 1) {
+				$cus['sex'] = '男';
+			}
+			if($cus['sex'] == 2){
+				$cus['sex'] = '女';
+			}
+			if(!$cus['sex']){
+				$cus['sex'] = '未知';
+			}
+			$cus['marriage']=$this->cus_marry($cus['marriage']);
+			$cus['education']=$this->cus_educate($cus['education']);
+		
+			if ($this->see_tel == 2) {
+				$res['tel'] = substr_replace($res['phone'], '****', 3, 4);
+			}
+		  
+			$res['stage']=$this->res_step($res['stage']);	//销售阶段
+			$res['next_step']=$this->res_next_step($res['next_step']);//下次跟进阶段
+			
+			$this->assign('res',$res);//
+			$this->assign('cus',$cus);//
+			//客户资质
+			$wh['gr.res_id']=array('eq',$id);
+			$wh['wt.status']=array('eq',1);
+			$group=M('gr_res_wealth as gr')->field('wt.table,wt.name,gr.wealth_id,gr.id as gid')->join('weal_table as wt on wt.table=gr.wealth_table')->where($wh)->select();
+			foreach($group as $key=>$val){
+				$whe['table']=array('eq',$val['table']);
+				$fld_key=M('weal_field')->where($whe)->select();
+				$field=M($val['table'])->where('id='.$val['wealth_id'])->find();
+				foreach($fld_key as $item=>$v){
+					foreach($field as $q=>$e){
+						if($q==$v['field']){
+							$fld_key[$item]['value']=$e;
+						}
+					}
+				}
+				$wealth[]=array('table'=>$val['name'],'gid'=>$val['gid'],'fields'=>$fld_key);
+			}
+			$this->assign('wealth',$wealth);//
+			//客户意向产品
+			$goods=M('gr_res_goods as gr')->field('g.*,gr.id as gid')->join('goods as g on g.id=gr.goods_id')->where('gr.res_id='.$id)->select();
+			$this->assign('goods',$goods);//
+			//所有资质
+			$tables=M('weal_table')->where('status=1')->select();
+			foreach($tables as $key=>$val){
+				$where['table']=array('eq',$val['table']);
+				$tables[$key]['fields']=M('weal_field')->where($where)->order('id ASC')->select();
+			}
+			$this->assign('tables',$tables);
+			$this->display();
+		}
+			
+	}
+	
+	//修改商机类型
+	public function change_type(){
+		$id=I('post.id');
+		$data['res_type_id']=I('post.res_type_id');
+		M('resources')->where('id='.$id)->save($data);
+		$content = "修改商机类型";
+        $this->res_op_log($id, $content);
+		$list['code'] = 200;
+		$list['msg'] = '修改成功';
+		echo json_encode($list, true);
+	}
+	
+	//修改商机来源
+	public function change_orgin(){
+		$id=I('post.id');
+		$data['origin_id']=I('post.origin_id');
+		M('resources')->where('id='.$id)->save($data);
+		$content = "修改商机来源";
+        $this->res_op_log($id, $content);
+		$list['code'] = 200;
+		$list['msg'] = '修改成功';
+		echo json_encode($list, true);
+	}
+	
+		//修改内部成本
+	public function change_cb_nei(){
+		$id=I('post.id');
+		$data['cb_nei']=I('post.cb_nei');
+		M('resources')->where('id='.$id)->save($data);
+		$content = "修改商机内部成本";
+        $this->res_op_log($id, $content);
+		$list['code'] = 200;
+		$list['msg'] = '修改成功';
+		echo json_encode($list, true);
+	}
+	
+		//修改外部成本
+	public function change_cb_wai(){
+		$id=I('post.id');
+		$data['cb_wai']=I('post.cb_wai');
+		M('resources')->where('id='.$id)->save($data);
+		$content = "修改商机外部成本";
+        $this->res_op_log($id, $content);
+		$list['code'] = 200;
+		$list['msg'] = '修改成功';
+		echo json_encode($list, true);
+	}
+	
+	//编辑基础信息
+	public function edit(){
+		if(IS_POST){
+			$data=$_POST;
+			$id=$data['id'];
+			unset($data['id']);
+			M('resources')->where('id='.$id)->save($data);
+			$where['phone']=array('eq',$_POST['phone']);
+			M('customer')->where($where)->save($data);
+			$content = "修改基础信息";
+			$this->res_op_log($id, $content);
+			$list['code'] = 200;
+			$list['msg'] = '修改成功';
+			echo json_encode($list, true);
+		}else{
+			$id=I('get.id');
+			$res=M('resources')->where('id='.$id)->find();
+			$where['phone']=array('eq',$res['phone']);
+			$cus=M('customer')->where($where)->find();
+			$this->assign('res',$res);
+			$this->assign('cus',$cus);
+			$this->display();
+		}
+	}
+	
+	public function add_wealth(){
+		if(IS_POST){
+			$table=I('post.table');
+			$res_id=I('post.res_id');
+			unset($_POST['table']);
+			unset($_POST['res_id']);
+			$wealth=$_POST;
+			$wealth_id=M($table)->add($wealth);
+			$group['res_id']=$res_id;
+			$group['wealth_id']=$wealth_id;
+			$group['wealth_table']=$table;
+			M('gr_res_wealth')->add($group);
+			$content = "新增资质";
+			$this->res_op_log($id, $content);
+			$list['code'] = 200;
+			$list['msg'] = '操作成功';
+			echo json_encode($list, true);
+		}else{
+			$tables=M('weal_table')->where('status=1')->select();
+			foreach($tables as $key=>$val){
+				$where['table']=array('eq',$val['table']);
+				$tables[$key]['fields']=M('weal_field')->where($where)->select();
+			}
+			$this->assign('tables',$tables);
+			$this->assign('id',$_GET['id']);
+			$this->display();
+		}
+	}
+	
+	
+	public function delete_wealth(){
+		$id=I('param.gid');
+		$group=M('gr_res_wealth')->where('id='.$id)->find();
+		M('gr_res_wealth')->where('id='.$id)->delete();
+		M($group['wealth_table'])->where('id='.$group['wealth_id'])->delete();
+		$content = "删除资质";
+		$this->res_op_log($group['res_id'], $content);
+		$list['code'] = 200;
+		$list['msg'] = '操作成功';
+		echo json_encode($list, true);
+	}
+	
+	
+	//添加联系人
+	public function add_contact(){
+		$res_id=I('param.res_id');
+		$contact['type']=I('param.type');
+		$contact['ship']=I('param.ship');
+		$contact['tel']=I('param.tel');
+		$contact['address']=I('param.address');
+		$contact['job']=I('param.job');
+		$contact['name']=I('param.name');
+		$contact_id=M('contacts')->add($contact);
+		$group['contact_id']=$contact_id;
+		$group['res_id']=$res_id;
+		M('gr_res_contacts')->add($group);
+		$content = "新增联系人";
+		$this->res_op_log($res_id, $content);
+		$list['code'] = 200;
+		$list['msg'] = '操作成功';
+		echo json_encode($list, true);
+		
+	}
+	
+	//删除联系人
+	public function delete_contact(){
+		$id=I('param.gid');
+		$group=M('gr_res_contacts')->where('id='.$id)->find();
+		M('gr_res_contacts')->where('id='.$id)->delete();
+		M('contacts')->where('id='.$group['contract_id'])->delete();
+		$content = "删除联系人";
+		$this->res_op_log($group['res_id'], $content);
+		$list['code'] = 200;
+		$list['msg'] = '操作成功';
+		echo json_encode($list, true);
+	}
+	
+	//添加推荐产品
+	public function add_goods(){
+		$res_id=I('param.res_id');
+		$goods_id=I('param.goods_id');
+		$where['res_id']=array('eq',$res_id);
+		$where['goods_id']=array('eq',$goods_id);
+		$group=M('gr_res_goods')->where($where)->find();
+		if($group){
+			$list['code'] = "error";
+			$list['msg'] = '请勿重复推荐产品';
+			echo json_encode($list, true);
+		}
+		$group['res_id']=$res_id;
+		$group['goods_id']=$goods_id;
+		M('gr_res_goods')->add($group);
+		$content = "添加推荐产品";
+		$this->res_op_log($group['res_id'], $content);
+		$list['code'] = 200;
+		$list['msg'] = '操作成功';
+		echo json_encode($list, true);
+	}
+	
+	//删除推荐产品
+	public function delete_goods(){
+		$id=I('param.gid');
+		$group=M('gr_res_goods')->where('id='.$id)->find();
+		M('gr_res_goods')->where('id='.$id)->delete();
+		$content = "删除推荐产品";
+		$this->res_op_log($group['res_id'], $content);
+		$list['code'] = 200;
+		$list['msg'] = '操作成功';
+		echo json_encode($list, true);
+	}
+	
+		//添加附件
+	
+	public function add_fujian(){
+		$group['res_id']=I('param.res_id');
+		if(!$group['res_id']){
+			$list['code'] = 'ParamLose:res_id';
+            $list['msg'] = '缺少参数:商机ID';
+            $this->api_return($list);
+		}
+		
+		if($_FILES['img']['name']){
+		
+			$path = 'uploader/upload/fujian/'.date('Ymd');
+			if (!file_exists($path)) {
+				mkdir($path,0777);
+			}
+			chmod($path,0777);
+			
+			$end_file = strrchr($_FILES['img']['name'], '.');
+			$files =mt_rand(0, 99).$end_file;
+			$path = $path.'/'.date('YmdHis') . '_' . $files;
+			$resoult = move_uploaded_file($_FILES['img']['tmp_name'], $path);
+			if($resoult){
+				$data['url'] = $path;
+			}else{
+				//echo $path;
+				echo json_encode(["code"=>"ERROR","msg"=>"图片上传失败".$path],true);
+				exit;
+			}
+		}
+		$data['title']=I('param.title');
+		if(!$data['title']){
+			$list['code'] = 'ParamLose:title';
+            $list['msg'] = '缺少参数:附件名';
+            $this->api_return($list);
+		}
+		$group['fujian_id']=M('fujian')->add($data);
+		M('res_fujian')->add($group);
+		$log['resources_id']=$res_id;
+		$log['content']='添加附件';
+		$this->add_goin_log($log);
+		$list['code'] = 200;
+		$list['msg'] = '添加成功';
+		$this->api_return($list);
+		
+	}
+	
+		
+	//删除附件
+	function delete_fujian(){
+		$fujian_id=I('param.fujian_id');
+		$res_id=I('param.res_id');
+		$fujian=M('fujian')->where('id='.$fujian_id)->find();
+		M('fujian')->where('id='.$fujian_id)->delete();
+		unlink($fujian['url']);
+		$where['fujian_id']=array('eq',$fujian_id);
+		$where['res_id']=array('eq',$res_id);
+		M('res_fujian')->where($where)->delete();
+		$log['resources_id']=$res_id;
+		$log['content']='删除附件';
+		$this->add_goin_log($log);
+		$list['code'] = 200;
+		$list['msg'] = '删除成功';
+		$this->api_return($list);
+	}
+	//跟进
+	public function go_in(){
+		$id=I('param.id');
+		if(IS_POST){
+			$res=M('resources')->where('id='.$id)->find();
+			switch($res['status']){
+				case 4:
+					$list['code'] = "error";
+					$list['msg'] = '反无效审核中,无法跟进';
+					echo json_encode($list, true);
+					exit;
+					break;
+				case 5:
+					$list['code'] = "error";
+					$list['msg'] = '剔除效审核中,无法跟进';
+					echo json_encode($list, true);
+					exit;
+					break;
+				case 6:
+					$list['code'] = "error";
+					$list['msg'] = '白名单商机,无法跟进';
+					echo json_encode($list, true);
+					exit;
+					break;
+				case 7 :
+					$list['code'] = "error";
+					$list['msg'] = '掉库商机,无法跟进';
+					echo json_encode($list, true);
+					exit;
+					break;
+			}
+		
+			//添加记录
+			$remark=I('param.remark');
+			
+			$this->res_op_log($id ,$remark);
+			//计算跟进频率
+			$wl['res_id'] = array('eq', $id);
+            $wl['controler'] = array('eq', 'Resources/go_in');
+            $res_op_log = M('res_op_log')->where($wl)->order('id DESC')->select();//跟进记录
+            if ($res_op_log) {
+                $count = count($res_op_log); //总跟进次数
+                $first = strtotime($res_op_log[$count - 1]['creat_time']);  //第一次跟进
+                $end = strtotime($res_op_log[0]['creat_time']);//最后一次跟进
+                $times = ($end - $first) / (7 * 86400); //算出跟进率
+                $frequ = ceil($times) . '周/' . $count . '次';
+            }
+			$data['last_time']=date('Y-m-d H:i:s',time());
+			$data['next_time']=I('post.next_time');
+			$data['next_step']=I('post.next_step');
+			$data['stage']=I('post.stage');
+			$data['frequ']=I('post.frequ');
+			$config_change=M('config_change')->where('id=1')->find();
+			$data['guess_out_time']=date('Y-m-d H:i:s',time()+$config_change['over_time']*86400);
+		}else{
+			//查询跟进标签
+			$where['type']=array('eq',3);
+			$where['status']=array('eq',1);
+            $label = M('label')->where($where)->limit($num*$page,$num)->select();
+			//查询商机
+			$res=M('resources')->where('id='.$id)->find();
+			$this->assign('label',$label);
+			$this->assign('res',$res);
+			$this->display();
+		}
+	}
+}

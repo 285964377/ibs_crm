@@ -1,0 +1,14 @@
+<script src="__COMMON__/layui/layui.js"></script>
+<script src="__COMMON__/js/jquery.js"></script>
+<script>
+		var path = "__COMMON__";
+		function Ajax(url,type,datas,fun){
+			$.ajax({
+				url:url,
+				type:type,
+				data:datas,
+				dataType:'json',
+				success:fun
+			})
+		}
+</script>

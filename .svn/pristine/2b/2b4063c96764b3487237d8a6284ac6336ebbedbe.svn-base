@@ -1,0 +1,57 @@
+<?php
+
+namespace Home\Controller;
+
+use Think\Controller;
+
+class BackController extends Controller
+{
+    public function _initialize()
+    {
+        A('Auto')->check_login();
+        A('Auto')->check_power();
+    }
+
+    //管理员操作日志
+    public function op_log($content)
+    {
+        $data['type'] = CONTROLLER_NAME . '/' . ACTION_NAME;
+        $data['user_id'] = session("user");
+        $data['ip'] = $_SERVER["REMOTE_ADDR"];
+        $data['content'] = $content;
+        M('operation_log')->add($data);
+    }
+
+    //商机操作记录
+    public function res_op_log($res_id, $content, $type)
+    {
+        $data['controler'] = CONTROLLER_NAME . '/' . ACTION_NAME;
+        $data['user_id'] = session("user");
+        $data['res_id'] = $res_id;
+        $data['type'] = $type;
+        $data['content'] = $content;
+        M('res_op_log')->add($data);
+    }
+
+    public function select_part()
+    {
+        $data = M('part')->field('name,id,pid')->select();
+        $data = $this->roles($data);
+        echo json_encode($data, true);
+        exit;
+    }
+
+    //递归无限极分类
+    public function roles($data, $pid = 0)
+    {
+        $arr = array();
+        foreach ($data as $key => $val) {
+            if ($val['pid'] == $pid) {
+                $arr[$key] = $val;
+                $arr[$key]['children'] = $this->roles($data, $val['id']);
+            }
+        }
+        $arr = array_merge($arr);
+        return $arr;
+    }
+}

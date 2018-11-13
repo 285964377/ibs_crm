@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.layui-form-label{
+			width:auto;
+		}
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+		.layui-treeSelect .ztree li span.button.switch{
+			position: relative;
+			top:-7px;
+		}
+	</style>
+	<div class="layui-content">
+	    <div class="layui-row">
+				<div class="layui-card">
+						<div class="layui-card-body">
+								<div class="form-box">
+									<div class="layui-form" action="">
+										<div class="layui-input-inline">
+											<input type="text" class="search_input layui-input"  placeholder="姓名/工号" />
+										</div>
+										<div class="layui-input-inline">
+											<input type="text"  id="tree" name="" lay-filter="tree" class="layui-input">
+										</div>
+										<div class="layui-input-inline">
+											<input type="text"  placeholder="操作时间范围" autocomplete="off" id="time_start" class="layui-input">
+										</div>
+										<button class="layui-btn layui-btn-blue" lay-submit id="search" lay-filter="search"><i class="layui-icon">&#xe615;</i>查询</button>
+										<button class="layui-btn layui-btn-blue addBtn" id="red_get"><i class="layui-icon">&#xe654;</i>添加</button>
+								</div>		
+							</div>
+							<hr/>
+							<div class="table_box">
+								<table id="Machine" lay-filter="Machine"></table>
+							</div>	
+						</div>
+					</div>
+			</div>		
+	</div>		
+	<include file="Public:footer" />
+	<!--存放默认的权限-->
+
+
+	<script type="text/javascript">
+			layui.config({
+				base: path+'/modules/table/',
+			})
+			layui.use(['form','layer','laydate','table'],function(){
+				var $ = layui.$,data,layer=layui.layer,form=layui.form,table=layui.table,laydate=layui.laydate;
+					laydate.render({
+					elem: '#time_start',
+					range:'~'
+				});
+						//员工列表
+				Machine= table.render({
+						elem: '#Machine',
+						url: "index.html?search_data=1" //数据接口
+						,page: true //开启分页
+						,response: {
+								statusCode: 200 //规定成功的状态码，默认：0
+						}
+						,cols: [[
+								{type: 'checkbox'}
+								,{title: '操作类型', field: 'type'}
+								, {title: '操作人', field: 'name'}
+								, {title: '工号', field: 'code'}
+								, {title: 'IP', field: 'ip'}
+								, {title: '操作时间', field: 'creat_time'}
+								, {title: '内容', field: 'content'}
+						]]
+				});
+				//监听搜索
+				$("#search").click(function(){
+						var type = $('#tree').val();
+						var search =$('.search_input').val();
+						var time_start = $('#time_start').val();
+						var Ntime = time_start.split('~');
+						data= {type:type,search:search,time_start:Ntime[0],time_end:Ntime[1]};
+						Machine.reload({
+								where:data,
+								page: {
+										curr: 1
+								}
+						});
+				})
+				
+			})			
+			layui.config({
+					base: path+'/modules/treeSelect/',
+				})
+				layui.use(['treeSelect','form','layer'],function(){
+					var treeSelect= layui.treeSelect;
+			
+					treeSelect.render({
+						// 选择器
+						elem: '#tree',
+						// 数据
+						data: "{:U('Operlog/linkage')}",
+						// 异步加载方式：get/post，默认get
+						type: 'get',
+						// 占位符
+						placeholder: '选择操作类型',
+						// 是否开启搜索功能：true/false，默认false
+						search: false,
+						// 点击回调
+						click: function(d){
+							$('#tree').val(d.current.title);
+						},
+						// 加载完成后的回调函数
+						success: function (d) {
+							console.log(d);
+							//                选中节点，根据id筛选
+							//                treeSelect.checkNode('tree', 3);
+			
+							//                获取zTree对象，可以调用zTree方法
+							//                var treeObj = treeSelect.zTree('tree');
+							//                console.log(treeObj);
+			
+							//                刷新树结构
+							//                treeSelect.refresh();
+						}
+					});
+				})
+	</script>
+</body>
+</html>

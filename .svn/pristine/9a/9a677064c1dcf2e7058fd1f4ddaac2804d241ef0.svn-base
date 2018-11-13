@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+    .hide{
+        display:none;
+    }
+    .layui-form-item .layui-input-block{
+        margin-right: 20px;
+    }
+</style>
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="form-box">
+                    <button class="layui-btn layui-btn-blue layui-btn-sm add-depart"><i class="layui-icon">&#xe654;</i>新增上级分类</button>
+                    <button class="layui-btn layui-btn-primary up-all layui-btn-sm"><i class="layui-icon">&#xe619;</i>全部收起</button>
+                    <button class="layui-btn layui-btn-primary down-all layui-btn-sm"><i class="layui-icon">&#xe61a;</i>全部展开</button>
+                </div>
+                <div class="test-tree-table" lay-filter="test1"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!--添加上级部门-->
+<div  class="" id="add-department" style="display: none;padding: 20px 0">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">商机名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <hr/>
+        <div class="layui-form-item">
+            <div class="layui-input-inline" style="margin-left: 90px">
+                <button class="layui-btn layui-btn-blue" lay-submit lay-filter="Add">保存</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!--添加下级部门-->
+<div  class="" id="add-child-department" style="display: none;padding: 20px 0">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">上级商机</label>
+            <div class="layui-input-block">
+                <input type="text"  id="child-p-name"  disabled autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">商机名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+                <input  id="child-p-id" name="pid"   type="hidden" class="layui-input">
+            </div>
+        </div>
+        <hr/>
+        <div class="layui-form-item">
+            <div class="layui-input-inline" style="margin-left: 90px">
+                <button class="layui-btn layui-btn-blue" lay-submit lay-filter="Add_child">保存</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!--编辑部门-->
+<div  class="" id="edit-department" style="display: none;padding: 20px 0">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">商机名称</label>
+            <div class="layui-input-block">
+                <input type="text" id="edit-input-name" name="name" value="" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+                <input  id="edit-input-id" name="id" type="hidden" class="layui-input">
+            </div>
+        </div>
+        <hr/>
+        <div class="layui-form-item">
+            <div class="layui-input-inline" style="margin-left: 90px">
+                <button class="layui-btn layui-btn-blue" lay-submit lay-filter="Edit">保存</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<include file="Public:footer" />
+<script type="text/javascript">
+    layui.config({
+        base: path+'/modules/table/',
+    })
+    layui.use(['treetable','form','layer'],function(){
+        var o = layui.$,treetable = layui.treetable,data,layer=layui.layer,form=layui.form;
+        o.ajax({
+            url:'index.html?search_data=1',
+            dataType:'json',
+            async:false,
+            success:function(res){
+                data=res.data;
+            }
+        })
+        parttable = treetable.render({
+            elem: '.test-tree-table',
+            data: data,
+            field: 'name',
+            cols: [
+                {
+                    field: 'name',
+                    title: '商机来源名称',
+                    width: '35%',
+                },
+                {
+                    field: 'creat_time',
+                    title: '创建时间',
+                    width: '35%',
+                },
+                {
+                    field: 'actions',
+                    title: '操作',
+                    width: '30%',
+                    data: [
+                        '<button style="border: none;background: none" onclick="add_child(this)"><i class="layui-icon">&#xe654;</i>添加</button>',
+                        '<button style="border: none;background: none"  onclick="edit(this)"><i class="layui-icon">&#xe642;</i>编辑</button>',
+                    ],
+                },
+            ]
+        });
+
+
+
+        //添加上级部门
+        o('.add-depart').click(function(){
+            ADD=layer.open({
+                title: '新增分类',
+                type: 1,
+                content: o('#add-department'),
+                area: ['280px', '200px']
+            })
+        })
+
+
+        o('.up-all').click(function(){
+            treetable.all('up');
+        })
+
+        o('.down-all').click(function(){
+            treetable.all('down');
+        })
+
+        //提交添加上级部门内容
+        form.on('submit(Add)', function(data){
+            var datas = data.field;
+            o.ajax({
+                url:'add.html',
+                data:datas,
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            layer.closeAll();
+                            location.reload();
+                        },500)
+                    }
+                }
+            })
+            return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+
+        //提交添加下级部门内容
+        form.on('submit(Add_child)', function(data){
+            var datas = data.field;
+            o.ajax({
+                url:'add.html',
+                data:datas,
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            layer.closeAll();
+                            location.reload();
+                        },500)
+                    }
+                }
+            })
+            return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+
+        //提交编辑内容
+        form.on('submit(Edit)', function(data){
+            var datas = data.field;
+            o.ajax({
+                url:'edit.html',
+                data:datas,
+                type:'post',
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            layer.closeAll();
+                            location.reload();
+                        },500)
+                    }
+                }
+            })
+            return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+    });
+
+    function  add_child(obj){
+        layui.use(['form','layer'],function(){
+            var o = layui.$,layer=layui.layer,form=layui.form;
+            layer.open({
+                title: '新增下级分类',
+                type: 1,
+                content: o('#add-child-department'),
+                area: ['280px', '240px']
+            })
+            var tr =o(obj).parents('tr');
+            var id=o(tr).attr('data-tb-id');
+            var name=o(tr).attr('data-name');
+            document.getElementById("child-p-id").value=id;
+            document.getElementById("child-p-name").value=name;
+        })
+    }
+
+    function  edit(obj){
+        layui.use(['form','layer'],function(){
+            var o = layui.$,layer=layui.layer,form=layui.form;
+            edit_depart=layer.open({
+                title:'编辑商机',
+                type:1,
+                content:o('#edit-department'),
+                area:['280px','200px']
+            })
+            //     console.log(obj);
+            var tr =o(obj).parents('tr');
+            var name=o(tr).attr('data-name');
+            var id=o(tr).attr('data-tb-id');
+            document.getElementById("edit-input-name").value=name;
+            document.getElementById("edit-input-id").value=id;
+        })
+    }
+</script>
+</body>
+</html>

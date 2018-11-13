@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+	 input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+    input[type="number"]{
+        -moz-appearance: textfield;
+    }
+		.layui-view-body{
+			background:#fff;
+		}
+		.layui-table{
+			margin-top:0
+		}
+		.layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row]{
+			border-width: 1px;
+			border-style: solid;
+			border-color: #c6d1d6;
+		}
+		.layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even){
+			background: url(__COMMON__/images/t_bck.png) repeat-x;
+			background-size:100% 100%;
+		}
+		.layui-table td, .layui-table th{
+			padding:0;
+			text-align:center;
+			line-height: 28px;
+			font-size:12px;
+			color:#000
+		}
+		.layui-form-item{
+			margin-top:0
+		}
+		.sj_form{
+			margin-bottom:10px;
+		}
+		.layui-form-label{
+			width:auto;
+		}
+		.layui-form-mid{
+				padding: 0px 0px !important;
+		}
+		.layui-form-radio{
+			margin:0;
+		}
+		.layui-form-item{
+			clear:none;
+		}
+</style>
+<div class="layui-content">
+	<form class="layui-form" id="js_adds" action="">
+	<div id="form" class="layui-form layui-row">
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs12">
+			<label class="layui-form-label">收款金额</label>
+			<div class="layui-input-inline">
+				<input type="text"  value="{$data.money}" disabled  class="layui-input ">
+			</div>
+		</div>	
+		<div style="clear:both"></div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs12">
+			<label class="layui-form-label">付款方式</label>
+			<div class="layui-input-inline">
+				<input type="text"  value="{$data.pay_way}" disabled  class="layui-input ">
+			</div>
+		</div>
+		<div style="clear:both"></div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs12">
+			<label class="layui-form-label">收款类型</label>
+			<div class="layui-input-inline">
+				<input type="text"  value="{$data.rk_type}" disabled  class="layui-input ">
+			</div>
+		</div>
+		<div style="clear:both"></div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs12">
+			<label class="layui-form-label">认款凭证</label>
+			<div class="layui-input-inline" id="imgs">
+				<img src="__WWW__/{$data.url}" style="width:228px;height:228px;cursor: pointer;"/>
+			</div>
+		</div>
+		<div class="layui-form-item layui-form-text sj_form layui-col-xs12">
+			<label class="layui-form-label">备注信息</label>
+			<div class="layui-input-block" style="margin-left:80px;">
+				<textarea  	 disabled  class="layui-textarea">{$data.remark}</textarea>
+			</div>
+		</div>
+		<div style="clear:both"></div>
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+					<a href="javascript:;" id="yes" class="layui-btn-blue layui-btn">同意</a>
+					<a href="javascript:;" id="no"  class="layui-btn-danger layui-btn">拒绝</a>
+			</div>
+		</div>
+	</div>
+</div>	
+</form>	
+<div class="cb_box"  style="display:none;">
+	<form class="layui-form" style="margin-top:20px;">
+			<div class="layui-form-item sj_form layui-col-xs12">
+				<label class="layui-form-label">内部成本</label>
+				<div class="layui-input-inline">
+					<input type="text" onkeyup="je(this)" name="cb_nei" required  lay-verify="required" placeholder="请输入内部成本"     class="layui-input ">
+				</div>
+			</div>
+			<div style="clear:both"></div>
+			<div class="layui-form-item sj_form 	layui-col-xs12">
+				<label class="layui-form-label">外部成本</label>
+				<div class="layui-input-inline">
+					<input type="text" onkeyup="je(this)"  name="cb_wai" required  lay-verify="required" placeholder="请输入外部成本"    class="layui-input ">
+				</div>
+			</div>
+			<input type="hidden" name="id" value="{$data.id}"/>
+			<div style="clear:both"></div>					
+			<div class="layui-form-item">
+				<div class="layui-input-block">
+					<button class="layui-btn layui-btn-blue" lay-submit lay-filter="*">立即提交</button>
+				</div>
+			</div>
+	</form>
+</div>	
+	 <include file="Public:footer" />
+	<script>
+		var tc_box,Ids = "{$data.id}";
+	layui.config({
+		base: path+'/modules/treeSelect/',
+	})			
+	layui.use(['table','layer','jquery','form','treeSelect','element','laydate'],function(){
+		var table = layui.table;
+		var layer= layui.layer;
+		var form = layui.form;
+		var $ = layui.jquery;
+		var laypage = layui.laypage;
+		var treeSelect= layui.treeSelect;
+		var element = layui.element;
+		var laydate = layui.laydate;
+		laydate.render({
+			elem: '#birth' 
+		});
+		layer.photos({
+			photos: '#imgs'
+			,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+		}); 
+		var tc_box;
+		$('#yes').click(function(){
+			tc_box= 	layui.layer.open({
+					title : "同意",
+					type : 1,
+					content :$('.cb_box'),
+					area:["280px","200px"]
+				})
+		})
+		$('#no').click(function(){
+			layer.prompt({'formType':	0,'title':'拒绝原因'},function(value, index, elem){
+						var index_o = layer.load();
+						$.ajax({
+							url:"check_first.html",
+							type:'post',
+							data:{'check_remark':value,'status':'2','id':Ids},
+							dataType:"json",
+							success:function(res){
+								layer.close(index_o);
+								layer.msg(res.msg);
+								if(res.code==200){
+									setTimeout(function(){
+										layer.close(index);
+										parent.layui.table.reload('Machine');
+										var my_index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+										parent.layer.close(my_index);
+									},500)
+								}
+							}	
+						})
+					});
+						layer.tips('请填写拒绝原因，否则无法提交哟', '.layui-layer-btn0');
+
+		})
+		//同意
+		form.on('submit(*)', function(data){
+			var datas = data.field 
+			datas.status=1;
+			layer.confirm('是否通过审核?', function(index){
+				var index_two = layer.load();
+				$.ajax({
+					url:'check_first.html',
+					type:"post", 
+					dataType:"json",
+					data:datas,
+					success:function(res){
+						layer.msg(res.msg);
+						layer.close(index_two);
+						if(res.code==200){
+							parent.layui.table.reload('Machine');
+							layer.close(tc_box);
+							var my_index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+							parent.layer.close(my_index);
+						}
+					}
+				})
+			});    
+			return false; 
+		});
+	});
+	</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<?php
+//自动业务
+namespace Home\Controller;
+use Think\Controller;
+class AutoController extends Controller {
+
+		/*登录验证*/
+		public function check_login(){
+			if(!session('user')){
+				session('user',null);
+				if(IS_AJAX){
+					echo json_encode(["code"=>"ERROR","msg"=>"您还没有登录，请刷新页面重新登录"],true);
+					exit;
+				}else{
+					
+				  if( CONTROLLER_NAME.'/'.ACTION_NAME=="Index/index"){
+						$this->redirect('Login/login');
+						exit;
+				  }
+				  $tis = "您还没有登录,如没有自动刷新请手动刷新";
+				  $this->assign('tis',$tis);
+				  $this->assign('flash','yes');
+				  $this->display('Worning/404');
+				  exit;
+				}
+			}else{
+				$where['login_session'] = array('eq',session('login_session'));
+				$admin = M('user')->where($where)->find();
+				if(!$admin){
+					session('user',null);
+					session('login_session',null);
+					if(IS_AJAX){
+						echo json_encode(["code"=>"ERROR","msg"=>"您的账号已在异地登录，请刷新页面重新登录"],true);
+						exit;
+					}else{
+						
+						if( CONTROLLER_NAME.'/'.ACTION_NAME=="Index/index"){
+							$this->redirect('Login/login');
+							exit;
+						}
+						$tis = "您的账号已在异地登录,如没有自动刷新请手动刷新";
+						$this->assign('tis',$tis);
+						$this->assign('flash','yes');
+						$this->display('Worning/404');
+						exit;
+					}
+				}else{
+					if($admin['status']!=1){
+						if(IS_AJAX){
+							echo json_encode(["code"=>"ERROR","msg"=>"您的账号已被冻结"],true);
+							exit;
+						}else{
+							session('user',null);
+							$tis = "您的账号已被冻结";
+							$this->assign('tis',$tis);
+							$this->assign('flash','yes');
+							$this->display('Worning/404');
+							exit;
+						}
+					}
+					
+				}
+			}
+			
+		}
+		
+		
+		//超期未首电掉库
+		public function auto_out_first($time){
+			$where['status']=array('eq',1);//待首电
+			$where['user_id']=array('neq',0);
+			$where['guess_out_time']=array('lt',$time);
+			$res=M('resources')->where($where)->select();
+		
+			foreach($res as $key=>$val){
+				$data['status']=7;
+				$data['out_type']=1;
+				$data['real_out_time']=$val['guess_out_time'];
+				$data['guess_out_time']=null;
+				$data['user_id']=0;
+				$content="您的商机：编号{$val['code']}超时未首电，已经掉库";
+				 A('Workerman')->send_msg($val['user_id'],'商机掉库通知', $content);
+				M('resources')->where('id='.$val['id'])->save($data);
+				//掉库记录
+				$log['part_id']=$val['part_id'];
+				$log['part_code']=$val['part_code'];
+				$log['user_id']=$val['user_id'];
+				$log['res_id']=$val['id'];
+				$log['type']=$data['out_type'];
+				$log['creat_time']=$data['real_out_time'];
+				M('res_dk_log')->add($log);
+			}
+		}
+		
+		
+		//超期未跟进
+		public function auto_out_fllow($time){
+			$where['status']=array('eq',2);//跟进中
+			$where['user_id']=array('neq',0);
+			$where['guess_out_time']=array('lt',$time);
+			$res=M('resources')->where($where)->select();
+			foreach($res as $key=>$val){
+				$data['status']=7;
+				$data['out_type']=2;
+				$data['real_out_time']=$val['guess_out_time'];
+				$data['guess_out_time']=null;
+				$data['user_id']=0;
+				$content='您的商机：编号**超时未跟进，已经掉库';
+				 A('Workerman')->send_msg($val['user_id'],'商机掉库通知', $content);
+				M('resources')->where('id='.$val['id'])->save($data);
+				//掉库记录
+				$log['part_id']=$val['part_id'];
+				$log['part_code']=$val['part_code'];
+				$log['user_id']=$val['user_id'];
+				$log['res_id']=$val['id'];
+				$log['type']=$data['out_type'];
+				$log['creat_time']=$data['real_out_time'];
+				M('res_dk_log')->add($log);
+			}
+		}
+		
+		//成单保护过期
+		
+		public function auto_out_over($time){
+			$where['status']=array('eq',3);//已成单
+			$where['user_id']=array('neq',0);
+			$where['guess_out_time']=array('lt',$time);
+			$res=M('resources')->where($where)->select();
+			foreach($res as $key=>$val){
+				$data['status']=7;
+				$data['out_type']=5;
+				$data['real_out_time']=$val['guess_out_time'];
+				$data['guess_out_time']=null;
+				$data['user_id']=0;
+				$content='您的商机：编号**保护期已过，已经掉库';
+				 A('Workerman')->send_msg($val['user_id'],'商机掉库通知', $content);
+				M('resources')->where('id='.$val['id'])->save($data);
+				//掉库记录
+				$log['part_id']=$val['part_id'];
+				$log['part_code']=$val['part_code'];
+				$log['user_id']=$val['user_id'];
+				$log['res_id']=$val['id'];
+				$log['type']=$data['out_type'];
+				$log['creat_time']=$data['real_out_time'];
+				M('res_dk_log')->add($log);
+			}
+		}
+		
+		
+		/*权验证*/
+		public function check_power(){
+			$gc=M('group_access')->where('uid='.session('user'))->find();
+			if(!$gc){
+				if(IS_AJAX){//这里只能使用echo  不可以 ajaxReturn
+						echo json_encode(["code"=>"ERROR","msg"=>"权限出错"],true);
+						exit;
+					}else{
+						$tis = "权限出错";
+						$this->assign('tis',$tis);
+						$this->assign('flash','no');
+						$this->display('Worning/404');
+						exit;
+					}
+			}
+            $ruleName= strtolower( CONTROLLER_NAME.'/'.ACTION_NAME);
+            $this->tpl_AuthCheck($ruleName,session('user'));
+			//获取所有权限 如果所有的规则中不包含这个规则，则不进行权限验证
+			$ruleList = M('group_rule')->select();
+			$checkName = CONTROLLER_NAME.'/'.ACTION_NAME;
+			$yes = false;
+			foreach($ruleList as $key =>$val){
+				if($checkName == $val['name']){
+					$yes = true;
+					break;
+				}
+			}
+			if($yes){
+				$ruleName= strtolower( CONTROLLER_NAME.'/'.ACTION_NAME);
+				//转为小写  //数据库不支持 大写
+				if(!$this->tpl_AuthCheck($ruleName,session('user'))){
+					if(IS_AJAX){//这里只能使用echo  不可以 ajaxReturn
+						echo json_encode(["code"=>"ERROR","msg"=>"权限不足"],true);
+						exit;
+					}else{
+						$tis = "权限不足！";
+						$this->assign('tis',$tis);
+						$this->assign('flash','no');
+						$this->display('Worning/404');
+						exit;
+					}
+				}
+			}
+		}
+		
+		/*
+		*@ruleName 控制器名连接上操作名
+		*@userId 用户ID
+		*/
+		public function tpl_AuthCheck($ruleName,$userId,$relation='or'){
+			//$relation = or|and; //默认为'or' 表示满足任一条规则即通过验证; 'and'则表示需满足所有规则才能通过验证
+			$Auth = new \Think\Auth();
+			$type=1; //默认为:1 type：1是实时验证，2是登录验证
+			$mode='url'; //执行check的模式,默认为:url
+			$result = $Auth->check($ruleName,$userId,$type,$mode,$relation);
+			return $result;
+		}
+
+  		
+}

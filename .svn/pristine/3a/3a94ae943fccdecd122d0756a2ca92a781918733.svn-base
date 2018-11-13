@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.layui-form-label{
+			width:auto;
+		}
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+		.layui-treeSelect .ztree li span.button.switch{
+			position: relative;
+			top:-7px;
+		}
+	</style>
+	<div class="layui-content">
+	    <div class="layui-row">
+				<div class="layui-card">
+						<div class="layui-card-body">
+								<div class="form-box">
+									<div class="layui-form" action="">
+											<div class="layui-input-inline">
+												<input type="text" class="search_input layui-input" id="like"  placeholder="产品名称/产品类型" />
+											</div>
+											<div class="layui-input-inline">
+												<button class="layui-btn layui-btn-blue" lay-submit id="search" lay-filter="search"><i class="layui-icon">&#xe615;</i>查询</button>
+												<button class="layui-btn layui-btn-blue addBtn" id="red_get"><i class="layui-icon">&#xe654;</i>添加</button>
+											</div>
+								</div>		
+							</div>
+							<hr/>
+							<div class="table_box">
+								<table id="Machine" lay-filter="Machine"></table>
+							</div>	
+						</div>
+					</div>
+			</div>		
+	</div>		
+	<include file="Public:footer" />
+	<!--存放默认的权限-->
+	<input type="hidden" name="roleID" id="roleID" value="{$role[0]['id']}" />
+	
+	<script type="text/html" id="cz">
+	  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit"><i class="layui-icon">&#xe642;</i>编辑</a>
+	  <a class="layui-btn layui-btn-danger layui-btn-xs"  lay-event="del"><i class="layui-icon">&#xe640;</i>删除</a>
+	</script>
+	
+	<script type="text/html" id="sts">
+	    <input type="checkbox" value="{{d.id}}" name="zzz" lay-skin="switch" {{ d.status == 1 ? 'checked' : '' }} lay-text="下架|上架" lay-filter="switchBtn">
+	 </script>
+	<script type="text/html" id="money">
+		{{d.money_start}}万~{{d.money_end}}万
+	</script>
+	<script type="text/html" id="age">
+		{{d.age_start}}~{{d.age_end}}
+	</script>
+	<script type="text/html" id="dk_time">
+		{{d.dk_time_start}}~{{d.dk_time_end}}({{d.dk_time_type}})
+	</script>
+	<script type="text/html" id="loan_time">
+		{{d.loan_time_start}}~{{d.loan_time_end}}({{d.loan_time_type}})
+	</script>
+	<script type="text/html" id="ratio">
+		{{d.ratio_start}}%~{{d.ratio_end}}%({{d.ratio_type}})
+	</script>
+	<script type="text/javascript">
+			layui.config({
+				
+				base: path+'/modules/table/',
+			})
+			layui.use(['form','layer','table'],function(){
+				var $ = layui.$,data,layer=layui.layer,form=layui.form,table=layui.table;
+						//产品列表
+						Machine= table.render({
+								elem: '#Machine',
+								url: "index.html?search_data=1" //数据接口
+								,page: true //开启分页
+								,response: {
+										statusCode: 200 //规定成功的状态码，默认：0
+								}
+								,cols: [[
+										{type: 'checkbox'}
+										,{title: '产品名称', field: 'name'}
+										,{title: '产品类型', field: 'type'}
+										,{title: '渠道名称', field: 'origin'}
+										,{title: '进件条件',field:"jinjian"}
+										,{title: '放贷金额', templet:"#money"}
+										,{title: '贷款周期', templet: '#dk_time'}
+										,{title:'贷款利息',templet:'#ratio',width:150}
+										,{title: '放款周期', templet: '#loan_time'}
+										,{title: '年龄',templet:"#age",width:70}
+										,{title:'状态',templet:"#sts",width:100}
+										,{toolbar: '#cz',title: '操作',width:146}
+								]]
+						});
+						//监听搜索
+						$("#search").click(function(){
+								var search =$('#like').val();
+								data= {search:search};
+								Machine.reload({
+									where:data,
+									page: {
+											curr: 1
+									}
+								});
+						})
+						var add;
+					//添加
+					$('#red_get').click(function(){
+						var index = layer.load();
+						add = layui.layer.open({
+							title :"添加产品",
+							type :2,
+							content:"add.html",
+							area:["460px","570px"],
+							closeBtn:2,
+							success:function(){
+								layer.close(index);
+							}
+						})	
+					})
+					//上下架
+					form.on('switch(switchBtn)', function(obj){
+							var id=this.value;
+							if(obj.elem.checked){
+							var status = 1;
+							var text='上架';
+								$(obj.elem).next().removeClass('layui-form-onswitch');
+								$(obj.elem).next().find('em').html('上架');
+								obj.elem.checked = false;
+							}else{
+								var status = 2;
+								var text='下架';
+								$(obj.elem).next().addClass('layui-form-onswitch');
+								$(obj.elem).next().find('em').html('下架');
+								obj.elem.checked = 'checked';
+							}
+							layer.confirm('确认'+text+'该产品吗?',{icon: 3, title:text}, function(index){
+								$.ajax({
+									url:"status.html",
+									type:'post',
+									data:{'id':id,'status':status},
+									dataType:"json",
+									success:function(data){
+										layer.close(index);
+										layer.msg(data.msg);
+										if(data.code == 200){
+											if(status == 1){
+												$(obj.elem).next().addClass('layui-form-onswitch');
+												$(obj.elem).next().find('em').html('下架');
+												obj.elem.checked = 'checked';
+											}else{
+												$(obj.elem).next().removeClass('layui-form-onswitch');
+												$(obj.elem).next().find('em').html('上架');
+												obj.elem.checked = false;
+											}
+										}
+									}
+								})
+							});
+					});
+				//监听表格
+				table.on('tool(Machine)', function(obj){
+						var data = obj.data;
+						var layEvent = obj.event;
+						if(layEvent === 'del'){
+							layer.confirm('确认删除产品：'+data.name+'?', {icon: 3, title:'删除产品'}, function(index){
+								$.ajax({
+									url:'delete.html',
+									dataType:'json',
+									data:{'id':data.id},
+									type:'post',
+									success:function(res){
+										layer.msg(res.msg);
+										if(res.code==200){
+											setTimeout(function(){
+													layer.close(index);
+													Machine.reload();
+											},500)
+										}
+									}
+								})
+							});
+						}
+						if(layEvent === 'edit'){
+								var index = layer.load();
+								add = layui.layer.open({
+									title :"编辑产品",
+									type :2,
+									content:"edit.html?id="+data.id,
+									area:["460px","570px"],
+									closeBtn:2,
+									success:function(){
+										layer.close(index);
+									}
+								})	
+						}
+				})	
+			})			
+	</script>
+</body>
+</html>

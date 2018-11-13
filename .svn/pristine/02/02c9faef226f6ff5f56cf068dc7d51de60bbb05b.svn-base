@@ -1,0 +1,234 @@
+<?php
+/*
+部门管理
+*/
+namespace Home\Controller;
+class PartController extends BackController {
+	//部门列表
+	public function index(){
+		if($_GET['index']){
+			$this->display();
+		}
+		if($_GET['search_data']){
+			$data=M('part as p')
+				->field('p.*,u.name as user_name,u.code as user_code')
+				->join('left join user as u on u.uid=p.leader_id')
+				->select();
+			foreach($data as $key=>$val){
+				foreach($val as $k=>$v){
+					if($k=='id' || $k=='pid'){
+						$data[$key][$k]=intval($v);
+					}
+				}
+			}
+			$list['code']=200;
+			$list['data']=$data;
+			echo json_encode($list,true);
+		}
+    }
+	
+	public function add(){
+		if(IS_POST){
+			$name=I('post.name');
+			$code=I('post.code');
+			$where['name']=array('eq',$name);
+			$part=M('part')->where($where)->find();
+			if($part){
+				$list['code']='error';
+				$list['msg']='重复命名';
+				echo json_encode($list,true);
+				exit;
+			}
+			unset($where);
+			$where['code']=array('eq',$code);
+			$part=M('part')->where($where)->find();
+			if($part){
+				$list['code']='error';
+				$list['msg']='重复部门代码';
+				echo json_encode($list,true);
+				exit;
+			}
+			$pid=I('post.pid');
+			//验证上级部门编码
+			if($pid){
+				$p_part=M('part')->where('id='.$pid)->getField('code');
+				strlen($p_part);
+				$code_check=substr($code,0,$p_part-1);
+				if($code_check!=$p_part){
+					$list['code']='error';
+					$list['msg']='部门代码必须包含上级部门代码';
+					echo json_encode($list,true);
+					exit;
+				}
+			}
+			
+			$rush=I('post.rush');
+			$leader_id=I('post.leader_id');
+			if(!$leader_id){
+				$list['code']='error';
+				$list['msg']='请选择部门负责人';
+				echo json_encode($list,true);
+				exit;
+			}
+			$leader=M('user')->where('uid='.$leader_id)->find();
+			if(!$leader){
+				$list['code']='error';
+				$list['msg']='该员工已被删除';
+				echo json_encode($list,true);
+				exit;
+			}
+			
+			$data['name']=$name;
+			$data['code']=$code;
+			$data['leader_id']=$leader_id;
+			$data['rush']=$rush;
+			M('part')->add($data);
+			$this->op_log('添加部门:'.$name);
+			
+			$list['code']=200;
+			$list['msg']='添加成功';
+			echo json_encode($list,true);
+			exit;
+			
+		}else{
+			$this->display();
+		}
+		
+	}
+	
+	
+	public function edit(){
+		$id=I('post.id');
+		$name=I('post.name');
+		$code=I('post.code');
+		$where['name']=array('eq',$name);
+		$part=M('part')->where($where)->find();
+		if($part && $part['id']!=$id){
+			$list['code']='error';
+			$list['msg']='重复命名';
+			echo json_encode($list,true);
+			exit;
+		}
+		unset($where);
+		$where['code']=array('eq',$code);
+		$part=M('part')->where($where)->find();
+		if($part && $part['id']!=$id){
+			$list['code']='error';
+			$list['msg']='重复部门代码';
+			echo json_encode($list,true);
+			exit;
+		}
+		
+		//验证是否未其他部门的上级
+		$where['code']=array('like',"%".$code."%");
+		$part=M('part')->where($where)->find();
+		if($part){
+			$list['code']='error';
+			$list['msg']='部门代码不能包含其他部门';
+			echo json_encode($list,true);
+			exit;
+		}
+		unset($where);
+		$where["'".$code."'"]=array('likef',"%code%");
+		$part=M('part')->where($where)->find();
+		if($part){
+			$list['code']='error';
+			$list['msg']='部门代码不能被其他部门包含';
+			echo json_encode($list,true);
+			exit;
+		}
+		
+		$part=M('part')->where('id='.$id)->find();
+		$pid=$part['pid'];
+			//验证上级部门编码
+		if($pid){
+			$p_part=M('part')->where('id='.$pid)->getField('code');
+			strlen($p_part);
+			$code_check=substr($code,0,$p_part-1);
+			if($code_check!=$p_part){
+				$list['code']='error';
+				$list['msg']='部门代码必须包含上级部门代码';
+				echo json_encode($list,true);
+				exit;
+			}
+		}
+		
+		$data['name']=$name;
+		$data['code']=$code;
+		$data['leader_id']=$leader_id;
+		$data['rush']=$rush;
+		M('part')->where('id='.$id)->save($data);
+		$content='修改部门:id='.$id.';';
+		$content.=$part['name'].'=>'.$name.';';
+		$content.=$part['code'].'=>'.$code.';';
+		$this->op_log($content);
+		$list['code']=200;
+		$list['msg']='修改成功';
+		echo json_encode($list,true);
+		exit;
+	}
+	
+	
+	public  function delete(){
+		$id=I('param.id');
+		$part=M('part')->where('pid='.$id)->find();
+		if($part){
+			$list['code']='error';
+			$list['msg']='存在下级部门,无法删除';
+			echo json_encode($list,true);
+			exit;
+		}
+		$user=M('user')->where('part_id='.$id)->find();
+		if($part){
+			$list['code']='error';
+			$list['msg']='部门下还有员工,无法删除';
+			echo json_encode($list,true);
+			exit;
+		}
+		M('part')->where('id='.$id)->delete();
+		$list['code']=200;
+		$list['msg']='删除成功';
+		echo json_encode($list,true);
+		exit;
+	}
+	
+	
+	//用户列表
+	public function get_user(){
+		$page = (I('get.page') != '') ? I('get.page')-1 : 0;    //页码
+		$num = (I('get.limit') != '') ? I('get.limit') : 10;        //每页条数
+		if(I('get.search')){
+			$complex[]=array(
+                'u.name'=>array('like',"%".I('get.search')."%"),
+                'u.tel'=>array('like',"%".I('get.search')."%"),
+                '_logic'=>'or'
+            );
+		}
+		
+		if(I('get.part_id')){
+			$complex[]=array(
+				'u.part_id'=> array('eq',I('get.part_id'))
+			);
+		}
+		if($complex){
+			$where=array(
+				'_complex'=>$complex,
+				'_logic'=>'and'
+			);
+		}
+		
+		
+		$data=M('user as u')
+			->field('u.uid,u.name as user_name,u.code as user_code,p.name')
+			->join('left join part as p on p.id=u.part_id')
+			->where($where)
+			->limit($num*$page,$num)
+			->select();
+		$list['code'] = 200;
+		$list['data'] = $data;
+		$list['count'] =  M('user as u')->join('left join part as p on p.id=u.part_id')->where($where)->count();
+		echo json_encode($list,true);
+		exit;
+	}
+}
+

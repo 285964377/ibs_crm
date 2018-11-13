@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.layui-form-label{
+			width:auto;
+		}
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+		.layui-treeSelect .ztree li span.button.switch{
+			position: relative;
+			top:-7px;
+		}
+	</style>
+	<div class="layui-content">
+	    <div class="layui-row">
+			<div class="layui-card">
+				<div class="layui-card-body">
+					<div class="form-box">
+						<div class="layui-form" action="">
+							<div class="layui-form-item">
+								<label class="layui-form-label">姓名<span style="color:#FF5722;font-size:22px">*</span>：</label>
+								<div class="layui-input-inline">
+								  <input type="text" name="name" required  value="{$data.name}" ay-verify="required" placeholder="请输入姓名" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">工号<span style="color:#FF5722;font-size:22px">*</span>：</label>
+								<div class="layui-input-inline">
+								<input type="text" name="code" required value="{$data.code}"  lay-verify="required" placeholder="请输入工号" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">部门<span style="color:#FF5722;font-size:22px">*</span>：</label>
+								<div class="layui-input-inline">
+								<input type="text" name="part_id" id="tree"  value="{$data.part_id}" lay-filter="tree" required  lay-verify="required" placeholder="请选择部门" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<input type="hidden" value="" />
+							<div class="layui-form-item">
+								<label class="layui-form-label">登陆账号<span style="color:#FF5722;font-size:22px">*</span>：</label>
+								<div class="layui-input-inline">
+								<input type="text" name="login_id" value="{$data.login_id}" required  lay-verify="required" placeholder="请输入登陆账号" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">角色</label>
+								<div class="layui-input-inline">
+								<select name="city" lay-verify="required">
+									<volist name="role" id="item" >
+									<option value="{$item.id}" <if condition="$data['role_id'] eq $item['id']">selected</if> >{$item.title}</option>
+									</volist>
+								</select>
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">sip账号：</label>
+								<div class="layui-input-inline">
+								<input type="text" name="sip" value="{$data.sip}" placeholder="请输入sip账号" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">sip密码：</label>
+								<div class="layui-input-inline">
+								<input type="text" name="sip_pwd"  value="{$data.sip_pwd}" placeholder="请输入sip密码" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">身份证<span style="color:#FF5722;font-size:22px">*</span>：</label>
+								<div class="layui-input-inline">
+								<input type="text" name="idcard" value="{$data.idcard}" required  lay-verify="required" placeholder="请输入身份证号码" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<label class="layui-form-label">电话号码<span style="color:#FF5722;font-size:22px">*</span>：</label>
+								<div class="layui-input-inline">
+								<input type="text" name="tel" value="{$data.tel}" required  lay-verify="required" placeholder="请输入电话号码" autocomplete="off" class="layui-input">
+								</div>
+							</div>
+							<div class="layui-form-item">
+								<div class="layui-input-block">
+									<input type="hidden" name="id" value="{$data.uid}" />
+								  <button class="layui-btn layui-btn-blue" lay-submit lay-filter="eidt" >保存</button>
+								</div>
+							  </div>
+						</div>	
+					</div>		
+				</div>
+			</div>
+		</div>
+	</div>		
+	<include file="Public:footer" />
+	<!--存放默认的权限-->
+	<input type="hidden" name="roleID" id="roleID" value="{$role[0]['id']}" />
+	<script type="text/html" id="cz">
+	  <a class="layui-btn layui-btn-sm" lay-event="edit"><i class="layui-icon">&#xe642;</i>编辑</a>
+	  <a class="layui-btn layui-btn-danger layui-btn-sm" lay-event="reset">重置密码</a>
+	  <a class="layui-btn layui-btn-sm" style="background-color:#393D49;" lay-event="del"><i class="layui-icon">&#xe640;</i>删除</a>
+	</script>
+	<script type="text/javascript">
+		layui.config({
+			base: path+'/modules/table/',
+		})
+	layui.use(['form','layer','table'],function(){
+		var $ = layui.$,data,layer=layui.layer,form=layui.form,table=layui.table;
+	//监听发送	
+		form.on('submit(eidt)',function(data){
+			var data=data.field;
+			var index_o = layer.load();
+			$.ajax({
+				url:'edit.html',
+				type:'POST',
+				data:data,
+				dataType:'json',
+				success:function(res){
+						layer.msg(res.msg);
+						layer.close(index_o);
+						if(res.code==200){
+							setTimeout(function(){
+								var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+								parent.layer.close(index); //再执行关闭  
+								parent.layui.table.reload('Machine');
+							},500)
+					}
+				}
+			})
+			return false;
+		})		
+		
+	})		
+	
+	 layui.config({
+			base: path+'/modules/treeSelect/',
+		})
+		layui.use(['treeSelect','form','layer'],function(){
+			var treeSelect= layui.treeSelect;
+	
+			treeSelect.render({
+				// 选择器
+				elem: '#tree',
+				// 数据
+				data: "{:U('Back/select_part')}",
+				// 异步加载方式：get/post，默认get
+				type: 'get',
+				// 占位符
+				placeholder: '选择部门',
+				// 是否开启搜索功能：true/false，默认false
+				search: false,
+				// 点击回调
+				click: function(d){
+					$('#tree').val(d.current.id);
+	
+				},
+				// 加载完成后的回调函数
+				success: function (d) {
+					console.log(d);
+					//                选中节点，根据id筛选
+					treeSelect.checkNode('tree', {$data.part_id});
+	
+					//                获取zTree对象，可以调用zTree方法
+					//                var treeObj = treeSelect.zTree('tree');
+					//                console.log(treeObj);
+	
+					//                刷新树结构
+					//                treeSelect.refresh();
+				}
+			});
+		})
+	</script>
+</body>
+</html>

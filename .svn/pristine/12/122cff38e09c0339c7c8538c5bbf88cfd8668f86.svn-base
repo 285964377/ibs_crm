@@ -1,0 +1,198 @@
+<?php
+/*
+商机管理
+*/
+
+namespace Home\Controller;
+class ResourcesController extends BackController
+{
+
+
+    public $page;
+    public $num;
+
+    public function _initialize()
+    {
+        $this->page = (I('get.page') != '') ? I('get.page') - 1 : 0;
+        $this->num = (I('get.limit') != '') ? I('get.limit') : 10;
+        parent::_initialize();
+    }
+
+    //跟进中商机
+    public function ing()
+    {
+        $where['status'] = array('ELT', 2);
+        $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+        foreach ($data as $ke => $values) {
+            //商机类型
+            $res_type = M('restype')->field('name')->where('id=' . $values['res_type_id'])->find();
+            $data[$ke]['res_type'] = $res_type['name'];
+            //商机所属人
+            $user_name = M('user')->field('uid,name')->where('uid=' . $values['user_id'])->find();
+            $data[$ke]['username'] = $user_name['name'];
+            //渠道
+            $channel = M('channel')->field('name')->where('id=' . $values['channel_id'])->find();
+            $data[$ke]['channel'] = $channel['name'];
+            //分配人
+            $allot_user_id = M('user')->field('name')->where('uid=' . $values['allot_user_id'])->find();
+            $data[$ke]['allot_user'] = $allot_user_id['name'];
+            //订单
+            $order = M('orders')->where('id=' . $values['order_id'])->find();
+            $data[$ke]['order'] = $order['code'];
+            //商机来源
+            $origin = M('origin')->where('id=' . $values['origin_id'])->find();
+            $data[$ke]['origin'] = $origin['name'];
+            //部门
+            $part = M('part')->where('id=' . $values['part_id'])->find();
+            $data[$ke]['part'] = $part['name'];
+            switch ($data[$ke]['status']) {
+                case 1;
+                    $data[$ke]['status'] = '待首电';
+                    break;
+                case 2;
+                    $data[$ke]['status'] = '跟进中';
+                    break;
+            }
+        }
+        $this->assign('data', $data);
+    }
+
+    //已成单商机
+    public function over()
+    {
+        $where['status'] = array('eq', 3);
+        $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+        foreach ($data as $ke => $values) {
+            //商机类型
+            $res_type = M('restype')->field('name')->where('id=' . $values['res_type_id'])->find();
+            $data[$ke]['res_type'] = $res_type['name'];
+            //商机所属人
+            $user_name = M('user')->field('uid,name')->where('uid=' . $values['user_id'])->find();
+            $data[$ke]['username'] = $user_name['name'];
+            //渠道
+            $channel = M('channel')->field('name')->where('id=' . $values['channel_id'])->find();
+            $data[$ke]['channel'] = $channel['name'];
+            //分配人
+            $allot_user_id = M('user')->field('name')->where('uid=' . $values['allot_user_id'])->find();
+            $data[$ke]['allot_user'] = $allot_user_id['name'];
+            //订单
+            $order = M('orders')->where('id=' . $values['order_id'])->find();
+            $data[$ke]['order'] = $order['code'];
+            //商机来源
+            $origin = M('origin')->where('id=' . $values['origin_id'])->find();
+            $data[$ke]['origin'] = $origin['name'];
+            //部门
+            $part = M('part')->where('id=' . $values['part_id'])->find();
+            $data[$ke]['part'] = $part['name'];
+            if ($data[$ke]['status'] == 3) {
+                $data[$ke]['status'] = "已成单";
+            }
+        }
+        $this->assign('data', $data);
+    }
+
+    //待审核商机
+    public function checking()
+    {
+        $where['status'] = array('eq', 4);
+        $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+        foreach ($data as $ke => $values) {
+            //商机类型
+            $res_type = M('restype')->field('name')->where('id=' . $values['res_type_id'])->find();
+            $data[$ke]['res_type'] = $res_type['name'];
+            //商机所属人
+            $user_name = M('user')->field('uid,name')->where('uid=' . $values['user_id'])->find();
+            $data[$ke]['username'] = $user_name['name'];
+            //渠道
+            $channel = M('channel')->field('name')->where('id=' . $values['channel_id'])->find();
+            $data[$ke]['channel'] = $channel['name'];
+            //分配人
+            $allot_user_id = M('user')->field('name')->where('uid=' . $values['allot_user_id'])->find();
+            $data[$ke]['allot_user'] = $allot_user_id['name'];
+            //订单
+            $order = M('orders')->where('id=' . $values['order_id'])->find();
+            $data[$ke]['order'] = $order['code'];
+            //商机来源
+            $origin = M('origin')->where('id=' . $values['origin_id'])->find();
+            $data[$ke]['origin'] = $origin['name'];
+            //部门
+            $part = M('part')->where('id=' . $values['part_id'])->find();
+            $data[$ke]['part'] = $part['name'];
+            if ($data[$ke]['status'] == 4) {
+                $data[$ke]['status'] = "待审核";
+            }
+        }
+        $this->assign('data', $data);
+    }
+
+    //白名单商机
+    public function white()
+    {
+        $where['status'] = array('eq', 6);
+        $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+        foreach ($data as $ke => $values) {
+            //商机类型
+            $res_type = M('restype')->field('name')->where('id=' . $values['res_type_id'])->find();
+            $data[$ke]['res_type'] = $res_type['name'];
+            //商机所属人
+            $user_name = M('user')->field('uid,name')->where('uid=' . $values['user_id'])->find();
+            $data[$ke]['username'] = $user_name['name'];
+            //渠道
+            $channel = M('channel')->field('name')->where('id=' . $values['channel_id'])->find();
+            $data[$ke]['channel'] = $channel['name'];
+            //分配人
+            $allot_user_id = M('user')->field('name')->where('uid=' . $values['allot_user_id'])->find();
+            $data[$ke]['allot_user'] = $allot_user_id['name'];
+            //订单
+            $order = M('orders')->where('id=' . $values['order_id'])->find();
+            $data[$ke]['order'] = $order['code'];
+            //商机来源
+            $origin = M('origin')->where('id=' . $values['origin_id'])->find();
+            $data[$ke]['origin'] = $origin['name'];
+            //部门
+            $part = M('part')->where('id=' . $values['part_id'])->find();
+            $data[$ke]['part'] = $part['name'];
+            if ($data[$ke]['status'] == 6) {
+                $data[$ke]['status'] = "白名单";
+            }
+        }
+        $this->assign('data', $data);
+    }
+
+    /**
+     * 商机掉库
+     */
+    public function out()
+    {
+        $where['status'] = array('eq', 7);
+        $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+        foreach ($data as $ke => $values) {
+            //商机类型
+            $res_type = M('restype')->field('name')->where('id=' . $values['res_type_id'])->find();
+            $data[$ke]['res_type'] = $res_type['name'];
+            //商机所属人
+            $user_name = M('user')->field('uid,name')->where('uid=' . $values['user_id'])->find();
+            $data[$ke]['username'] = $user_name['name'];
+            //渠道
+            $channel = M('channel')->field('name')->where('id=' . $values['channel_id'])->find();
+            $data[$ke]['channel'] = $channel['name'];
+            //分配人
+            $allot_user_id = M('user')->field('name')->where('uid=' . $values['allot_user_id'])->find();
+            $data[$ke]['allot_user'] = $allot_user_id['name'];
+            //订单
+            $order = M('orders')->where('id=' . $values['order_id'])->find();
+            $data[$ke]['order'] = $order['code'];
+            //商机来源
+            $origin = M('origin')->where('id=' . $values['origin_id'])->find();
+            $data[$ke]['origin'] = $origin['name'];
+            //部门
+            $part = M('part')->where('id=' . $values['part_id'])->find();
+            $data[$ke]['part'] = $part['name'];
+            if ($data[$ke]['status'] == 7) {
+                $data[$ke]['status'] = "掉库";
+            }
+        }
+        $this->assign('data', $data);
+    }
+
+}

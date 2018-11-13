@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+    table{
+        font-size:12px;
+        text-align:center;
+    }
+    .layui-table-view .layui-table td, .layui-table-view .layui-table th{
+        text-align:center;
+    }
+    .hide{
+        display:none;
+    }
+    .layui-form-item .layui-input-block{
+        margin-right: 20px;
+    }
+
+    .layui-table-view .layui-table td {
+        height:56px;
+        line-height:normal;
+    }
+    .layui-table-main .layui-table-cell {
+        height:auto;
+    }
+    .layui-table-fixed  .layui-table-cell{
+        height:auto;
+    }
+    .layui-table-view .layui-table td, .layui-table-view .layui-table th{
+        padding:0;
+    }
+    .layui-form-label{
+        width:auto;
+    }
+    .my_form_box{
+        float:left;
+        display: inline-block;
+        margin-top:10px;
+    }
+    .nav_list{
+        overflow: hidden;
+        background:#eff3f5;
+        border:1px solid #c6d1d6;
+        padding:7px 10px;
+    }
+    .nav_list li{
+        padding:6px 20px;
+        float:left;
+        margin-right:20px;
+        cursor: pointer;
+    }
+    .nav_list li.active{
+        background:url(__COMMON__/images/top_bck.png) no-repeat;
+        background-size:100% 100%;
+    }
+    .layui-treeSelect .ztree li span.button.switch {
+        position: relative;
+        top: -7px;
+    }
+</style>
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="layui-form" >
+                    <div class="layui-form-item" style="margin-top:0">
+                        <ul class="nav_list">
+                            <li class="active" data-name="">全部</li>
+                            <li class="" data-name="1">进件</li>
+                            <li class="" data-name="2">出件</li>
+                            <li class="" data-name="3">银行审批</li>
+                            <li class="" data-name="4">放款</li>
+                        </ul>
+                        <div class="my_form_box">
+                            <label class="layui-form-label">工单编号：</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="code"  placeholder="请输入工单编号" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="my_form_box">
+                            <label class="layui-form-label">贷款金额：</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="money" onkeyup="je(this)"   placeholder="请输入贷款金额" autocomplete="off" class="layui-input">
+                                <span style="font-size:12px">万</span>
+                            </div>
+                        </div>
+                        <div class="my_form_box">
+                            <label class="layui-form-label">工单状态：</label>
+                            <div class="layui-input-inline">
+                                <select name="status" lay-verify="">
+                                    <option value="1">办理暂缓</option>
+                                    <option value="2">办理超期</option>
+                                    <option value="3">正常进行中</option>
+                                    <option value="4">办理完毕</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="my_form_box">
+                            <label class="layui-form-label">创建时间：</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="creat_time"  id="apply_time" placeholder="请选择创建时间" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+
+                        <div class="my_form_box">
+                            <button class="layui-btn layui-btn-blue" lay-submit lay-filter="get_search"><i class="layui-icon">&#xe615;</i>查询</button>
+                        </div>
+                    </div>
+                </div>
+                <table id="Machine" lay-filter="Machine"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<include file="Public:footer" />
+<script type="text/html" id="cz">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="add"><i class="layui-icon">&#xe657;</i>新增工单</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="tui"><i class="layui-icon">&#xe640;</i>退单</a>
+</script>
+<script id="res" type="text/html">
+    <p lay-event="res_link" style="color:#01AAED;cursor: pointer;">{{d.res_name}}</p>
+    <p>{{d.res_code?d.res_code:''}}</p>
+</script>
+<script id="order" type="text/html">
+    <p lay-event="order_link" style="color:#01AAED;cursor: pointer;">{{d.code}}</p>
+    <!--<p>{{d.apply_time?d.apply_time:'未下单'}}</p>-->
+</script>
+<script id="demand" type="text/html">
+    {{#  layui.each(d.demand, function(index, item){ }}
+    <p><span lay-event="order_link" data-id="{{item.demand_id}}" style="color:#01AAED;cursor: pointer;">{{item.demand_code}}</span>{{item.demand_step?item.demand_step:''}}-{{item.demand_status?item.demand_status:''}}</p>
+    {{#  }); }}
+</script>
+
+<script>
+    layui.config({
+        base: path+'/modules/treeSelect/',
+    })
+    layui.use(['table','layer','jquery','form','laydate','treeSelect'],function(){
+        var table = layui.table;
+        var layer= layui.layer;
+        var form = layui.form;
+        var $ = layui.jquery;
+        var laypage = layui.laypage;
+        var laydate = layui.laydate;
+        var treeSelect = layui.treeSelect;
+        //顶部进度分类
+        $('.nav_list li').click(function(){
+            $(this).siblings().removeClass('active');
+            $(this).addClass('active');
+            Top_name=$(this).attr('data-name');
+            $('#top_name').val(Top_name);
+        })
+
+        //下单时间
+        laydate.render({
+            elem: '#apply_time',
+            range:'~',
+            type:'datetime'
+        });
+
+        //第一个实例
+        var Machine = table.render({
+            elem: '#Machine'
+            ,url: 'demand.html?search_data=1' //数据接口
+            ,page: true //开启分页
+            ,cols: [[ //表头
+                {width:200,templet:'#order',title: '工单编号'},
+                {field:'money',title: '贷款金额'},
+                {field:'dk_type',title: '贷款类型'},
+                {field:'creat_user',title: '创建人'},
+                {field: 'channel', title: '渠道'},
+                {field: 'lixi_way', title: '利息'},
+                {field: 'recharge', title: '手续费'},
+                {field: 'status', title: '状态'},
+                {field:'step',title: '进度'},
+
+                // {title: '操作',toolbar:'#cz',fixed: 'right',width:180}
+            ]]
+            ,limit:15
+            ,limits:[15,30,45,60]
+            ,response: {
+                statusCode: 200
+            }
+        });
+        form.on('submit(get_search)', function(data){
+            data=data.field;
+            if($('#apply_time').val()){
+                var Nlast = data.apply_time.split('~');
+                data.apply_time_start=Nlast[0];
+                data.apply_time_end=Nlast[1];
+            }
+            delete  data.apply_time;
+            Machine.reload({
+                where:data,
+                page: {
+                    curr: 1
+                }
+            });
+            return false;
+        });
+
+//监听左侧表格
+        table.on('tool(Machine)', function(obj){
+            var layEvent  = obj.event;
+            var data  = obj.data;
+            if(layEvent==='order_link'){
+                var url="{:U('Orders/demand_details')}?index=1&id="+data.id;
+                var ids ='demand_details'+data.id;
+                get_url(this,ids,url,"工单订单："+data.code);
+            }
+        })
+
+
+    });
+
+</script>
+</body>
+</html>

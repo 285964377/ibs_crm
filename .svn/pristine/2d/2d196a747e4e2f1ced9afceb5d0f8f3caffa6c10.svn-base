@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<style>
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+    input[type="number"]{
+        -moz-appearance: textfield;
+    }
+    .layui-view-body{
+        background:#fff;
+    }
+    .layui-table{
+        margin-top:0
+    }
+    .layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row]{
+        border-width: 1px;
+        border-style: solid;
+        border-color: #c6d1d6;
+    }
+    .layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even){
+        background: url(__COMMON__/images/t_bck.png) repeat-x;
+        background-size:100% 100%;
+    }
+    .layui-table td, .layui-table th{
+        padding:0;
+        text-align:center;
+        line-height: 28px;
+        font-size:12px;
+        color:#000
+    }
+    .layui-form-item{
+        clear:none;
+    }
+    .layui-form-mid {
+        line-height: 12px;
+    }
+    .layui-form-label{
+        width:auto;
+    }
+    .layui-table-view .layui-table{
+        width:100%;
+    }
+    .my_fj_list img{
+        width:100%;
+        height:138px;
+        cursor: pointer;
+    }
+    .my_fj_list li{
+        margin-bottom:20px;
+    }
+    .my_fj_list li>div{
+        border:1px solid #eee;
+        position:relative;
+    }
+    .my_fj_list p{
+        font-size:12px;
+        padding:10px 6px;
+        background:#eff3f5;
+        color:#000;
+        overflow: hidden;
+        text-overflow:ellipsis;
+        white-space: nowrap;
+    }
+    .my_fj_list li>div span{
+        cursor: pointer;
+
+        display: block;
+        width: 36px;
+        height: 36px;
+        background: url(/crm/Application/Home/Common/images/del.png) no-repeat;
+        background-size: 100% 100%;
+        position: absolute;
+        right: -18px;
+        top: -15px;
+    }
+</style>
+<body class="layui-view-body">
+<div class="layui-content">
+    <ul class="head_top_table">
+        <li><p><span class="fwt">客户</span>：{$data.res.name}</p></li>
+        <li><p><span class="fwt">联系方式（手机号码）</span>：{$data.res.phone}</p></li>
+        <li><p><span class="fwt">订单编号</span>：{$data.order.code}</p></li>
+        <li><p><span class="fwt">下单时间</span>：{$data.order.creat_time}</p></li>
+        <li><p><span class="fwt">签单人</span>：{$data.order.creat_user_name}</p></li>
+        <!--<li><p><span class="fwt">判断</span>：<if condition="$res['allot_time']">{$res.allot_time}<else />未分配</if></p></li>-->
+    </ul>
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p>
+                <span class="fwt">基础信息</span>
+                <a style="margin-left:10px;" id="edit_base" href="javascript:;" class="layui-btn layui-btn-xs layui-btn-blue">编辑</a>
+                <a style="margin-left:10px;" id="send_msg" href="javascript:;" class="layui-btn layui-btn-xs layui-btn-blue">发短信</a>
+                <a style="margin-left:10px;" id="remark" href="javascript:;" class="layui-btn layui-btn-xs layui-btn-blue">备注</a>
+            </p></li>
+        </div>
+        <ul class="my_style_table_body">
+            <li class="layui-row">
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户名称：</span>
+                        <span>{$data.res.name}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户电话：</span>
+                        <if condition="$res.res.phone" >
+                            <span>{$data.res.phone}</span>
+                            <span data-tel="{$res.phone}">查看</span>
+                            <else />
+                            <span>{$data.phone}</span>
+                        </if>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>星级：</span>
+                        <span>暂无</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户身份证号码：</span>
+                        <span>暂无</span>
+                </div>
+            </li>
+            <li>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户性别：</span>
+                        <span>暂无</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户年龄：</span>
+                        <span>暂无</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户婚姻状况：</span>
+                        <span>暂无</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户子女个数：</span>
+                        <span>暂无</span>
+                    </p>
+                </div>
+            </li>
+            <li>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>客户学历：</span>
+                        <span>暂无</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>商机来源：</span>
+                        <span>{$data.origin.name}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>商机：</span>
+                        <span>{$data.res_type}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>业务区域：</span>
+                        <span>无??</span>
+                    </p>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p><span class="fwt">客户属性</span></p></li>
+        </div>
+        <ul class="my_style_table_body">
+
+            <volist name="wealth" id="wealth">
+                <li class="layui-row">
+                    <div class="layui-col-xs1" style="text-align: right;padding-right:20px;">
+                        <p>
+                            <span>{$wealth.table}</span>
+                        </p>
+                    </div>
+                    <div class="layui-col-xs11"  style="text-align: left;padding-left:20px;position:relative;">
+                        <p>
+							<span>
+							<volist name="table.fields" id="fields">
+								<if condition="$fields['value']">
+								{$fields.field_name}：{$fields.value}；
+								</if>
+							</volist>
+							</span>
+                        </p>
+                    </div>
+                </li>
+            </volist>
+            <if condition="!$wealth">
+                <li class="layui-row">
+                    <div class="layui-col-xs12" style="text-align: center;">
+                        <p>
+                            <span>暂无</span>
+                        </p>
+                    </div>
+
+                </li>
+            </if>
+        </ul>
+    </div>
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p><span class="fwt">客户意向</span></p></li>
+        </div>
+        <table class="layui-table">
+            <thead>
+            <tr>
+                <th>产品编号</th>
+                <th>产品名称</th>
+                <th>渠道名称</th>
+                <th>贷款金额</th>
+                <th>贷款利率</th>
+                <th>贷款年限</th>
+                <th>放款周期</th>
+                <th>年龄要求</th>
+                <th>进件条件</th>
+            </tr>
+            </thead>
+            <tbody>
+            <volist name="goods" id="goods">
+                <tr>
+                    <td>{$goods.code}</td>
+                    <td>{$goods.name}</td>
+                    <td>{$goods.origin}</td>
+                    <td>{$goods.money_start}~{$goods.money_end}万元</td>
+                    <td>{$goods.ratio_start}%~{$goods.ratio_end}%({$goods.ratio_type}息)</td>
+                    <td>{$goods.dk_time_start}~{$goods.dk_time_end}（{$goods.dk_time_type}）</td>
+                    <td>{$goods.loan_time_start}~{$goods.loan_time_end}（{$goods.loan_time_type}）</td>
+                    <td>{$goods.age_start}~{$goods.age_end}</td>
+                    <td>{$goods.jinjian}</td>
+                </tr>
+            </volist>
+            <if condition="!$goods">
+                <tr>
+                    <td style="border-right:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;text-align:right;padding-right:25px;">暂无</td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-left:none;"></td>
+                </tr>
+            </if>
+            </tbody>
+        </table>
+    </div>
+    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+        <ul class="layui-tab-title">
+            <li class="layui-this">订单详情</li>
+            <li>生产订单</li>
+            <li>财务核款信息</li>
+        </ul>
+        <div class="layui-tab-content">
+            <!-- 订单详情 -->
+            <div class="layui-tab-item layui-show">
+                <!-- 借贷人 -->
+                <div class="my_style_table">
+                    <div class="head_top_table">
+                        <li><p><span class="fwt">借贷人</span></p></li>
+                    </div>
+                    <table class="layui-table">
+                        <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>身份证号</th>
+                            <th>联系电话</th>
+                            <th>婚姻状况</th>
+                            <th>子女数量</th>
+                            <th>家人是否知晓</th>
+                            <!--<th>与主借贷人关系</th>-->
+                            <th>是否客户本人</th>
+                        </tr>
+                        </thead>
+                        <volist name="borrow" id="borrow">
+                        <tbody>
+                            <tr>
+                                <td>{$borrow.name}</td>
+                                <td>{$borrow.id_number}</td>
+                                <td>{$borrow.tel}</td>
+                                <td>{$borrow.marriage}</td>
+                                <td>{$borrow.child}</td>
+                                <td>{$borrow.ships}</td>
+                                <td>{$borrow.is_self}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- 贷款合同 -->
+                <div class="my_style_table">
+                    <div class="head_top_table">
+                        <li><p><span class="fwt">贷款合同</span></p></li>
+                    </div>
+                    <table class="layui-table">
+                        <tbody>
+                        <tr style="background: #FFFFFF"><td style="padding: 16px">
+                            <ul class="head_top_table" style="border: none;background: none;margin-bottom: -20px">
+                                <li><p>贷款金额：{$data..order.dk_money}</p></li>
+                                <li><p>贷款年限：{$data.order.dk_time}</p></li>
+                                <li><p>贷款利率：{$data.order.dk_ratio}</p></li>
+                                <li><p>定金：{$data.order.ding_money}</p></li>
+                            </ul>
+                            <!-- 包装费 -->
+                        </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!--客户属性-->
+            <div class="layui-tab-item">
+                <!-- 生产订单 -->
+                <div class="my_style_table">
+                    <!--<div class="head_top_table">-->
+                        <!--<li><p><span class="fwt">生产订单</span></p></li>-->
+                        <!--<li><p><i class="layui-icon layui-icon-radio" style="color: #00CC99;margin-right: 5px"></i>已完成</p></li>-->
+                        <!--<li><p><i class="layui-icon layui-icon-radio" style="color: #CC3333;margin-right: 5px"></i>已超期</p></li>-->
+                        <!--<li><p><i class="layui-icon layui-icon-radio" style="color: #FF9933;margin-right: 5px"></i>超期已完成</p></li>-->
+                        <!--<li><p><i class="layui-icon layui-icon-radio" style="color: #909090;margin-right: 5px"></i>未完成</p></li>-->
+                        <!--<li><p><span class="fwt">订单预计完成时间：</span>{$res.name}</p></li>-->
+                    <!--</div>-->
+                    <table class="layui-table">
+                        <tbody>
+                        <tr style="background: #FFFFFF">
+                            <td colspan="8" style="height: 160px;padding-left: 30%">
+                                <ul class="head_top_table" style="border: none;background: none;">
+                                    <li style="width: 160px;margin-right: -30px">
+                                        <fieldset class="layui-elem-field layui-field-title">
+                                            <legend><i class="layui-icon layui-icon-radio" style="color: #00CC99;"></i></legend>
+                                        </fieldset>
+                                        <p>接单</p>
+                                        <p>时间字段</p>
+                                    </li>
+                                    <li style="width: 160px;margin-right: -30px">
+                                        <fieldset class="layui-elem-field layui-field-title">
+                                            <legend><i class="layui-icon layui-icon-radio" style="color: #CC3333;"></i></legend>
+                                        </fieldset>
+                                        <p>初审</p>
+                                        <p>时间字段</p>
+                                    </li>
+                                    <li>
+                                    <li style="width: 160px;margin-right: -30px">
+                                        <fieldset class="layui-elem-field layui-field-title">
+                                            <legend><i class="layui-icon layui-icon-radio" style="color: #FF9933;"></i></legend>
+                                        </fieldset>
+                                        <p>终审</p>
+                                        <p>时间</p>
+                                    </li>
+                                    <li style="width: 160px;margin-right: -30px">
+                                        <fieldset class="layui-elem-field layui-field-title">
+                                            <legend><i class="layui-icon layui-icon-radio" style="color: #909090;"></i></legend>
+                                        </fieldset>
+                                        <p>签约</p>
+                                        <p>时间</p>
+                                    </li>
+                                    <li style="width: 160px;margin-right: -30px">
+                                        <fieldset class="layui-elem-field layui-field-title">
+                                            <legend><i class="layui-icon layui-icon-radio" style="color: #909090;"></i></legend>
+                                        </fieldset>
+                                        <p>放款</p>
+                                        <p>时间</p>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>接单时间</td>
+                            <td>字段</td>
+                            <td>流程人员</td>
+                            <td>字段（字段）</td>
+                            <td>协单人员</td>
+                            <td>字段</td>
+                            <td>产品</td>
+                            <td>字段</td>
+                        </tr>
+                        <tr>
+                            <td>渠道</td>
+                            <td>字段</td>
+                            <td>支行</td>
+                            <td>字段</td>
+                            <td>垫资金额（万元）</td>
+                            <td>字段</td>
+                            <td>服务器合同标号</td>
+                            <td>字段+判读</td>
+                        </tr>
+                        <tr style="background: #FFFFFF;"><td colspan="8"><p style="visibility: hidden">0</p></td></tr>
+                        <tr>
+                            <td>结案银行</td>
+                            <td>字段</td>
+                            <td>注销时间</td>
+                            <td>字段</td>
+                            <td>还款时间</td>
+                            <td>字段</td>
+                            <td>说明</td>
+                            <td>字段</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- 历史记录 -->
+                <div class="my_style_table">
+                    <div class="head_top_table">
+                        <li><p><span class="fwt">历史记录</span></p></li>
+                    </div>
+                    <table class="layui-table">
+                        <tbody>
+                        <tr style="background: #FFFFFF">
+                            <td>
+                                <div class="form-box" style="padding: 16px">
+                                    <div class="layui-form" action="">
+                                        <ul class="head_top_table" style="border: none;background: none;margin-bottom: -20px">
+                                            <li style="width: 3px;height: 15px;background: deepskyblue"></li>
+                                            <li><p style="margin-left: -30px"><span  class="fwt">备注</span></p></li>
+                                        </ul>
+                                        <div class="layui-form-item">
+                                            <div class="layui-input-inline" style="width: 500px">
+                                                <textarea name="desc" style="height: 300px" placeholder="" class="layui-textarea"></textarea>
+                                            </div>
+
+                                        </div>
+                                        <ul class="head_top_table" style="border: none;background: none;margin-bottom: -20px">
+                                            <li><button class="layui-btn layui-btn-blue search_btn " id="get_serch">提交备注</button></li>
+                                            <li> <button href="javascript:;" class="layui-btn layui-btn-blue" id="add_img" style="margin-bottom:10px;">添加附件</button></li>
+                                        </ul>
+                                        <ul class="my_fj_list layui-row layui-col-space30" style="" id="people_list_fj">
+                                            <volist name="fujian" id="item">
+                                                <li class="layui-col-md2 layui-col-xs4">
+                                                    <div>
+                                                        <img src="{$item.url}"  alt=""/>
+                                                        <p>{$item.title}</p>
+                                                        <span onclick="del_fj(this)" data-id="{$item.gid}"></span>
+                                                    </div>
+                                                </li>
+                                            </volist>
+                                        </ul>
+
+                                    </div>
+                                </div>
+                                <ul class="head_top_table" style="border: none;background: none;">
+                                    <li style="width: 3px;height: 15px;background: deepskyblue"></li>
+                                    <li><p style="margin-left: -30px">历史记录（仅显示90天以内的数据）</p></li>
+                                </ul>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!--财务核款信息-->
+            <div class="layui-tab-item">
+                <a href="javascript:;" class="layui-btn layui-btn-blue" id="add_lxr">添加</a>
+               很饿或或或或或或或或
+                财务核款信息
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 商机类型 -->
+<div id="sj_lx" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="res_type_id" value="{$res.res_type_id}" id="get_lx" lay-filter="get_lx" required  lay-verify="required" placeholder="请选择商机类型" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}"  name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_sjlx">修改</button>
+        </div>
+    </div>
+</div>
+<!-- 商机来源 -->
+<div id="sj_ly" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="origin_id"  value="{$res.origin_id}" id="get_ly" lay-filter="get_ly" required  lay-verify="required" placeholder="请选择商机来源" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}"  name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_sjly">修改</button>
+        </div>
+    </div>
+</div>
+<!-- 内部成本 -->
+<div id="sj_nbcb" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="cb_nei" onkeyup="je(this)" value="{$res.cb_nei}"  required  lay-verify="required" placeholder="请输入内部成本" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}"  name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_nei">修改</button>
+        </div>
+    </div>
+</div>
+<!-- 外部成本 -->
+<div id="sj_wbcb" style="display:none;">
+    <div class="layui-form layui-row">
+        <div class="layui-form-item sj_form ">
+            <div class="layui-input-inline" style="margin-left:20px;">
+                <input type="number" name="cb_wai" onkeyup="je(this)" value="{$res.cb_wai}" required  lay-verify="required" placeholder="请输入外部成本" autocomplete="off" class="layui-input ">
+            </div>
+            <input type="hidden" value="{$res.id}"  name="id"/>
+            <button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_wai">修改</button>
+        </div>
+    </div>
+</div>
+<include file="Public:footer" />
+<script type="text/html" id="cz_lxr">
+    <a href="javascript:;"  class='layui-btn layui-btn-danger layui-btn-xs' lay-event="del_lxr">删除</a>
+</script>
+<script>
+
+    var tc_o,tc_t,tc_r,tc_f,add_box,Machine;
+    var Ids = "{$res.id}";
+    layui.config({
+        base: path+'/modules/treeSelect/',
+    })
+    layui.use(['table','layer','jquery','form','element','treeSelect','laydate'],function(){
+        var table = layui.table,layer= layui.layer,form = layui.form,$ = layui.jquery,laypage = layui.laypage,element = layui.element,treeSelect=layui.treeSelect,laydate=layui.laydate;
+        laydate.render({
+            elem: '#times',
+            range:'~',
+            type:'datetime'
+        });
+        $('.search_btn').click(function(){
+            var times = $('#times').val().split('~');
+            data= {'controler':$("#cz_lx").val(),'time_start':times[0],'time_end':times[1]};
+            cz_table.reload({
+                where:data,
+                page: {
+                    curr: 1
+                }
+            });
+        })
+        var cz_table  = 	table.render({
+            elem: '#hostry'
+            ,height: 312
+            ,url: "details?op_log=1&id={$res.id}"
+            ,page: true
+            ,response: {
+                statusCode: 200
+            }
+            ,cols: [[
+                {field: 'name', title: '操作人'}
+                ,{field: 'code', title: '工号'}
+                ,{field: 'controler', title: '操作类型'}
+                ,{field: 'content', title: '内容/备注'}
+                ,{field: 'creat_time', title: '操作时间'}
+            ]]
+        });
+        layer.photos({
+            photos: '#people_list_fj'
+            ,anim: 5
+        });
+        var lxr_table = table.render({
+            elem: '#contacts'
+            ,height: 312
+            ,url: "details?contacts=1&id={$res.id}"
+            ,page: true
+            ,response: {
+                statusCode: 200
+            }
+            ,cols: [[
+                {field: 'name', title: '联系人'}
+                ,{field: 'tel', title: '电话'}
+                ,{field: 'type', title: '联系人类型'}
+                ,{field: 'ship', title: '与客户关系'}
+                ,{field: 'job', title: '工作'}
+                ,{field: 'address', title: '住址'}
+                ,{title:'操作',toolbar:'#cz_lxr',width:100,fixed:'right'}
+            ]]
+        });
+        table.on('tool(contacts)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+            if(layEvent === 'del_lxr'){
+                layer.confirm('是否删除该联系人?', {icon: 3, title:'提示'},function(index){
+                    var index_o = layer.load();
+                    $.ajax({
+                        url:'delete_contact.html',
+                        type:'POST',
+                        data:{'gid':data.gid},
+                        dataType:'json',
+                        success:function(res){
+                            layer.msg(res.msg);
+                            layer.close(index_o);
+                            if(res.code==200){
+                                setTimeout(function(){
+                                    lxr_table.reload()
+                                },500)
+                            }
+                        }
+                    })
+                });
+            }
+        })
+        $('#red_goin').click(function(){
+            layui.layer.open({
+                title : "跟进",
+                type :2,
+                content:'go_in.html?id='+Ids,
+                area:["96%","96%"]
+            })
+        })
+        $('#edit_nbcb').click(function(){
+            tc_r=layui.layer.open({
+                title : "编辑商机内部成本",
+                type :1,
+                content :$('#sj_nbcb'),
+                area:["300px",'100px']
+            })
+        })
+        $('#edit_wbcb').click(function(){
+            tc_f=layui.layer.open({
+                title : "编辑商机外部成本",
+                type :1,
+                content :$('#sj_wbcb'),
+                area:["300px",'100px']
+            })
+        })
+        $('#edit_base').click(function(){
+            layui.layer.open({
+                title : "编辑基础信息",
+                type :2,
+                content :'edit.html?id='+Ids,
+                area:["70%","80%"]
+            })
+        })
+        $('#edit_sjlxs').click(function(){
+            tc_o=layui.layer.open({
+                title : "修改商机类型",
+                type :1,
+                content :$('#sj_lx'),
+                area:["360px",'300px'],
+                success:function(layero, index){
+                    treeSelect.render({
+                        // 选择器
+                        elem: '#get_lx',
+                        // 数据
+                        data: "{:U('Back/select_restype')}",
+                        // 异步加载方式：get/post，默认get
+                        type: 'get',
+                        // 占位符
+                        placeholder: '选择商机类型',
+                        search: false,
+                        // 点击回调
+                        click: function(d){
+                            $('#get_lx').val(d.current.id);
+                        },
+                        // 加载完成后的回调函数
+                        success: function (d) {
+                            treeSelect.checkNode('get_lx', {$res.res_type_id});
+                        }
+                    });
+                }
+            })
+        })
+        $('#edit_sjlys').click(function(){
+            tc_t=layui.layer.open({
+                title : "修改商机来源",
+                type :1,
+                content :$('#sj_ly'),
+                area:["360px",'300px'],
+                success:function(layero, index){
+                    treeSelect.render({
+                        // 选择器
+                        elem: '#get_ly',
+                        // 数据
+                        data:"{:U('Back/select_origin')}",
+                        // 异步加载方式：get/post，默认get
+                        type:'get',
+                        // 占位符
+                        placeholder: '选择商机来源',
+                        search: false,
+                        // 点击回调
+                        click: function(d){
+                            $('#get_ly').val(d.current.id);
+                        },
+                        // 加载完成后的回调函数
+                        success: function (d) {
+                            treeSelect.checkNode('get_ly', {$res.origin_id});
+                        }
+                    });
+                }
+            })
+        })
+        form.on('submit(edit_sjlx)',function(data){
+            var data=data.field;
+            var index_o = layer.load();
+            $.ajax({
+                url:'change_type.html',
+                type:'POST',
+                data:data,
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            layer.close(tc_o);
+                            location.reload()
+                        },500)
+                    }
+                }
+            })
+            return false;
+        })
+
+        form.on('submit(edit_sjly)',function(data){
+            var data=data.field;
+            var index_o = layer.load();
+            $.ajax({
+                url:'change_orgin.html',
+                type:'POST',
+                data:data,
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            layer.close(tc_t);
+                            location.reload()
+                        },500)
+                    }
+                }
+            })
+            return false;
+        })
+
+        form.on('submit(edit_nei)',function(data){
+            var data=data.field;
+            var index_o = layer.load();
+            $.ajax({
+                url:'change_cb_nei.html',
+                type:'POST',
+                data:data,
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            layer.close(tc_r);
+                            location.reload()
+                        },500)
+                    }
+                }
+            })
+            return false;
+        })
+
+        form.on('submit(edit_wai)',function(data){
+            var data=data.field;
+            var index_o = layer.load();
+            $.ajax({
+                url:'change_cb_wai.html',
+                type:'POST',
+                data:data,
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            layer.close(tc_f);
+                            location.reload()
+                        },500)
+                    }
+                }
+            })
+            return false;
+        })
+        $('#get_bj').click(function(){
+            add_box= 	layui.layer.open({
+                title : "添加属性",
+                type : 2,
+                content :'add_wealth.html?id='+Ids,
+                area:["96%","96%"]
+            })
+        })
+        //添加联系人
+        $('#add_lxr').click(function(){
+            layui.layer.open({
+                title :"添加联系人",
+                type : 2,
+                content :'add_contact.html?id='+Ids,
+                area:["420px","380px"]
+            })
+        })
+        $('#add_img').click(function(){
+            layui.layer.open({
+                title :"添加附件",
+                type : 2,
+                content :'add_fujian.html?id='+Ids,
+                area:["420px","380px"]
+            })
+        })
+    });
+    function del_sx(obj){
+        var ids = $(obj).attr('data-id');
+        layer.confirm('是否删除该属性?', {icon: 3, title:'提示'},function(index){
+            var index_o = layer.load();
+            $.ajax({
+                url:'delete_wealth.html',
+                type:'POST',
+                data:{'gid':ids},
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            location.reload()
+                        },500)
+                    }
+                }
+            })
+        });
+    }
+    function yx(){
+        layui.use(['table','layer','jquery','form','element','treeSelect'],function(){
+            var table = layui.table,layer= layui.layer,form = layui.form,$ = layui.jquery,laypage = layui.laypage,element = layui.element,treeSelect=layui.treeSelect;
+            add_box= 	layui.layer.open({
+                title : "添加客户意向",
+                type : 2,
+                content :'add_goods.html?index=1&id='+Ids,
+                area:["96%","96%"]
+            })
+        })
+    }
+    function del_yx(obj){
+        var ids = $(obj).attr('data-id');
+        layer.confirm('是否删除该产品?', {icon: 3, title:'提示'},function(index){
+            var index_o = layer.load();
+            $.ajax({
+                url:'delete_goods.html',
+                type:'POST',
+                data:{'gid':ids},
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            location.reload()
+                        },500)
+                    }
+                }
+            })
+        });
+    }
+    function del_fj(obj){
+        var ids = $(obj).attr('data-id');
+        layer.confirm('是否删除该附件?', {icon: 3, title:'提示'},function(index){
+            var index_o = layer.load();
+            $.ajax({
+                url:'delete_fujian.html',
+                type:'POST',
+                data:{'gid':ids},
+                dataType:'json',
+                success:function(res){
+                    layer.msg(res.msg);
+                    layer.close(index_o);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            location.reload()
+                        },500)
+                    }
+                }
+            })
+        });
+    }
+</script>
+</body>
+</html>

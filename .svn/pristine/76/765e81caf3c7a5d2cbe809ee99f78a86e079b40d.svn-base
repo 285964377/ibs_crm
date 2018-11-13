@@ -1,0 +1,320 @@
+<?php
+
+namespace Home\Controller;
+
+use Think\Controller;
+
+class BackController extends Controller
+{
+    public function _initialize()
+    {
+        A('Auto')->check_login();
+        A('Auto')->check_power();
+    }
+	
+	//商机销售阶段
+	public function res_step($stage){
+		switch ($stage) {
+				case 0;
+                    $stage = "未首电";
+                    break;
+                case 1;
+                    $stage = "咨询";
+                    break;
+                case 2;
+                    $stage = "犹豫";
+                    break;
+                case 3;
+                    $stage = "意向";
+                    break;
+                case 4;
+                    $stage = "已上门";
+                    break;
+                case 5;
+                    $stage = "签约";
+                    break;
+                default:
+                    $stage = '未首电';
+					break;
+            }
+		return $stage;
+	}
+	
+	//商机下次跟进阶段
+	public function res_next_step($stage){
+		switch ($stage) {
+                case 1;
+                    $stage = "咨询";
+                    break;
+                case 2;
+                    $stage = "犹豫";
+                    break;
+                case 3;
+                    $stage = "意向";
+                    break;
+                case 4;
+                    $stage = "已上门";
+                    break;
+                case 5;
+                    $stage = "签约";
+                    break;
+                default:
+                    $stage = '无';
+					break;
+            }
+		return $stage;
+	}
+	
+
+	// 客户婚姻状况
+	public function cus_marry($stage){
+		switch ($stage) {
+				case 0;
+                    $stage = "未知";
+                    break;
+                case 1;
+                    $stage = "已婚";
+                    break;
+                case 2;
+                    $stage = "未婚";
+                    break;
+                case 3;
+                    $stage = "离异";
+                    break;
+                case 4;
+                    $stage = "丧偶";
+                    break;
+                case 5;
+                    $stage = "再婚";
+                    break;
+                default:
+                    $stage = '无';
+					break;
+            }
+		return $stage;
+	}
+	
+		// 客户学历
+	public function cus_educate($stage){
+		switch ($stage) {
+				case 0;
+                    $stage = "未知";
+                    break;
+                case 1;
+                    $stage = "高中以下";
+                    break;
+                case 2;
+                    $stage = "大专";
+                    break;
+                case 3;
+                    $stage = "本科";
+                    break;
+                case 4;
+                    $stage = "硕士及以上";
+                    break;
+                default:
+                    $stage = '无';
+					break;
+            }
+		return $stage;
+	}
+	
+	//商机操作类型 控制器转中文
+	public function op_log_trans($controler){
+		switch ($controler) {
+				case 'Resources/add';
+                    $stage = "新增商机";
+                    break;
+				case 'Resources/edit';
+                    $stage = "编辑基础信息";
+                    break;
+				case 'Resources/change_type';
+                    $stage = "修改商机类型";
+                    break;
+				case 'Resources/change_orgin';
+                    $stage = "修改商机来源";
+                    break;
+				case 'Resources/add_wealth';
+                    $stage = "添加资质";
+                    break;
+				case 'Resources/delete_wealth';
+                    $stage = "删除资质";
+                    break;
+				case 'Resources/add_contact';
+                    $stage = "添加联系人";
+                    break;
+				case 'Resources/delete_contact';
+                    $stage = "删除联系人";
+                    break;
+				case 'Resources/add_goods';
+                    $stage = "添加推荐产品";
+                    break;
+				case 'Resources/delete_goods';
+                    $stage = "删除推荐产品";
+                    break;
+				case 'Resources/add_fujian';
+                    $stage = "添加附件";
+                    break;
+				case 'Resources/delete_fujian';
+                    $stage = "删除附件";
+                    break;
+				case 'Resources/go_in';
+                    $stage = "跟进";
+                    break;
+				case 'Resources/xd';
+                    $stage = "下单";
+                    break;
+				case 'Resources/tcheck';
+                    $stage = "审核剔除";
+                    break;
+				case 'Resources/fcheck';
+                    $stage = "审核反无效";
+                    break;
+				case 'Resources/tichu_res';
+                    $stage = "申请剔除";
+                    break;
+				case 'Resources/fan_res';
+                    $stage = "申请反无效";
+                    break;
+				case 'Resources/allot';
+                    $stage = "移交/分配";
+                    break;
+				case 'Resources/change_cb_nei';
+                    $stage = "修改内部成本";
+                    break;
+				case 'Resources/change_cb_wai';
+                    $stage = "修改外部成本";
+                    break;
+				case 'Resources/qiang';
+                    $stage = "抢单";
+                    break;
+					
+            }
+		return $stage;
+		
+	}
+	
+    //管理员操作日志
+    public function op_log($content)
+    {
+        $data['type'] = CONTROLLER_NAME . '/' . ACTION_NAME;
+        $data['user_id'] = session("user");
+        $data['ip'] = $_SERVER["REMOTE_ADDR"];
+        $data['content'] = $content;
+        M('operation_log')->add($data);
+    }
+
+    //商机操作记录
+    public function res_op_log($res_id, $content)
+    {
+        $data['controler'] = CONTROLLER_NAME . '/' . ACTION_NAME;
+        $data['user_id'] = session("user");
+        $data['res_id'] = $res_id;
+        $data['content'] = $content;
+        M('res_op_log')->add($data);
+    }
+
+    //工单跟进操作记录
+    public function dmd_op_log($demd_id, $content)
+    {
+        $data['controler'] = CONTROLLER_NAME . '/' . ACTION_NAME;
+        $data['user_id'] = session("user");
+        $data['demd_id'] = $demd_id;
+        $data['content'] = $content;
+        M('dmd_op_log')->add($data);
+    }
+
+
+    //获取部门
+    public function select_part()
+    {
+        $data = M('part')->field('name,id,pid')->select();
+        $data = $this->roles($data);
+		$data[]=array(
+			'id'=>0,
+			'pid'=>0,
+			'name'=>'全部',
+		);
+        echo json_encode($data, true);
+        exit;
+    }
+
+	//获取商机类型
+	public function select_restype(){
+		$data = M('restype')->select();
+		$data = $this->roles($data);
+		echo json_encode($data, true);
+		exit;
+	}
+	
+	//获取商机来源
+	public function select_origin(){
+		$data = M('origin')->select();
+		$data = $this->roles($data);
+		echo json_encode($data, true);
+		exit;
+	}
+	
+    //递归无限极分类
+    public function roles($data, $pid = 0)
+    {
+        $arr = array();
+        foreach ($data as $key => $val) {
+            if ($val['pid'] == $pid) {
+                $arr[$key] = $val;
+                $arr[$key]['children'] = $this->roles($data, $val['id']);
+            }
+        }
+        $arr = array_merge($arr);
+        return $arr;
+    }
+
+    //导出 到excel
+    /*
+    $xlsData= $data;
+    $xlsName  = "中国城市列表";
+    $xlsCell  = array(
+        array('name','名字'),
+        array('pid','上级ID'),
+        array('id','下级ID'),
+    );
+
+    $this->exportE($xlsName,$xlsCell,$xlsData);
+    */
+    public function exportE($xlsName, $xlsCell, $xlsData)
+    {
+        $xlsName .= time();
+        $length = count($xlsData);
+        header('pragma:public');
+        header('Content-type:application/vnd.ms-excel;charset=utf-8;name="' . $xlsName . '.xls"');
+        header("Content-Disposition:attachment;filename=$xlsName.xls");//attachment新窗口打印inline本窗口打印
+        $data .= "<table border=1>";
+        $data .= "<tr>";
+        foreach ($xlsCell as $key => $val) {
+            $data .= "<td>" . $val[1] . "</td>";
+        }
+        $data .= "</tr>";
+
+        for ($i = 0; $i < $length; $i++) {
+            $data .= "<tr>";
+            foreach ($xlsCell as $k => $v) {
+                $data .= "<td>" . $xlsData[$i][$v[0]] . "</td>";
+            }
+            $data .= "</tr>";
+        }
+        /*
+        foreach($xlsData as $key=>$val){
+            $data .= "<tr>";
+            foreach($xlsCell as $k=>$v){
+                $data .= "<td>".$val[$v[0]]."</td>";
+            }
+            $data .= "</tr>";
+        }
+        */
+        $data .= "</table>";
+        exit($data);
+
+    }
+
+   
+}

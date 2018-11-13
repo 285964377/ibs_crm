@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+	</style>
+    <div class="layui-content">
+        <div class="layui-row">
+            <div class="layui-card">
+                <div class="layui-card-body">
+									<div class="form-box">
+										<div class="layui-form" action="">
+												<button class="layui-btn layui-btn-blue layui-btn-sm add-depart"><i class="layui-icon">&#xe654;</i>新增资质</button>
+										</div>		
+									</div>
+									<hr/>
+									<div class="table_box">
+                    <table id="demo" lay-filter="test"></table>
+									</div>		
+                </div>
+            </div>
+						
+        </div>
+    </div>
+	<div id="add_zz" style="display:none;">
+		<form class="layui-form" action="">
+		    <div class="layui-form-item">
+				<label class="layui-form-label">资质名</label>
+				<div class="layui-input-inline">
+				  <input type="text" name="table" required  lay-verify="english" placeholder="请输入资质名" autocomplete="off" class="layui-input">
+				</div>
+		    </div>
+		    <div class="layui-form-item">
+				<label class="layui-form-label">资质别名</label>
+				<div class="layui-input-inline">
+					<input type="text" name="name" required  lay-verify="required" placeholder="请输入资质别名" autocomplete="off" class="layui-input">
+				</div>
+		    </div>
+		  <div class="layui-form-item">
+			<div class="layui-input-block">
+			  <button class="layui-btn layui-btn-blue" lay-submit lay-filter="add_form">立即提交</button>
+			</div>
+		  </div>
+		</form>
+	</div>
+	<div id="edit_zz" style="display:none;">
+		<form class="layui-form" action="">
+		    <div class="layui-form-item">
+				<label class="layui-form-label">资质名</label>
+				<div class="layui-input-inline">
+				  <input type="text" name="table" required  lay-verify="english" placeholder="请输入资质名" autocomplete="off" class="layui-input">
+				</div>
+		    </div>
+		    <div class="layui-form-item">
+				<label class="layui-form-label">资质别名</label>
+				<div class="layui-input-inline">
+					<input type="text" name="name" required  lay-verify="required" placeholder="请输入资质别名" autocomplete="off" class="layui-input">
+					<input type="hidden" name="id" id="id" >
+				</div>
+		    </div>
+		  <div class="layui-form-item">
+			<div class="layui-input-block">
+			  <button class="layui-btn layui-btn-blue" lay-submit lay-filter="edit_form">立即提交</button>
+			</div>
+		  </div>
+		</form>
+	</div>
+    <include file="Public:footer" />
+	<script type="text/html" id="barDemo">
+	  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="details">详情</a>
+	  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">编辑</a>
+	  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+	</script>
+		<script>
+		layui.use(['table','jquery','form'], function(){
+		  var table = layui.table,$=layui.jquery,form=layui.form;
+		  form.verify({
+			  english:[
+				 /^[A-Za-z]+$/,
+				 '只能输入英文字母'
+			  ]
+			});  
+		  var zz_table =   table.render({
+			elem: '#demo'
+			,url: 'index?search_data=1'
+			,page: true
+			,cols: [[ //表头
+			   {field: 'table', title: '资质名'}
+			  ,{field: 'name', title: '资质别名'}
+			  ,{field: 'creat_time', title: '创建时间'}
+			  ,{toolbar: '#barDemo',title: '操作'}
+			]]
+			,response: {
+                statusCode: 200
+            }
+		  });
+		  var ADD;
+		  //添加资质
+		  $('.add-depart').click(function(){
+			  ADD=layer.open({
+			  	title: '新增资质',
+			  	type: 1,
+			  	content: $('#add_zz'),
+			  	area: ['330px', '180px']
+			  })
+		  })
+		   form.on('submit(add_form)', function(data){
+               var index_o = layer.load();
+			  $.ajax({
+				  url:'add.html',
+				  data:data.field,
+				  type:'post',
+				  dataType:'json',
+				  success:function(res){
+				      layer.close(index_o);
+					layer.msg(res.msg);
+					if(res.code==200){
+						setTimeout(function(){
+							layer.close(ADD);
+							zz_table.reload();
+							$('.layui-input').val('');
+						},500)
+					}
+				  }
+			  })
+			  return false;
+		   });
+		   //修改资质
+		   form.on('submit(edit_form)', function(data){
+               var index_o = layer.load();
+			  $.ajax({
+				  url:'edit_table.html',
+				  data:data.field,
+				  type:'post',
+				  dataType:'json',
+				  success:function(res){
+                    layer.close(index_o);
+					layer.msg(res.msg);
+					if(res.code==200){
+						setTimeout(function(){
+							layer.close(ADD);
+							zz_table.reload();
+							$('.layui-input').val('');
+						},500)
+					}
+				  }
+			  })
+			  return false;
+		   });
+		   //监听表格
+		   table.on('tool(test)', function(obj){
+			  var data = obj.data;
+			  var layEvent = obj.event; 
+			  if(layEvent === 'del'){
+				   layer.confirm('确认删除资质：'+data.table+'吗', {icon: 3, title:'删除资质'}, function(index){
+					$.ajax({
+						url:'delete_table.html',
+						data:{'id':data.id},
+						type:'post',
+						dataType:'json',
+						success:function(res){
+							layer.msg(res.msg);
+							if(res.code==200){
+								setTimeout(function(){
+									layer.close(index);
+									zz_table.reload();
+								},500)
+							}
+						}
+					})
+				  });
+			  }
+			  if(layEvent === 'edit'){
+				  var data = obj.data;
+				  $('#id').val(data.id);
+				  $('#edit_zz').find('input').eq(0).val(data.table);
+				  $('#edit_zz').find('input').eq(1).val(data.name);
+				  ADD=layer.open({
+					title: '修改资质',
+					type: 1,
+					content: $('#edit_zz'),
+					area: ['330px', '180px']
+				  })
+			  }
+			  
+			  if(layEvent === 'details'){
+				  ADD=layer.open({
+					title: '资质详情',
+					type: 2,
+					content: "details.html?index=1&id="+data.id,
+					area: ['90%', '80%']
+				  })
+			  }
+			})  
+		});
+		</script>
+</body>
+</html>

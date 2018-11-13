@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+		.layui-view-body{
+			background:#fff;
+		}
+		.layui-table{
+			margin-top:0
+		}
+		.layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row]{
+			border-width: 1px;
+			border-style: solid;
+			border-color: #c6d1d6;
+		}
+		.layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even){
+			background: url(__COMMON__/images/t_bck.png) repeat-x;
+			background-size:100% 100%;
+		}
+		.layui-table td, .layui-table th{
+			padding:0;
+			text-align:center;
+			line-height: 28px;
+			font-size:12px;
+			color:#000
+		}
+		.layui-form-item{
+			margin-top:0
+		}
+		.sj_form{
+			margin-bottom:10px;
+		}
+		.layui-form-label{
+			width:auto;
+		}
+		.layui-form-mid{
+				padding: 0px 0px !important;
+		}
+		.layui-form-radio{
+			margin:0;
+		}
+			.layui-form-item{
+				clear:none;
+			}
+		.layui-form-mid {
+				line-height: 12px;
+			}
+			.layui-form-label{
+				width:auto;
+			}
+</style>
+<div class="layui-content">
+    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    	<ul class="layui-tab-title">
+    		<volist name="tables" id="item">
+    			<li <if condition="$i eq 1">class="layui-this" </if>> {$item.name}</li>
+    		</volist>
+    	</ul>
+    	<div class="layui-tab-content" style="margin-top:20px;">
+    	<volist name="tables" id="item" >
+    		<div class='layui-tab-item <if condition="$i eq 1">layui-show</if>'>
+    			<div class="layui-form layui-row">
+    				<volist name="item.fields" id="fields">	
+    				<div  class="layui-form-item sj_form layui-col-md3 layui-col-xs12 my_style_input">
+    					<label class="layui-form-label">{$fields.field_name}</label>
+    					<div class="layui-input-inline">
+    						<input type="text" name="{$fields.field}" value=""  <if condition="$key eq 0">lay-verify="required"</if>  placeholder="请输入{$fields.field_name}" autocomplete="off" class="layui-input ">
+    					</div>
+    				</div>
+    				</volist>
+    				<div style="clear:both"></div>
+    				<div class="layui-form-item">
+    					<div class="layui-input-block">
+    						<input type="hidden" name="table" value="{$item.table}">
+    						<button class="layui-btn layui-btn-blue" lay-submit data-name="{$item.name}" data-id="{$item.id}" onclick="get(this)">保存</button>
+    					</div>
+    				</div>
+    			</div>		
+    		</div>
+    		
+    	</volist>
+    	</div>
+    </div>  
+</div>								
+	
+	 <include file="Public:footer" />
+	<script>
+		var Ids = "{$id}";
+	layui.use(['table','layer','jquery','form','element'],function(){
+			var table = layui.table,layer= layui.layer,form = layui.form,$ = layui.jquery,laypage = layui.laypage,element = layui.element;
+	});
+	function get(obj){
+		layui.use(['layer'],function(){
+			var layer= layui.layer;
+			var objs = $(obj).parents('.layui-form').find('input');
+			var inpLength = $(obj).parents('.layui-form').find('input').length;
+			var Datas={};
+			if(objs.eq(0).val()==''){
+				return false;
+			}
+			for(var i=0;i<inpLength;i++){
+				var Name =  objs.eq(i).attr('name');
+				var Value = objs.eq(i).val();
+				Datas[Name]=Value;
+			}
+			Datas.res_id=Ids;
+			layer.confirm('是否添加该属性?', {icon: 3, title:'提示'},function(index){
+				var index_o = layer.load();
+				$.ajax({
+					url:'add_wealth.html',
+					type:'POST',
+					data:Datas,
+					dataType:'json',
+					success:function(res){
+						layer.close(index_o);
+							layer.msg(res.msg);
+							if(res.code==200){
+								setTimeout(function(){
+									parent.location.reload();
+									var index = parent.layer.getFrameIndex(window.name); 
+									parent.layer.close(index);
+								},500)
+						}
+					}
+				})
+			});     
+		})
+	}
+	</script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+	<include file="Public:header" />
+	<style>
+		input::-webkit-outer-spin-button,
+		input::-webkit-inner-spin-button {
+				-webkit-appearance: none;
+		}
+		input[type="number"]{
+				-moz-appearance: textfield;
+		}
+		.layui-view-body{
+			background:#fff;
+		}
+		.layui-table{
+			margin-top:0
+		}
+		.layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row]{
+			border-width: 1px;
+			border-style: solid;
+			border-color: #c6d1d6;
+		}
+		.layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even){
+			background: url(__COMMON__/images/t_bck.png) repeat-x;
+			background-size:100% 100%;
+		}
+		.layui-table td, .layui-table th{
+			padding:0;
+			text-align:center;
+			line-height: 28px;
+			font-size:12px;
+			color:#000
+		}
+		.layui-form-item{
+			clear:none;
+		}
+	.layui-form-mid {
+			line-height: 12px;
+		}
+		.layui-form-label{
+			width:auto;
+		}
+		.layui-table-view .layui-table{
+			width:100%;
+		}
+		.my_fj_list img{
+			width:100%;
+			height:138px;
+			cursor: pointer;
+		}
+		.my_fj_list li{
+			margin-bottom:20px;	
+		}
+		.my_fj_list li>div{
+			border:1px solid #eee;
+			position:relative;
+		}
+		.my_fj_list p{
+			font-size:12px;
+			padding:10px 6px;
+			background:#eff3f5;
+			color:#000;
+			overflow: hidden;
+			text-overflow:ellipsis;
+			white-space: nowrap;
+		}
+		.my_fj_list li>div span{
+			cursor: pointer;
+
+			display: block;
+			width: 36px;
+			height: 36px;
+			background: url(/crm/Application/Home/Common/images/del.png) no-repeat;
+			background-size: 100% 100%;
+			position: absolute;
+			right: -18px;
+			top: -15px;
+		}
+	</style>
+<body class="layui-view-body">
+	<div class="layui-content">
+		<ul class="head_top_table">
+			<li><p><span class="fwt">客户</span>：<span class="blue">{$res.name}</span>( {$cus.code} )</p></li>
+			<li><p><span class="fwt">商机</span>：{$res.res_type} ( {$res.code} )</p></li>
+			<li><p><span class="fwt">销售阶段</span>：<span class="yellow">{$res.stage}</span></p></li>
+			<li><p><span class="fwt">所属人</span>：<if condition="$res['user_name']">{$res.user_name}({$res.user_code})( {$res.part_name} )<else />未分配</if></p></li>
+			<li><p><span class="fwt">预计掉库时间</span>：{$res.guess_out_time}</p></li>
+			<li><p><span class="fwt">接收时间</span>：<if condition="$res['allot_time']">{$res.allot_time}<else />未分配</if></p></li>
+		</ul>
+		<div class="my_style_table">
+			<div class="head_top_table">
+				<li><p><span class="fwt">借贷人</span><a style="margin-left:10px" onclick="yx()" href="javascript:;" class="layui-btn layui-btn-blue layui-btn-xs">添加</a></p></li>
+			</div>
+			<table class="layui-table">
+			  <thead>
+				<tr>
+				  <th>身份</th>
+				  <th>姓名</th>
+				  <th>身份证号码</th>
+				  <th>联系电话</th>
+				  <th>婚姻状况</th>
+				  <th>子女情况</th>
+				  <th>家属是否知晓</th>
+				  <th>与主借贷人关系</th>
+				  <th>是否是客户本人</th>
+				  <th>操作</th>
+				</tr> 
+			  </thead>
+			  <tbody>
+					<tr>
+					  <td><input type="" value="" placeholder="身份" /></td>
+					  <td><input type="" value="" placeholder="姓名" /></td>
+					  <td><input type="" value="" placeholder="身份证号码" /></td>
+					  <td><input type="" value="" placeholder="身份证号码" /></td>
+					  <td> 
+						  <select name="marriage">
+								<option value="0">未知</option>
+								<option value="1">已婚</option>
+								<option value="2">未婚</option>
+								<option value="3">离异</option>
+								<option value="4">丧偶</option>
+								<option value="5">再婚</option>
+							</select>
+						</td>
+					  <td>{$item.dk_time_start}~{$item.dk_time_end}（{$item.dk_time_type}）</td>
+					  <td>{$item.loan_time_start}~{$item.loan_time_end}（{$item.loan_time_type}）</td>
+					  <td>{$item.age_start}~{$item.age_end}</td>
+					  <td>{$item.jinjian}</td>
+					  <td><a href="javascript:;" class="layui-btn layui-btn-danger layui-btn-xs" onclick="del_yx(this)" data-id="{$item.gid}">删除</a></td>
+					</tr>
+			  </tbody>
+			</table>
+		</div>	
+	</div>			
+		
+	<!-- 外部成本 -->
+	<div id="sj_wbcb" style="display:none;">
+		<div class="layui-form layui-row">
+			<div class="layui-form-item sj_form ">
+				<div class="layui-input-inline" style="margin-left:20px;">
+					<input type="number" name="cb_wai" onkeyup="je(this)" value="{$res.cb_wai}" required  lay-verify="required" placeholder="请输入外部成本" autocomplete="off" class="layui-input ">
+				</div>
+					<input type="hidden" value="{$res.id}"  name="id"/>
+				<button class="layui-btn layui-btn-blue" style="float:left;" lay-submit lay-filter="edit_wai">修改</button>
+			</div>
+		</div>	
+	</div>	
+	<include file="Public:footer" />
+	<script type="text/html" id="cz_lxr">
+		<a href="javascript:;"  class='layui-btn layui-btn-danger layui-btn-xs' lay-event="del_lxr">删除</a>
+	</script>
+	<script>
+		
+		var tc_o,tc_t,tc_r,tc_f,add_box,Machine;
+		var Ids = "{$res.id}";
+		layui.config({
+			base: path+'/modules/treeSelect/',
+		})
+		layui.use(['table','layer','jquery','form','element','treeSelect','laydate'],function(){
+			var table = layui.table,layer= layui.layer,form = layui.form,$ = layui.jquery,laypage = layui.laypage,element = layui.element,treeSelect=layui.treeSelect,laydate=layui.laydate;
+			 laydate.render({
+				elem: '#times',
+				range:'~',
+				type:'datetime'
+			});
+			$('#edit_nbcb').click(function(){
+				tc_r=layui.layer.open({
+						title : "编辑商机内部成本",	
+						type :1,
+						content :$('#sj_nbcb'),
+						area:["300px",'100px']
+					})
+			})
+		form.on('submit(edit_sjly)',function(data){
+			var data=data.field;
+			var index_o = layer.load();
+			$.ajax({
+				url:'change_orgin.html',
+				type:'POST',
+				data:data,
+				dataType:'json',
+				success:function(res){
+						layer.msg(res.msg);
+						layer.close(index_o);
+						if(res.code==200){
+							setTimeout(function(){
+								layer.close(tc_t);
+								location.reload()
+							},500)
+					}
+				}
+			})
+			return false;
+		})
+		
+	function del_sx(obj){
+		var ids = $(obj).attr('data-id');
+		layer.confirm('是否删除该属性?', {icon: 3, title:'提示'},function(index){
+			var index_o = layer.load();
+			$.ajax({
+				url:'delete_wealth.html',
+				type:'POST',
+				data:{'gid':ids},
+				dataType:'json',
+				success:function(res){
+						layer.msg(res.msg);
+						layer.close(index_o);
+						if(res.code==200){
+							setTimeout(function(){
+								location.reload()
+							},500)
+					}
+				}
+			})
+		});    
+	}
+});	
+	</script>
+</body> 
+</html>

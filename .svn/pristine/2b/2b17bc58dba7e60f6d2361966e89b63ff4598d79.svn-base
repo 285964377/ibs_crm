@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.layui-form-label{
+			width:auto;
+		}
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+		.layui-treeSelect .ztree li span.button.switch{
+			position: relative;
+			top:-7px;
+		}
+		.head_bg_list li{
+			height:300px;
+		}
+		#base_one{
+				box-shadow: 20px 20px 20px #eee;
+				height:340px;
+				background: #fff;
+				margin-bottom:40px;
+			}
+			.base_one_list li{
+				height:112px;
+			}
+			#base_one_y{
+				height:340px;
+			}
+			.base_title{
+				font-size:16px;
+				color:#2b3245;
+				padding-left:12px;
+				border-left:4px solid #03a9f4;
+				margin:20px 0;
+				font-weight:bold;
+				margin-bottom:30px;
+			}
+			#base_one_r div{
+				width:100%;
+				border-radius:8px;
+				height:308px;
+				background:url(images/base_get.png) no-repeat;
+				background-size:100% 100%;
+				box-shadow: -10px 8px 14px #ccc;
+				position:relative;
+				overflow: hidden;
+			}
+			.titel_img{
+				display: block;
+				position: absolute;
+				left:0;
+				top:25px;
+				width:153px;
+				height:45px;
+				background:url(images/titles.png) no-repeat;
+				background-size:100% 100%;
+			}
+			.base_sj_list{
+				width:280px;
+				margin:0 auto;
+				margin-top:60px;
+			}
+			.base_sj_list li{
+				width:50%;
+				float:left;
+				text-align:center;
+				color:#fff;
+			}
+			.base_sj_list li h2{
+				font-size:36px;
+				margin-top:38px;
+			}
+			.base_sj_list li p{
+				font-size:12px;
+			}
+			.base_db>div{
+				width:100%;
+				height:74px;
+				line-height: 74px;
+				background:#dee3f0;
+			}
+			.base_db>div h3{
+				display:inline-block;
+				float:left;
+				margin-left:18px;
+				font-size:14px;
+			}
+			.base_db>div h3 span{
+				display:inline-block;
+				margin-left:6px;
+				padding:2px 8px;
+				background:#f08f90;
+				line-height: normal;
+				border-radius:50%;
+				color:#fff;
+			}
+			.base_db>div a{
+				float:right;
+				margin-right:20px;
+				margin-top:22px;
+			}
+			.base_110{
+				width:100%;
+				background: #fff;
+				height:118px;
+				overflow:hidden;
+			}
+			.base_110 li{
+				width:14%;
+				text-align:center;
+				float:left;	
+				border-right:1px solid #e0e7ed;
+				margin-top:30px;
+				padding-bottom:4px;
+				cursor: pointer;
+			}
+			.base_110 li:nth-last-of-type(1){
+				border:none;
+			}
+			.base_110 li h3{
+				margin-top:6px;
+				font-size:26px;
+			}
+			.base_110 li p{
+				margin-top:6px;
+				font-size:12px;
+				color:#999;
+			}
+			.msg_list_get{
+				background:#fff;
+				padding:0 20px;
+			}
+			.msg_list_get li{
+				cursor: pointer;
+				line-height:50px;
+				color:#666666;
+				font-size:12px;
+				border-bottom:1px solid #eff3f5;
+				overflow:hidden;
+			}
+			.msg_list_get li span:nth-of-type(1){
+				float:left;
+			}
+			.msg_list_get li span:nth-of-type(2){
+				float:right;
+			}
+			#wite,#adiuo{
+				width:100%;
+				height:226px;
+				background:#fff;
+			}
+			.no_title{
+				color:#666666;
+				font-size:12px;
+				padding-top:17px;
+				border-top:1px solid #eee;
+				padding-left:20px;
+				background:#fff;
+				padding-bottom:23px;
+			}
+			.no_title span{
+				color:#e80010;
+			}
+
+	</style>
+	<div class="layui-content layui-row">
+	    <div class="layui-fluid"> 
+			<div class="layui-row layui-col-space30"  style="background:none;">
+				<div class="layui-col-md12">
+					<li class="layui-row layui-col-space10"> 
+						<h2 class="base_title" style="margin-top:0;margin-bottom:10px;padding:0;padding-left:12px;	">今日待办</h2>
+						<div class="layui-col-md4 base_db">
+							<div>
+								<h3>待首电<span>6</span></h3>
+								<a class="layui-btn layui-btn-danger layui-btn-sm" href="javascript:;">批量拨打</a>
+							</div>
+							<table class="layui-table" style="margin:0;">
+									<colgroup>
+										<col>
+										<col>
+										<col>
+										<col>
+									</colgroup>
+									<thead>
+										<tr>
+											<th>分配时间</th>
+											<th>客户</th>
+											<th>贷款类型</th>
+											<th>来源</th>
+										</tr> 
+									</thead>
+									<tbody>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td>网运</td>
+										</tr>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td>网运</td>
+										</tr>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td>网运</td>
+										</tr>
+									</tbody>
+								</table>
+						</div>
+						<div class="layui-col-md4 base_db">
+							<div style="background:#a1adcf;">
+								<h3 style="color:#fff">待首电<span style="color:#a1adcf;background: #fff;">6</span></h3>
+								<a class="layui-btn layui-btn-primary layui-btn-sm" href="javascript:;">批量拨打</a>
+							</div>
+							<table class="layui-table" style="margin:0;">
+									<colgroup>
+										<col>
+										<col>
+										<col>
+										<col>
+									</colgroup>
+									<thead>
+										<tr>
+											<th>分配时间</th>
+											<th>客户</th>
+											<th>贷款类型</th>
+											<th>来源</th>
+										</tr> 
+									</thead>
+									<tbody>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td>网运</td>
+										</tr>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td>网运</td>
+										</tr>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td>网运</td>
+										</tr>
+									</tbody>
+								</table>
+						</div>
+						<div class="layui-col-md4 base_db">
+							<div>
+								<h3>待上门客户<span>6</span></h3>
+							</div>
+							<table class="layui-table" style="margin:0;">
+									<colgroup>
+										<col>
+										<col>
+										<col>
+										<col>
+									</colgroup>
+									<thead>
+										<tr>
+											<th>分配时间</th>
+											<th>客户</th>
+											<th>贷款类型</th>
+											<th>操作</th>
+										</tr> 
+									</thead>
+									<tbody>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td><a href="javascript:;" style="color:#008aff">备注</a></td>
+										</tr>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td><a href="javascript:;" style="color:#008aff">备注</a></td>
+										</tr>
+										<tr>
+											<td>10:21</td>
+											<td>王小二</td>
+											<td>抵押贷款</td>
+											<td><a href="javascript:;" style="color:#008aff">备注</a></td>
+										</tr>
+									</tbody>
+								</table>
+						</div>
+					</li> 
+					<li class="layui-row" style="margin-bottom:20px;"> 
+						<h2 class="base_title" style="margin-top:20px;margin-bottom:20px;">数据报警</h2>
+						<ul class="base_110">
+							<li>
+								<h3 style="color:#03a9f4;">26</h3>
+								<p>今日即将掉库</p>
+							</li>
+							<li>
+								<h3 style="color:#20c7a9;">6</h3>
+								<p>2天后即将掉库</p>
+							</li>
+							<li>
+								<h3 style="color:#ffbb5a;">10</h3>
+								<p>明日还款客户</p>
+							</li>
+							<li>
+								<h3 style="color:#e48080;">6</h3>
+								<p>今日生日客户</p>
+							</li>
+							
+							<li>
+								<h3 style="color:#be76ff;">2</h3>
+								<p>退单</p>
+							</li>
+							<li>
+								<h3 style="color:#73c8fe;">10</h3>
+								<p>订单超期</p>
+							</li>
+							<li>
+								<h3 style="color:#999;">6</h3>
+								<p>订单暂缓</p>
+							</li>
+						</ul>
+					</li>	
+					<li class="layui-row layui-col-space20"> 
+					
+						<div class="layui-col-md8  layui-col-space20">
+							<h2 class="base_title" style="margin-bottom:0;margin:10px 0;padding:0;padding-left:12px;margin-left:10px;">本周任务</h2>
+							<div class="layui-col-md6  base_db" style="box-shadow:none;">
+								<div>
+									<h3 style="color:#2b3245">待首电<span style="background: #7d89ac;color:#fff;border-radius: 20px;">共87条</span></h3>
+									<a style="color:#2b3245;display:inline-block;margin-top:0" href="javascript:;">到期日期:09.30</a>
+								</div>
+								<ul class="zw_box" style="background: #fff;">
+									<li id="wite" style="background: #fff;">
+										占位放图
+									<li>
+								</ul>
+								<p class="no_title">未完成每条扣100元，你即将被扣除<span>200元</span></p>
+							</div>
+							<div class="layui-col-md6  base_db" style="box-shadow:none;">
+								<div style="background: #a1adcf;">
+									<h3 style="color:#fff;">推荐录音<span style="border-radius: 20px;color:#a1adcf;background: #fff;">共9条</span></h3>
+									<a style="color:#fff;display:inline-block;margin-top:0" href="javascript:;">到期日期:09.30</a>
+								</div>
+								<ul class="zw_box" style="background: #fff;">
+									<li id="adiuo"  style="background: #fff;">
+										占位放图
+									<li>
+								</ul>
+								<p  class="no_title">未完成每条扣100元，你即将被扣除<span>200元</span></p>
+							</div>
+						</div>
+						<div class="layui-col-md12">
+							<h2 class="base_title" style="margin-top:0px;margin-bottom:20px;">消息通知</h2>
+							<!--消息列表-->
+							<div  id="msg_list"></div>
+						</div>
+					</li>
+				</ul>
+				<div class="layui-col-md3"></div>
+			</div>
+	
+	</div>		
+	<include file="Public:footer" />
+	<script src="__COMMON__/app/echarts.simple.min.js"></script>
+	<script type="text/javascript">
+		//实例化
+		 var my_res_type = echarts.init(document.getElementById('wite'));
+		var my_res_regin = echarts.init(document.getElementById('adiuo')); 
+		//商机来源分布配置项
+			res_type = {
+				series : [
+				{
+					type: 'pie',
+					data:[
+						{$res_type}
+					]
+				  }
+				]
+			};	
+			res_regin = {
+				series : [
+					{
+						type: 'pie',
+						data:[
+							{$res_regin}
+						],
+					}
+				]
+			};	
+			//自适应屏幕大小
+			window.addEventListener("resize", function(){ 
+					my_res_type.resize();  
+					my_res_regin.resize();
+			});
+			//加载配置
+			my_res_type.setOption(res_type);
+			my_res_regin.setOption(res_regin);
+	</script>
+</body>
+</html>

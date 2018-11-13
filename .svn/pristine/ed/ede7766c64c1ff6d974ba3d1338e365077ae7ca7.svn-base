@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+	.layui-treeSelect .ztree li span.button.switch{
+		position: relative;
+		top:-7px;
+	}
+</style>
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="form-box">
+                    <div class="layui-inline" style="width: 150px">
+                        <input type="text"  id="tree" name="" lay-filter="tree" class="layui-input">
+                    </div>
+                    <div class="layui-inline">
+                        <input type="text" style="width: 150px" name="" placeholder="姓名/电话" autocomplete="off" class="layui-input" id="like">
+                    </div>
+
+                    <button style="margin-left: 20px;" class="layui-btn layui-btn-normal" lay-submit id="search" lay-filter="search">搜索</button>
+                </div>
+                <div class="layui-form">
+                    <table id="department_table" class="layui-hide" lay-filter="department_table"></table>
+                </div>
+            </div>
+            <div class="form-box" style="text-align: center">
+                <button class="layui-btn layui-btn-blue" id="choose" lay-submit >选择</button>
+                <button type="reset" id="close" class="layui-btn layui-btn-primary ">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+<include file="Public:footer" />
+<script type="text/javascript">
+    layui.config({
+        base: path+'/modules/table/',
+    })
+    var datass;
+    layui.use(['treetable','form','table','layer'],function() {
+        var o = layui.$, treetable = layui.treetable,form=layui.form, table = layui.table,layer=layui.layer;
+
+
+        //渲染表格
+        Machine= table.render({
+            elem: '#department_table',
+            url: "{:U('Part/get_user')}" //数据接口
+            ,page: true //开启分页
+            ,response: {
+                statusCode: 200 //规定成功的状态码，默认：0
+            }
+            ,cols: [[
+                {type: 'radio'}
+                , {title: '上级单位', field: 'name'}
+                , {title: '工号', field: 'user_code'}
+                , {title: '姓名', field: 'user_name'}
+								, {title: '电话', field: 'tel'}
+            ]]
+        });
+
+        o("#search").click(function(){
+            var part_id = o('#tree').val();
+            var search =o('#like').val();
+            data= {part_id:part_id,search:search};
+            Machine.reload({
+                where:data,
+                page: {
+                    curr: 1
+                }
+            });
+
+        })
+        //监听表格选中
+       var lengths,idstring,leader,leader_name,leader_id;
+        table.on('radio(department_table)', function(obj){
+            console.log(obj)
+            datass=obj.data.user_name;
+						//添加上级部门
+						window.parent.document.getElementById("department-leader").value=obj.data.user_name;
+						window.parent.document.getElementById("department-id").value=obj.data.uid;
+            //编辑部门负责人
+            window.parent.document.getElementById("edit-input-leader").value=obj.data.user_name;
+            window.parent.document.getElementById("edit-input-leaderId").value=obj.data.uid;
+            //添加下级部门负责人
+            window.parent.document.getElementById("child-department-leader").value=obj.data.user_name;
+            window.parent.document.getElementById("child-department-id").value=obj.data.uid;
+        });
+        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        o('#choose').click(function() {
+                 /*
+                leader_name=window.parent.document.getElementById("department-leader");
+                 leader_name.value=datass;
+                window.parent.document.getElementById("department-id").value=leader_id;
+                */
+
+                  parent.layer.close(index);
+        });
+        //点击关闭弹层
+
+       o('#close').click(function () {
+           parent.layer.close(index);
+        })
+
+
+
+    })
+    /*
+     treetable.on('treetable(test1)',function(data){
+         console.dir(o(data.elem).html());
+     })
+
+     treetable.on('treetable(add)',function(data){
+         console.dir(data);
+     })*/
+    //树状选择框
+    layui.config({
+        base: path+'/modules/treeSelect/',
+    })
+    layui.use(['treeSelect','form','layer'],function(){
+        var treeSelect= layui.treeSelect;
+
+        treeSelect.render({
+            // 选择器
+            elem: '#tree',
+            // 数据
+            data: "{:U('Back/select_part')}",
+            // 异步加载方式：get/post，默认get
+            type: 'get',
+            // 占位符
+            placeholder: '选择部门',
+            // 是否开启搜索功能：true/false，默认false
+            search: false,
+            // 点击回调
+            click: function(d){
+                console.log(d);
+                $('#tree').val(d.current.id);
+
+            },
+            // 加载完成后的回调函数
+            success: function (d) {
+                console.log(d);
+                //                选中节点，根据id筛选
+                //                treeSelect.checkNode('tree', 3);
+
+                //                获取zTree对象，可以调用zTree方法
+                //                var treeObj = treeSelect.zTree('tree');
+                //                console.log(treeObj);
+
+                //                刷新树结构
+                //                treeSelect.refresh();
+            }
+        });
+    })
+</script>
+</body>
+</html>

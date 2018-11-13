@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+	.layui-treeSelect .ztree li span.button.switch{
+		position: relative;
+		top:-7px;
+	}
+</style>
+<div class="layui-content">
+	<div class="layui-row">
+		<div class="layui-card">
+			<div class="layui-card-body">
+				<div class="layui-form">
+					<div class="layui-form-item">
+						<label class="layui-form-label" style="font-weight:bold;">标题：</label>
+						<div class="layui-input-block">
+							<h4 id="title">{$data.title}</h4>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<label class="layui-form-label" style="font-weight:bold;">创建时间：</label>
+						<div class="layui-input-block">
+							<h4 id="create-time">{$data.creat_time}</h4>
+						</div>
+					</div>
+					<div class="layui-form-item">
+						<label class="layui-form-label" style="font-weight:bold;">内容：</label>
+						<div class="layui-input-block">
+							<div id="content">{$data.content}</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<include file="Public:footer" />
+<script>
+    $("body").bind("keydown",function(event){
+        if (event.keyCode == 116) {
+            event.preventDefault(); //阻止默认刷新
+            location=location;
+        }
+    })
+</script>
+<script>
+    layui.config({
+        base: path+'/modules/table/',
+    })
+    layui.use(['table','layer','jquery','layedit','form'], function(){
+        var table = layui.table,layer= layui.layer,$ = layui.jquery,layedit=layui.layedit,form=layui.form;
+        var edit=layedit.build('editor',{
+            tool: ['strong', 'italic', 'underline', 'del','|', 'left','center','right','image'],
+            height:480
+        })
+    });
+</script>
+</body>
+</html>

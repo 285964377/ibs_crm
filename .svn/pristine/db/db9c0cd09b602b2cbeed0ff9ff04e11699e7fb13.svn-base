@@ -1,0 +1,81 @@
+<?php
+namespace Home\Controller;
+//客户备注标签
+class LabelController extends BackController
+{
+  public function index(){
+      if ($_GET['index']) {
+          $this->display();
+      }
+      if ($_GET['search_data']) {
+          $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+          $num = (I('get.limit') != '') ? I('get.limit') : 10;         //每页条数
+          $data = M('label')->limit($page, $num * $page)->select();
+          $list['code'] = 200;
+          $list['data'] = $data;
+          $list['count'] = M('label')->count();
+          echo json_encode($list, true);
+      }
+  }
+  public function add(){
+      if (IS_POST) {
+          $data['type'] = I('post.type');
+          $data['content'] = I('post.content');
+          $where['type']=array('eq',$data['type']);
+          $check = M('label')->where($where)->find();
+          if ($check) {
+              $list['code'] = 'error';
+              $list['msg'] = '标签存在重复';
+              echo json_encode($list, true);
+              exit;
+          } else {
+              M('label')->add($data);
+              $list['code'] = '200';
+              $list['msg'] = '添加成功';
+              echo json_encode($list, true);
+              exit;
+          }
+      }
+  }
+    /**
+     * 修改
+     */
+    public function edit()
+    {
+        if (IS_POST) {
+            $id = I('post.id');
+            $data['type'] = I('post.type');
+            $data['content'] = I('post.content');
+            $check = M('label')->where(['type' =>$data['type']])->find();
+            if ($check) {
+                $list['code'] = 'error';
+                $list['msg'] = '重复命名';
+                echo json_encode($list, true);
+                exit;
+            }
+            M('label')->where('id='.$id)->save($data);
+            $list['code'] = '200';
+            $list['msg'] = '修改成功';
+            echo json_encode($list, true);
+            exit;
+        }
+    }
+    //**删除
+    public function delete()
+    {
+        $id = I('get.id');
+        if ($id) {
+            M('label')->where('id=' . $id)->delete();
+            $list['code'] = '200';
+            $list['msg'] = '删除成功';
+            echo json_encode($list, true);
+            exit;
+        } else {
+            $list['code'] = 'error';
+            $list['msg'] = '参数不存在';
+            echo json_encode($list, true);
+            exit;
+        }
+    }
+
+}

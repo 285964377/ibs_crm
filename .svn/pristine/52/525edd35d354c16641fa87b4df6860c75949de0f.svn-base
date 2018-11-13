@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+	.layui-treeSelect .ztree li span.button.switch{
+		position: relative;
+		top:-7px;
+	}
+</style>
+<div class="layui-content">
+	<div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="layui-form" id="e-form">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label" style="font-weight:bold;">标题：</label>
+                        <div class="layui-input-block">
+                            <input type="text"  name="title" required  value="{$data.title}" lay-verify="required" placeholder="请输入标题" maxlength="20"  autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label" style="font-weight:bold;">内容：</label>
+                        <div class="layui-input-block">
+                            <textarea id="editor" name="content" class="layui-textarea" style="display: none;">{$data.content}</textarea>
+                        </div>
+                    </div>
+                    <div class="layui-form-item" style="margin-top: 30px">
+                        <div class="layui-input-block">
+							<input name="id" value="{$data.id}" type="hidden" />
+                            <button class="layui-btn  layui-btn-primary layui-btn-blue" style="color: white" lay-submit lay-filter="get_add">发布</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</div>
+</div>
+
+<include file="Public:footer" />
+
+<script>
+	var post_img = "__WWW__"+"/uploader/fileupload.php";
+    layui.config({
+        base: path+'/modules/table/',
+    })
+    layui.use(['table','layer','jquery','layedit','form'], function(){
+        var table = layui.table,layer= layui.layer,$ = layui.jquery,layedit=layui.layedit,form=layui.form;
+		layedit.set({
+		  uploadImage: {
+			url: post_img, //接口url
+		  }
+		});
+        var edit=layedit.build('editor',{
+            tool: ['strong', 'italic', 'underline', 'del','|', 'left','center','right','image'],
+            height:480
+        })
+     
+		
+        form.on('submit(get_add)', function(data){
+            content = layedit.getContent(edit);
+            if(content==''){
+                layer.msg('内容不能为空！')
+                return false;
+            }
+            data.field.content = content;
+            var index_o = layer.load();
+            $.ajax({
+                url:"edit.html",
+                type:"post",
+                data:data.field,
+                dataType:"json",
+                success:function(res){
+                    layer.close(index_o);
+                    top.layer.msg(res.msg);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            var page = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                            parent.layer.close(page); //再执行关闭
+                            parent.location.reload();
+                        },500)
+                    }
+                }
+            })
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

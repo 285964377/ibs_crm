@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+    .hide{
+        display:none;
+    }
+    .layui-form-item .layui-input-block{
+        margin-right: 20px;
+    }
+		.layui-form-label{
+			width:auto
+		}
+</style>
+<div class="layui-content">
+	<form class="layui-form" id="add_form">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="form-box">
+										<div class="layui-form">
+												<div class="layui-inline">
+													<label class="layui-form-label">角色名称：</label>
+													<div class="layui-input-inline">
+														<input type="text" value="" name="title" placeholder="请输入角色名称" class="layui-input" id="title" >
+													</div>
+												</div>
+											  <div class="layui-inline">
+													<label class="layui-form-label">备注：</label>
+													<div class="layui-input-inline">
+														<input type="text" value="" name="descript" placeholder="请输入备注" class="layui-input" id="descript" >
+													</div>
+												</div>
+												<div class="layui-inline">
+													<label class="layui-form-label">数据权限：</label>
+													<div class="layui-input-inline">
+														<select name="show_data" lay-verify="required">
+															<option value="self">自己</option>
+															<option value="part">本部门</option>
+															<option value="all">全部</option>
+														</select>
+													</div>
+												</div>
+												<div class="layui-inline">
+													<label class="layui-form-label">显示手机：</label>
+													<div class="layui-input-inline">
+														<select name="show_tel" lay-verify="required">
+															<option value="1">是</option>
+															<option value="2">否</option>
+														</select>
+													</div>
+												</div>
+										</div>
+										
+								</div>
+								<div class="layui-form">
+									<div class="layui-form-item" class="allChooseBox">
+										<label class="layui-form-label">全部选中：</label>
+										<div class="layui-input-block">
+										<input type="checkbox" lay-skin="primary" lay-filter="selectAll" id="selectAll" title="选择">
+										</div>
+									</div>
+									<div id="role-list">
+									<volist name="result" id="item">
+										<div class="layui-form-item">
+											<label class="layui-form-label">{$key}:</label>
+											<div class="layui-input-block role-list">
+												<input type="checkbox"  lay-skin="primary"  lay-filter="selectLine" class="selectLine" title="全选">
+												<volist name="item" id="son">
+												<input type="checkbox" name="id[]" lay-skin="primary" value="{$son.id}" class="choose" lay-filter="choose" title="{$son.title}">
+												</volist>
+											</div>
+										</div>
+										
+									</volist>	
+									</div>
+								</div>
+								<div class="layui-inline">
+									<a class="layui-btn layui-btn-blue addBtn" style="margin-left:10px;">
+										保存
+									</a>
+								</div>
+						</div>
+				</div>	
+		</div>
+		
+	</form>
+</div>								
+	<include file="Public:footer" />
+	<script>
+	layui.config({
+		base : "js/"
+	}).use(['form','layer','jquery'],function(){
+		var form = layui.form,
+			layer = parent.layer === undefined ? layui.layer : parent.layer,
+			$ = layui.jquery;
+		//保存权限
+		$(".addBtn").click(function(){
+			var $checkbox = $('#role-list input[type="checkbox"]');
+			var formData = new FormData($('#add_form')[0]);
+			var title = $('#title').val()
+			var descript = $('#descript').val();
+			if(!title){
+				top.layer.msg("请填写角色名称!");
+				return false;
+			}
+			
+		  if(title.length>8){
+				top.layer.msg("角色名长度不能超过8!");
+				return false;
+			}
+			
+		  if(descript.length>8){
+				top.layer.msg("备注长度不能超过8!");
+				return false;
+			}
+			if($checkbox.is(":checked")){
+				var index_o = layer.load(); 
+				$.ajax({
+					url:'add.html',
+					type:'POST',
+					cache: false,
+					processData: false,
+					contentType: false,
+					data:formData,
+					dataType:"json",
+					success:function(data){
+						setTimeout(function(){
+							layer.close(index_o);
+							if(data.code == 'ERROR'){
+								top.layer.msg(data.msg);
+							}else{
+									top.layer.msg("添加成功!");
+							}
+							layer.closeAll("iframe");
+							//刷新父页面
+							parent.location.reload();
+						},200);
+						
+					}
+				})
+			}else{
+				layer.msg("请选择需要添加的权限！");
+			}
+		})
+		//全选
+		form.on('checkbox(selectAll)', function(data){
+			var child = $("#role-list input[type='checkbox']");
+			child.each(function(index, item){
+				item.checked = data.elem.checked;
+			});
+			form.render('checkbox');
+		});
+
+		//通过判断文章是否全部选中来确定全选按钮是否选中
+		form.on("checkbox(choose)",function(data){
+			
+			/*判断当前父级是否应该被选中*/	
+			var choose = $(data.elem).parent().find('.choose');
+			var choose_ed=$(data.elem).parent().find('.choose:checked');
+			if(choose.length == choose_ed.length){
+				$(data.elem).parent().find('.selectLine').get(0).checked=true;
+			}else{
+				$(data.elem).parent().find('.selectLine').get(0).checked=false;
+			}
+			form.render('checkbox');
+			
+			
+			/*查看所有父级是否被选中*/
+			var nav = $(data.elem).parents('#role-list').find('.selectLine');
+			var nav_ed = $(data.elem).parents('#role-list').find('.selectLine:checked');
+			if(nav.length == nav_ed.length){
+				$(data.elem).parents('#role-list').siblings("div").find('input#selectAll').get(0).checked = true;
+			}else{
+				$(data.elem).parents('#role-list').siblings("div").find('input#selectAll').get(0).checked = false;
+			}
+			form.render('checkbox');
+		})
+		
+
+		  //全选单行
+		form.on('checkbox(selectLine)', function(data){
+			var child = $(data.elem).siblings();
+			child.each(function(index, item){
+				item.checked = data.elem.checked;
+			});
+			form.render('checkbox');
+			/*查看所有父级是否被选中*/
+			var nav = $(data.elem).parents('#role-list').find('.selectLine');
+			var nav_ed = $(data.elem).parents('#role-list').find('.selectLine:checked');
+			if(nav.length == nav_ed.length){
+				$(data.elem).parents('#role-list').siblings("div").find('input#selectAll').get(0).checked = true;
+			}else{
+				$(data.elem).parents('#role-list').siblings("div").find('input#selectAll').get(0).checked = false;
+			}
+			 form.render('checkbox');
+			
+		});
+		
+	})
+	</script>
+</body>
+</html>

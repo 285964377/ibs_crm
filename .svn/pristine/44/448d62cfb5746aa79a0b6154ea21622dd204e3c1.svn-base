@@ -1,0 +1,37 @@
+<?php
+
+namespace Home\Controller;
+class MsgController extends BackController
+{
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;         //每页条数
+            if(I('get.type')){
+                $where['type']=array('eq',I('get.type'));
+            }
+            $data = M('msg_user')->where($where)->limit($page, $num * $page)->select();
+            foreach ($data as $k => $v) {
+                switch ($v['type']) {
+                    case 1;
+                        $data[$k]['type'] = '自动通知';
+                        break;
+                    case 2;
+                        $data[$k]['type'] = '管理员主动发送';
+                        break;
+                }
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('msg_user')->where($where)->count();
+            echo json_encode($list, true);
+        }
+    }
+    public function add(){
+        
+    }
+}

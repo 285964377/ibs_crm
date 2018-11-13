@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html style="background:#f4f4f4">
+<head>
+	<title>充值中心</title>
+	<meta charset="utf-8" />
+	<meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport"/>
+	<meta content="yes" name="apple-mobile-web-app-capable"/>
+	<meta content="black" name="apple-mobile-web-app-status-bar-style"/>
+	<meta content="telephone=no" name="format-detection"/>
+	<link rel="stylesheet" href="__WXPAY__/css/public.css"/>
+	<link rel="stylesheet" href="__WXPAY__/css/style.css"/>
+	<script src="__WXPAY__/js/flex.js"></script>
+	<script src="__WXPAY__/js/jquery-3.1.1.min.js"></script>
+</head>
+<body style="background:none;"> 
+	<img src="__WXPAY__/images/head_top.jpg" class="head_top"/>
+	<div class="recharge_box">
+		<h2>客户信息</h2>
+		<ul class="recharge_box_list">
+			<li class="flex_dq">
+				<span>姓名</span>
+				<input type="text" maxlength="6" onfocus="t_focus(this)" id="name" onblur="blur_fn(this)" value="" placeholder="请输入您的姓名"/>
+			</li>
+			<li class="flex_dq">
+				<span>电话</span>
+				<input type="text" maxlength="11" onfocus="t_focus(this)" id="tel" value="" onblur="blur_fn(this)"  placeholder="请输入您的电话号码"/>
+			</li>
+			<li class="flex_dq">
+				<span style="letter-spacing:4px;">身份证</span>
+				<input type="text" maxlength="18" onfocus="t_focus(this)" id="id_cord" value="" onblur="blur_fn(this)" placeholder="请输入您的身份证号码"/>
+			</li>
+		</ul>
+	</div>
+	<div class="recharge_box">
+		<h2>商务信息</h2>
+		<ul class="recharge_box_list">
+			<li class="flex_dq">
+				<span>姓名</span>
+				<input type="text" maxlength="6" onfocus="t_focus(this)" id="service_name" value="" onblur="blur_fn(this)"  placeholder="请输入您的姓名"/>
+			</li>
+			<li class="flex_dq">
+				<span>工号</span>
+				<input type="tel" onfocus="t_focus(this)" value="" id="service_tel" onblur="blur_fn(this)" placeholder="请输入您的电话号码"/>
+			</li>
+		</ul>
+	</div>
+	<div class="recharge_box">
+		<ul class="recharge_box_list" style="padding-top:0;">
+			<li class="flex_dq" style="margin-bottom:0;">
+				<span>金额</span>
+				<input type="tel" id="money" style="border:none;border-left:1px solid #d5d5d5;border-radius:0;" value="" placeholder="请输入您要贷款的金额"/>
+			</li>
+		</ul>	
+	</div>
+	<a href="javascript:;" class="yes_recharge">确认充值</a>
+	<script src="__WXPAY__/js/public.js"></script>
+<script>
+	 function t_focus(obj){
+			$(obj).css({'border':'1px solid #0594d6','transition':'1s'})
+	 }
+	 function blur_fn(obj){
+		  $(obj).css({'border':'1px solid #d5d5d5','transition':'1s'})
+	 }
+	 function error(obj){
+		  $(obj).css({'border':'1px solid red','transition':'1s'})
+	 }
+	 $('.yes_recharge').click(function(){
+		 var name = $('#name');  //客户姓名
+		 var tel = $('#tel');  //客户电话
+		 var id_cord = $('#id_cord')//客户身份证
+		 var service_name = $('#service_name')//商务姓名
+		 var service_tel = $('#service_tel')//商务工号
+		 var money=$('#money')//商务金额
+		 if(name.val()==''){
+			 msg('请输入客户姓名');
+			 error(name);
+			 return false;
+		 }
+		 if(!mobile.test(tel.val())){
+			 msg("请输入正确的客户电话号码");
+			 error(tel);
+			 return false;
+		 }
+		 if(!identity_card.test(id_cord.val())){
+			 msg("请输入正确的客户身份证号码");
+			 error(id_cord);
+			 return false;
+		 }
+		 if(service_name.val()==''){
+			 msg('请输入商务姓名');
+			 error(service_name);
+			 return false;
+		 }
+		 if(service_tel.val()==''){
+		 	msg('请输入商务工号');
+		 	error(service_tel);
+		 	return false;
+		 }
+		 if(money.val()==''){
+		 msg('请输入充值金额');
+		 return false;
+		 }
+		 var pay_way=1;
+		 datas={
+			 'cus_name':name.val(),
+			 'cus_tel':tel.val(),
+			 'cus_card':id_cord.val(),
+			 'worker_name':service_name.val(),
+			 'worker_code':service_tel.val(),
+			 'money':money.val(),
+			 'openid':"{$openid}",
+			 'pay_way':pay_way
+		 }
+		 GetApi("{:U('Wxpay/Wxpay/index')}",'POST',datas,function(res){
+			 console.log(res)
+			 if(res.return_code=='ERROR'||res.return_code=='FAIL'){
+				 msg(res.return_msg);
+			 }else{
+			     if(pay_way==1){
+                     if(typeof WeixinJSBridge == "undefined"){
+                         if( document.addEventListener ){
+                             document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+                         }else if (document.attachEvent){
+                             document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
+                             document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+                         }
+                     }else{
+                         var njson =  JSON.stringify(res);
+                         onBridgeReady(njson);
+                     }
+
+				 }
+
+				 if(pay_way==4){
+			         window.location.href=res.code_url;
+
+				 }
+
+				 if(pay_way==3){
+			         alert(res);
+				 }
+
+			}
+		 },function(){
+			 
+		 })
+	 })
+	 	function onBridgeReady(jsApiParameters){
+	 	WeixinJSBridge.invoke(
+	 			'getBrandWCPayRequest',jsApiParameters,
+	 			function(res){
+                    if(res.err_msg=="get_brand_wcpay_request:ok"){
+                        tc_Two('支付成功',function(){
+                            $('.poup-dw').fadeOut('slow');
+                        })
+                    }
+                    if(res.err_msg=="get_brand_wcpay_request:cancel"){
+
+
+                    }
+                    if(res.err_msg=="get_brand_wcpay_request:fail"){
+                        tc_Two(res.err_msg+res.err_desc,function(){
+                            $('.poup-dw').fadeOut('slow');
+                        })
+                    }
+	 	}); 
+	 }
+	 //金额验证
+	 $(document).on("keyup","#money",function(){
+        je(this);
+        
+      });
+	function je(obj){
+			var num=$(obj).val();
+			if(num==""){
+				num=0;
+				$(obj).val(num);
+				return;
+			}
+			
+			var len=num.split(".");
+			if(len[1]==0){
+				 return;
+			}
+			if(len.length>1&& len[1].length>1){
+				num=parseFloat(num);
+				num=num.toFixed(2);
+			}else{
+				num=parseFloat(num);
+			}
+			$(obj).val(num);
+	}
+</script>
+</body>
+</html>

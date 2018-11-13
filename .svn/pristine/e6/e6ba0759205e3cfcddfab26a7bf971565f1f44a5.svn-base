@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<include file="Public:header"/>
+<style>
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+
+    .layui-view-body {
+        background: #fff;
+    }
+
+    .layui-table {
+        margin-top: 0
+    }
+
+    .layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row] {
+        border-width: 1px;
+        border-style: solid;
+        border-color: #c6d1d6;
+    }
+
+    .layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even) {
+        background: url(__COMMON__/images/t_bck.png) repeat-x;
+        background-size: 100% 100%;
+    }
+
+    .layui-table td, .layui-table th {
+        padding: 0;
+        text-align: center;
+        line-height: 28px;
+        font-size: 12px;
+        color: #000
+    }
+
+    .layui-form-item {
+        clear: none;
+    }
+
+    .layui-form-mid {
+        line-height: 12px;
+    }
+
+    .layui-form-label {
+        width: auto;
+    }
+
+    .layui-table-view .layui-table {
+        width: 100%;
+    }
+
+    .my_fj_list img {
+        width: 100%;
+        height: 138px;
+        cursor: pointer;
+    }
+
+    .my_fj_list li {
+        margin-bottom: 20px;
+    }
+
+    .my_fj_list li > div {
+        border: 1px solid #eee;
+        position: relative;
+    }
+
+    .my_fj_list p {
+        font-size: 12px;
+        padding: 10px 6px;
+        background: #eff3f5;
+        color: #000;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .my_fj_list li > div span {
+        cursor: pointer;
+
+        display: block;
+        width: 36px;
+        height: 36px;
+        background: url(/crm/Application/Home/Common/images/del.png) no-repeat;
+        background-size: 100% 100%;
+        position: absolute;
+        right: -18px;
+        top: -15px;
+    }
+</style>
+<body class="layui-view-body">
+<div class="layui-content">
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p><span class="fwt">工单基础信息</span></p></li>
+        </div>
+        <ul class="my_style_table_body">
+            <li class="layui-row">
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>编号：</span>
+                        <span>{$demand.code}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>贷款金额：</span>
+                        <span>{$demand.money}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>利息：</span>
+                        <span>{$demand.lixi_way}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>业务类型：</span>
+                        <span>{$demand.business_type}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>贷款类型：</span>
+                        <span>{$demand.dk_type}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>手续费：</span>
+                        <span>{$demand.recharge}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p>
+                        <span>渠道：</span>
+                        <span>{$demand.channel}</span>
+                    </p>
+                </div>
+                <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                    <p></p>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <!--备注和添加附件-->
+    <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+        <ul class="layui-tab-title">
+            <li class="layui-this">操作记录</li>
+            <li>财务核款信息</li>
+            <li>添加备注</li>
+            <li>添加附件</li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <!--操作记录-->
+                <div class="form-box">
+                    <div class="layui-form" action="">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">操作时间</label>
+                            <div class="layui-input-inline">
+                                <input type="text" value="" class="layui-input" id="times"  name="create_time"/>
+                            </div>
+                            <button class="layui-btn layui-btn-blue search_btn "lay-submit lay-filter="get_search"><i  class="layui-icon">&#xe615;</i>查询</button>
+                        </div>
+                    </div>
+                </div>
+                <table id="hostry" lay-filter="hostry"></table>
+            </div>
+            <div class="layui-tab-item">
+                <!--财务核款信息-->
+                <div class="my_style_table">
+                    <div class="head_top_table">
+                        <li><p><span class="fwt">财务核款信息</span></p></li>
+                    </div>
+                    <table class="layui-table">
+                        <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>款项</th>
+                            <th>金额</th>
+                            <th>申请时间</th>
+                            <th>审核时间</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <volist name="log" id="logs">
+                            <tr>
+                                <td>{$logs.type}</td>
+                                <td>{$logs.rk_type}</td>
+                                <td>{$logs.money}</td>
+                                <td>{$logs.creat_time}</td>
+                                <td>{$logs.check_time}</td>
+                            </tr>
+                        </volist>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="layui-tab-item">
+                <div class="form-box" style="padding: 16px">
+                    <div class="layui-form" action="">
+                        <div class="layui-form-item">
+                            <div class="layui-input-inline" style="width: 500px">
+                                <textarea name="desc" style="height: 300px" placeholder=""
+                                          class="layui-textarea"></textarea>
+                            </div>
+                        </div>
+                        <ul class="head_top_table"
+                            style="border: none;background: none;margin-bottom: -20px">
+                            <li>
+                                <button class="layui-btn layui-btn-blue "
+                                        id="submit">提交备注
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-tab-item">
+                <ul class="head_top_table"
+                    style="border: none;background: none;margin-bottom: -20px">
+                    <li>
+                        <button href="javascript:;" class="layui-btn layui-btn-blue"
+                                id="add_img" style="margin-bottom:10px;">添加附件
+                        </button>
+                    </li>
+                </ul>
+                <ul class="my_fj_list layui-row layui-col-space30" style="" id="people_list_fj">
+                    <volist name="fujian" id="fujians">
+                        <li class="layui-col-md2 layui-col-xs4">
+                            <div>
+                                <img src="__WWW__/{$fujians.url}" alt=""/>
+                                <p>{$fujians.title}</p>
+                                <span onclick="del_fj(this)" data-id="{$fujians.id}"></span>
+                            </div>
+                        </li>
+                    </volist>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<include file="Public:footer"/>
+<script>
+
+    var tc_o, tc_t, tc_r, tc_f, add_box, Machine;
+    var Ids = "{$id}";
+    layui.config({
+        base: path + '/modules/treeSelect/',
+    })
+    layui.use(['table', 'layer', 'jquery', 'form', 'element', 'treeSelect', 'laydate'], function () {
+        var table = layui.table, layer = layui.layer, form = layui.form, $ = layui.jquery, laypage = layui.laypage,
+            element = layui.element, treeSelect = layui.treeSelect, laydate = layui.laydate;
+        laydate.render({
+            elem: '#times',
+            range: '~',
+            type: 'datetime'
+        });
+        layer.photos({
+            photos: '#imgs'
+            , anim: 5
+        });
+        form.on('submit(get_search)', function(data){
+            data=data.field;
+            if($('#creat_time').val()){
+                var Nlast = data.create_time.split('~');
+                data.create_time_start=Nlast[0];
+                data.create_time_end=Nlast[1];
+            }
+            delete  data.creat_time;
+            Machine.reload({
+                where:data,
+                page: {
+                    curr: 1
+                }
+            });
+            return false;
+        });
+        $('#add_img').click(function () {
+            layui.layer.open({
+                title: "添加附件",
+                type: 2,
+                content: 'add_fujian.html?id=' + Ids,
+                area: ["420px", "380px"]
+            })
+        })
+        var cz_table = table.render({
+            elem: '#hostry'
+            , height: 312
+            , url: "operator?&id={$res.id}"
+            , page: true
+            , response: {
+                statusCode: 200
+            }
+            , cols: [[
+                {field: 'user_name', title: '操作人'}
+                , {field: 'code', title: '工号'}
+                , {field: 'controller_name', title: '操作类型'}
+                , {field: 'content', title: '内容/备注'}
+                , {field: 'creat_time', title: '操作时间'}
+            ]]
+        });
+        layer.photos({
+            photos: '#people_list_fj'
+            , anim: 5
+        });
+    })
+
+</script>
+</body>
+</html>

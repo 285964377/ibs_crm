@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/crm/Application/Home/Common/layui/css/layui.css">
+    <link rel="stylesheet" href="/crm/Application/Home/Common/layui/css/admin.css">
+	<link rel="stylesheet" href="/crm/Application/Home/Common/layui/css/view.css">
+    <link rel="stylesheet" href="/crm/Application/Home/Common/css/style.css"/>
+    <link rel="icon" href="/crm/Application/Home/Common/favicon.ico">
+    <title>兴百惠CRM</title>
+</head>
+
+<body class="layui-view-body">
+	<style>
+		.layui-form-label{
+			width:auto;
+		}
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+		.layui-treeSelect .ztree li span.button.switch{
+			position: relative;
+			top:-7px;
+		}
+	</style>
+	<script src="/crm/Application/Home/Common/layui/layui.js"></script>
+<script src="/crm/Application/Home/Common/js/jquery.js"></script>
+<script>
+		$("body").bind("keydown",function(event){  
+           if (event.keyCode == 116) {  
+	         event.preventDefault(); //阻止默认刷新  
+	         location=location;  
+            }  
+        })
+		var path = "/crm/Application/Home/Common";
+		function Ajax(url,type,datas,fun){
+			$.ajax({
+				url:url,
+				type:type,
+				data:datas,
+				dataType:'json',
+				success:fun
+			})
+		}
+		function refresh(){
+			location=location;
+		}
+		function je(obj){
+			var num=$(obj).val();
+			if(num==""){
+				num=0;
+				$(obj).val(num);
+				return;
+			}
+			if(num=='NaN'){
+				num=0;
+				$(obj).val(num);
+				return;
+			}
+			var len=num.split(".");
+			if(len[1]==0){
+				return;
+			}
+			if(len.length>1&& len[1].length>1){
+				num=parseFloat(num);
+				num=num.toFixed(2);
+			}else{
+				num=parseFloat(num);
+			}
+			$(obj).val(num);
+		}
+		//商机跳转
+		function get_url(obj,id,url,text){
+				var id = id;
+				var url = url;
+				var text = text;
+			layui.use(['layer', 'element', 'jquery'], function() {
+				var layer = layui.layer;
+				var element = layui.element;
+				var $ = layui.jquery;
+				var isActive = $('#appTabs', parent.document).click().find('li[lay-id="'+id+'"]');
+				if(isActive.length>0){
+						//切换到选项卡
+						parent.layui.element.tabChange('tabs', id);
+					}else{
+						parent.layui.element.tabAdd('tabs',{
+							title: text,	
+							content:'<iframe  src="' + url + '" name="iframe' + id + '" class="iframe" framborder="0" data-id="' + id + '" scrolling="auto" width="100%"  height="100%"></iframe>',
+							id:id
+						})
+						parent.layui.element.tabChange('tabs',id);
+					}
+					parent.layui.element.init();
+			})
+		}
+		
+</script>
+	<div class="my_share_box" style="padding:20px;">
+		<div class="layui-form">
+			<div class="layui-input-inline">
+				<input type="text"  id="tree" name="part_id" lay-filter="tree" class="layui-input">
+				<input type="hidden" name="id" value="{$id}"/>
+			</div>
+			<button class="layui-btn layui-btn-blue"  lay-submit lay-filter="get_add">确定</button>
+		</div>
+	</div>
+	<script type="text/javascript">
+			layui.config({
+				base: path+'/modules/table/',
+			})
+			layui.use(['form','layer','table'],function(){
+				var $ = layui.$,data,layer=layui.layer,form=layui.form,table=layui.table;
+				form.on('submit(get_add)', function(data){
+					layer.confirm('确认分配吗?',{icon: 3, title:'分配'}, function(index){
+						var index_o = layer.load();
+						$.ajax({
+							url:"allot_part.html",
+							type:"post",
+							data:data.field,
+							dataType:"json",
+							success:function(res){
+								layer.close(index_o);
+								top.layer.msg(res.msg);
+								if(res.code==200){
+									setTimeout(function(){
+										parent.layui.table.reload('Machine');
+										var page = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+										parent.layer.close(page); //再执行关闭
+									},500)
+								}
+							}
+						})
+					})
+					return false;
+				});
+			})			
+			layui.config({
+					base: path+'/modules/treeSelect/',
+				})
+				layui.use(['treeSelect','form','layer'],function(){
+					var treeSelect= layui.treeSelect;
+			
+					treeSelect.render({
+						// 选择器
+						elem: '#tree',
+						// 数据
+						data: "/crm/index.php/Home/Back/select_part.html",
+						// 异步加载方式：get/post，默认get
+						type: 'get',
+						// 占位符
+						placeholder: '选择部门',
+						// 是否开启搜索功能：true/false，默认false
+						search: false,
+						// 点击回调
+						click: function(d){
+							$('#tree').val(d.current.id);
+			
+						},
+						// 加载完成后的回调函数
+						success: function (d) {
+						}
+					});
+				})
+	</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.hide{
+			display:none;
+		}
+        .layui-form-item .layui-input-block{
+            margin-right: 20px;
+        }
+	</style>
+    <div class="layui-content">
+        <div class="layui-row">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="form-box">
+                        <!-- <div class="layui-form layui-form-item">
+                            <div class="layui-inline">
+                                <div class="layui-form-mid">用户名:</div>
+                                <div class="layui-input-inline" style="width: 100px;">
+                                  <input type="text" autocomplete="off" class="layui-input">
+                                </div>
+                                <div class="layui-form-mid">邮箱:</div>
+                                <div class="layui-input-inline" style="width: 100px;">
+                                  <input type="text" autocomplete="off" class="layui-input">
+                                </div>
+                                <div class="layui-form-mid">性别:</div>
+                                <div class="layui-input-inline" style="width: 100px;">
+                                    <select name="sex">
+                                        <option value="1">男</option>
+                                        <option value="2">女</option>
+                                    </select>     
+                                </div>
+                                <button class="layui-btn layui-btn-blue">查询</button>
+                                <button class="layui-btn layui-btn-primary">重置</button>
+                            </div>
+                        </div> -->
+                        <button class="layui-btn layui-btn-blue layui-btn-sm add-depart"><i class="layui-icon">&#xe654;</i>新增上级部门</button>
+                            <button class="layui-btn layui-btn-primary up-all layui-btn-sm"><i class="layui-icon">&#xe619;</i>全部收起</button>
+                            <button class="layui-btn layui-btn-primary down-all layui-btn-sm"><i class="layui-icon">&#xe61a;</i>全部展开</button>
+                    </div>
+					<div class="test-tree-table" lay-filter="test1"></div>
+                </div>
+            </div>
+						
+        </div>
+    </div>
+    <div  class="" id="add-department" style="display: none;padding: 20px 0">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门名称</label>
+                <div class="layui-input-block">
+                    <input type="text" name="name" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门代码</label>
+                <div class="layui-input-block">
+                    <input type="text" name="code" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门负责人</label>
+                <div class="layui-input-block">
+                    <input type="text"  id="department-leader" name="" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+                    <input  id="department-id" name="leader_id" type="hidden" class="layui-input">
+                </div>
+            </div>
+            <hr />
+            <div class="layui-form-item">
+                <div class="layui-input-inline" style="margin-left: 60px">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">保存</button>
+                    <button type="reset" id="close" class="layui-btn layui-btn-primary ">关闭</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!--树状选项框
+		<div  class="layui-container layui-form">
+				<div class="layui-form-item">
+						<label for="" class="layui-form-label">测试</label>
+						<div class="layui-input-block">
+								<input type="text" id="tree" name="" lay-filter="tree" class="layui-input">
+						</div>
+				</div>
+		</div>-->
+    <include file="Public:footer" />
+		<script type="text/javascript">
+			layui.config({
+				base: path+'/modules/table/',
+			})
+			layui.use(['treetable','form','layer'],function(){
+				var o = layui.$,treetable = layui.treetable,data,layer=layui.layer,form=layui.form;
+				o.ajax({
+					url:'index.html?search_data=1',
+					dataType:'json',
+					async:false,
+					success:function(res){
+						data=res.data;
+					}
+				})
+				 parttable = treetable.render({
+					elem: '.test-tree-table',
+					data: data,
+					field: 'name',
+					cols: [
+						{
+							field: 'name',
+							title: '部门名称',
+							width: '30%',
+						},
+						{
+							field: 'code',
+							title: '部门代码',
+							width: '20%',
+						},
+						{
+							field: 'user_name',
+							title: '部门负责人',
+							width: '20%',
+						},
+						{
+							field: 'actions',
+							title: '操作',
+							width: '30%',
+							data: [
+								'<a lay-filter="add" href="1.html"><i class="layui-icon">&#xe654;</i>添加</a>','<a lay-filter="edit" href="xx"><i class="layui-icon">&#xe642;</i>编辑</a>',
+							],
+						},
+					]
+				});
+				
+				treetable.on('treetable(test1)',function(data){
+					console.dir(o(data.elem).html());
+				})
+				
+				treetable.on('treetable(add)',function(data){
+					console.dir(data);
+				})
+				
+				treetable.on('treetable(edit)',function(data){
+					console.dir(data);
+				})
+				
+				o('.up-all').click(function(){
+					treetable.all('up');
+				})
+				
+				o('.down-all').click(function(){
+					treetable.all('down');
+				})
+                //添加部门
+                o('.add-depart').click(function(){
+                  ADD=layer.open({
+                       title: '新增部门',
+                       type: 1,
+                       content: o('#add-department'),
+                       area: ['280px', '320px']
+                   })
+                })
+                //添加部门负责人
+                o('#department-leader').click(function(){
+                    layer.open({
+                        title: '选择负责人',
+                        type: 2,
+                        content: 'department-leader.html',
+                        area: ['800px', '400px']
+                    })
+                })
+                //点击关闭弹层
+                o('#close').click(function () {
+                    layer.closeAll();
+                })
+                //提交添加内容
+                form.on('submit(formDemo)', function(data){
+                    var datas = data.field;
+                    o.ajax({
+                        url:'add.html',
+                        data:datas,
+                        type:'post',
+                        dataType:'json',
+                        success:function(res){
+                            layer.msg(res.msg);
+                            if(res.code==200){
+                                setTimeout(function(){
+                                    layer.closeAll();
+                                    location.reload();
+                                },500)
+                            }
+                        }
+                    })
+
+                    return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+                });
+            });
+		</script>
+</body>
+</html>

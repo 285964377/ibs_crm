@@ -1,0 +1,27 @@
+<?php
+/*
+商机管理
+*/
+namespace Home\Controller;
+class ResourcesController extends BackController {
+	//跟进中商机
+	public function ing(){
+		
+	}
+	
+	//已成单商机
+	public function over(){
+		
+	}
+	
+	//待审核商机
+	public function checking(){
+		
+	}
+	
+	//白名单商机
+	public function checking(){
+		
+	}
+}
+

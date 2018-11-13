@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * 格式化字节大小
+ * @param  number $size      字节数
+ * @param  string $delimiter 数字和单位分隔符
+ * @return string            格式化后的带单位的大小
+ * @author 麦当苗儿 <zuojiazi@vip.qq.com>
+ */
+function format_bytes($size, $delimiter = '') {
+	$units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
+	for ($i = 0; $size >= 1024 && $i < 5; $i++) $size /= 1024;
+	return round($size, 2) . $delimiter . $units[$i];
+}
+
+/**
+*   降低图片质量，旋转图片
+*@param   string $path      图片地址
+*@author  ckj <994539036@qq.com>
+*/
+function img_size($path){
+	$ename=getimagesize($path);
+	$ename=explode('/',$ename['mime']); 
+	$ext=$ename[1]; 
+	switch($ext){ 
+		case "png": 
+			$im=imagecreatefrompng($path); 
+			break; 
+		case "jpeg":
+			$im=imagecreatefromjpeg($path); 
+			break; 
+		case "jpg": 
+			$im=imagecreatefromjpeg($path); 
+			break; 
+	   case "gif": 
+			$im=imagecreatefromgif($path); 
+			break; 
+	} 
+   if(function_exists('exif_read_data')){  
+        $exif = exif_read_data($path);
+        switch($exif['Orientation']){ 
+            case 3: 
+                $im = imagerotate($im, 180, 0);
+                break; 
+            case 6:
+                $im=imagerotate($im, -90, 0);
+                break; 
+            case 8: 
+                $im=imagerotate($im, 90, 0);
+                break; 
+        } 
+    }  
+	imageinterlace($im, 1);
+	Imagejpeg($im,$path, 70); 
+	ImageDestroy($im);
+}
+

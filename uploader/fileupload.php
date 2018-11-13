@@ -1,0 +1,238 @@
+<?php
+/**
+ * upload.php
+ *
+ * Copyright 2013, Moxiecode Systems AB
+ * Released under GPL License.
+ *
+ * License: http://www.plupload.com/license
+ * Contributing: http://www.plupload.com/contributing
+ */
+
+
+// Make sure file is not cached (as it happens for example on iOS devices)
+header('Content-Type: text/html; charset=utf-8');
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+
+// Support CORS
+header("Access-Control-Allow-Origin: *");
+// other CORS headers if any...
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit; // finish preflight CORS requests here
+}
+
+
+if ( !empty($_REQUEST[ 'debug' ]) ) {
+    $random = rand(0, intval($_REQUEST[ 'debug' ]) );
+    if ( $random === 0 ) {
+        header("HTTP/1.0 500 Internal Server Error");
+        exit;
+    }
+}
+
+// header("HTTP/1.0 500 Internal Server Error");
+// exit;
+
+
+// 5 minutes execution time
+@set_time_limit(5 * 60);
+
+// Uncomment this one to fake upload time
+// usleep(5000);
+
+// Settings
+// $targetDir = ini_get("upload_tmp_dir") . DIRECTORY_SEPARATOR . "plupload";
+$targetDir = 'upload_tmp';
+$uploadDir = 'upload/article_content/';
+
+$cleanupTargetDir = true; // Remove old files
+$maxFileAge = 5 * 3600; // Temp file age in seconds
+
+
+// Create target dir
+if (!file_exists($targetDir)) {
+    @mkdir($targetDir);
+}
+
+// Create target dir
+if (!file_exists($uploadDir)) {
+    @mkdir($uploadDir);
+}
+
+// Get a file name
+if (isset($_REQUEST["name"])) {
+    $fileName = $_REQUEST["name"];
+} elseif (!empty($_FILES)) {
+    $fileName = $_FILES["file"]["name"];
+} else {
+    $fileName = uniqid("file_");
+}
+$fileName=iconv('utf-8','gb2312',$fileName);
+$filePath = $targetDir . "/" . $fileName;
+$uploadPath = $uploadDir . time().'.png';
+// Chunking might be enabled
+$chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
+$chunks = isset($_REQUEST["chunks"]) ? intval($_REQUEST["chunks"]) : 1;
+
+
+// Remove old temp files
+if ($cleanupTargetDir) {
+    if (!is_dir($targetDir) || !$dir = opendir($targetDir)) {
+        die('{"jsonrpc" : "2.0", "error" : {"code": 100, "message": "Failed to open temp directory."}, "id" : "id"}');
+    }
+
+    while (($file = readdir($dir)) !== false) {
+        $tmpfilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
+
+        // If temp file is current file proceed to the next
+        if ($tmpfilePath == "{$filePath}_{$chunk}.part" || $tmpfilePath == "{$filePath}_{$chunk}.parttmp") {
+            continue;
+        }
+
+        // Remove temp file if it is older than the max age and is not the current file
+        if (preg_match('/\.(part|parttmp)$/', $file) && (@filemtime($tmpfilePath) < time() - $maxFileAge)) {
+            @unlink($tmpfilePath);
+        }
+    }
+    closedir($dir);
+}
+
+
+// Open temp file
+if (!$out = @fopen("{$filePath}_{$chunk}.parttmp", "wb")) {
+    die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
+}
+
+if (!empty($_FILES)) {
+    if ($_FILES["file"]["error"] || !is_uploaded_file($_FILES["file"]["tmp_name"])) {
+        die('{"jsonrpc" : "2.0", "error" : {"code": 103, "message": "Failed to move uploaded file."}, "id" : "id"}');
+    }
+
+    // Read binary input stream and append it to temp file
+    if (!$in = @fopen($_FILES["file"]["tmp_name"], "rb")) {
+        die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+    }
+} else {
+    if (!$in = @fopen("php://input", "rb")) {
+        die('{"jsonrpc" : "2.0", "error" : {"code": 101, "message": "Failed to open input stream."}, "id" : "id"}');
+    }
+}
+
+while ($buff = fread($in, 4096)) {
+    fwrite($out, $buff);
+}
+
+@fclose($out);
+@fclose($in);
+
+rename("{$filePath}_{$chunk}.parttmp", "{$filePath}_{$chunk}.part");
+
+$index = 0;
+$done = true;
+for( $index = 0; $index < $chunks; $index++ ) {
+    if ( !file_exists("{$filePath}_{$index}.part") ) {
+        $done = false;
+        break;
+    }
+}
+if ( $done ) {
+    if (!$out = @fopen($uploadPath, "wb")) {
+        die('{"jsonrpc" : "2.0", "error" : {"code": 102, "message": "Failed to open output stream."}, "id" : "id"}');
+    }
+
+    if ( flock($out, LOCK_EX) ) {
+        for( $index = 0; $index < $chunks; $index++ ) {
+            if (!$in = @fopen("{$filePath}_{$index}.part", "rb")) {
+                break;
+            }
+
+            while ($buff = fread($in, 4096)) {
+                fwrite($out, $buff);
+            }
+
+            @fclose($in);
+            @unlink("{$filePath}_{$index}.part");
+        }
+
+        flock($out, LOCK_UN);
+    }
+    @fclose($out);
+}
+
+$suffix = explode('.',$uploadPath);
+$fileName=$suffix[count($suffix)-1];
+$url=dirname ( __FILE__ ).DIRECTORY_SEPARATOR.$uploadPath;
+$ename=getimagesize($url); 
+$ename=explode('/',$ename['mime']); 
+$ext=$ename[1]; 
+switch($ext){ 
+	case "png": 
+		$im=imagecreatefrompng($url); 
+		break; 
+    case "jpeg":
+		$im=imagecreatefromjpeg($url); 
+		break; 
+	case "jpg": 
+		$im=imagecreatefromjpeg($url); 
+		break; 
+   case "gif": 
+		$im=imagecreatefromgif($url); 
+		break; 
+} 
+/*
+$pic_width=imagesx($im);
+$pic_height=imagesy($im);
+$maxwidth=160; 
+$maxheight=160;
+if($pic_width > $maxwidth || $pic_height > $maxheight){
+	if($pic_width>$maxwidth){
+		$widthratio = $maxwidth/$pic_width;
+		$resizewidth_tag = true;
+	}
+	if($pic_height>$maxheight){
+		$heightratio = $maxheight/$pic_height;
+		$resizeheight_tag = true;
+	}
+	
+	if($resizewidth_tag && $resizeheight_tag){
+	if($widthratio<$heightratio){
+		$ratio = $widthratio;
+	}else{
+		$ratio = $heightratio;
+		}
+	}
+	
+	if($resizewidth_tag && !$resizeheight_tag){
+		$ratio = $widthratio;
+	}
+	
+	if($resizeheight_tag && !$resizewidth_tag){
+		$ratio = $heightratio;
+	}
+
+	$newwidth = $pic_width * $ratio;
+	$newheight = $pic_height * $ratio;
+	
+	if(function_exists("imagecopyresampled")){
+	$im = imagecreatetruecolor($newwidth,$newheight);
+		imagecopyresampled($im,$im,0,0,0,0,$newwidth,$newheight,$pic_width,$pic_height);
+	}else{
+	$im = imagecreate($newwidth,$newheight);
+		imagecopyresized($im,$im,0,0,0,0,$newwidth,$newheight,$pic_width,$pic_height);
+	}	
+}
+*/
+   imageinterlace($im, 1);
+   Imagejpeg($im,$url, 70); 
+   ImageDestroy($im);
+   
+// Return Success JSON-RPC response
+	$uploadPath = "http://".$_SERVER['HTTP_HOST'].'/crm/uploader/'.$uploadPath;
+
+die('{"code" : "0", "msg" :"上传成功","data":{"src":"'.$uploadPath.'"},"file_path" :"'.$uploadPath.'"}');
+

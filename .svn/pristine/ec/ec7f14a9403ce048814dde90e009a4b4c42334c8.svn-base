@@ -1,0 +1,61 @@
+<?php
+
+/**
+ * 员工管理
+ */
+
+namespace Home\Controller;
+class UserController extends BackController
+{
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page')-1 : 0;    //页码
+			$num = (I('get.limit') != '') ? I('get.limit') : 10;        //每页条数
+			if(I('get.search')){
+				$complex[]=array(
+					'u.name'=>array('like',"%".I('get.search')."%"),
+					'u.tel'=>array('like',"%".I('get.search')."%"),
+					'u.code'=>array('like',"%".I('get.search')."%"),
+					'_logic'=>'or'
+				);
+			}
+			
+			if(I('get.part_id')){
+				$code=M('part')->where('id='.I('get.part_id'))->getField('code');
+				$complex[]=array(
+					'p.code'=> array('like',"%".$code."%")
+				);
+			}
+			if($complex){
+				$where=array(
+					'_complex'=>$complex,
+					'_logic'=>'and'
+				);
+			}
+			
+			$data=M('user as u')
+				->field('u.*,p.name as part_name')
+				->join('left join part as p on p.id=u.part_id')
+				->where($where)
+				->limit($num*$page,$num)
+				->select();
+			$list['code'] = 200;
+			$list['data'] = $data;
+			$list['count'] =  M('user as u')->join('left join part as p on p.id=u.part_id')->where($where)->count();
+			echo json_encode($list,true);
+			exit;
+        }
+    }
+
+    public function add()
+    {
+        if (IS_POST) {
+            
+        }
+        //  $data['']
+    }
+}

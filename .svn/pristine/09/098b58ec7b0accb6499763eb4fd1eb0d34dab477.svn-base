@@ -1,0 +1,61 @@
+<?php
+//欢迎页控制器 首页
+namespace Home\Controller;
+class IndexController extends BackController {
+	public function index(){
+		$web_set=M('web_set')->find();
+		//获取当前用户的权限组
+		$rule=M('group_role as gr')->field('gr.rules,gr.title')->join('group_access as ga on ga.group_id=gr.id')->where('ga.uid='.session('user'))->find();
+		$power = M('group_rule')->field('name')->where('id in ('.$rule['rules'].')')->select();
+		foreach($power as $key=>$val){
+			$new_arr[]=$val['name'];
+		}
+		$basic_menu_power=2;
+		$basic_menu=array(
+			'Part/index',
+			'User/index',
+			'Orgin/index',
+			'Wealth/index',
+			'Restype/index',
+			'Label/index',
+			'Role/index',
+			'Faq/index',
+			'Msg/index',
+			'Goods/index',
+			'Change/index',
+			'Operlog/index'
+		);
+		foreach($basic_menu as $key=>$val){
+			if(in_array($val,$new_arr)){
+				$basic_menu_power=1;
+				break;
+			}
+		}
+		$user = M('user as u')
+                ->field('u.*,p.name as part_name')
+                ->join('left join part as p on p.id=u.part_id')
+                ->where('u.uid='.session('user'))
+                ->limit($num * $page, $num)
+                ->find();
+		$user['role']=$rule['title'];
+		$this->assign('basic_menu_power',$basic_menu_power);
+		$this->assign('power',$new_arr);
+		$this->assign('web_set',$web_set);
+		$this->assign('user',$user);
+		$this->display();
+	}
+		
+		
+	public function wellcom(){
+		$this->display();
+	}
+	
+	
+	public function change_pwd(){
+		$data['pwd'] = MD5(I('post.pwd'));
+		$where['uid'] = array('eq',session('user'));
+		M('user')->where($where)->save($data);
+		echo json_encode(["code"=>200,"msg"=>'修改成功'],true);
+	}
+	
+}

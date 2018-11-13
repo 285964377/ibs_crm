@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="layui-form" style="display:none;">
+									 <div class="layui-form-item">
+										<label class="layui-form-label" style="margin-top: 5px;">发送方式</label>
+										<div class="layui-input-block" >
+											<input type="radio" name="accept_type" lay-filter="get" value="2" title="指定员工" checked>
+										</div>
+									</div>
+                </div>
+								<!-- 员工 -->
+								<div id="yg" style="display: block;">
+									 <div class="form-box" style="    margin-left: 36px;">
+											<label>部门：</label>
+											<div class="layui-inline" style="width: 150px">
+													<input type="text"  id="tree" name="" lay-filter="tree" class="layui-input">
+											</div>
+											<label style="margin-left: 20px;">姓名/电话：</label>
+											<div class="layui-inline">
+													<input type="text" style="width: 150px" name="" placeholder="" autocomplete="off" class="layui-input" id="like">
+											</div>
+	
+											<button style="margin-left: 20px;" class="layui-btn layui-btn-blue" lay-submit id="search" lay-filter="search">搜索</button>
+											<button style="margin-left: 10px;" class="layui-btn layui-btn-blue"  id="add_send" 	>开启编辑</button>
+									</div>
+										<table id="Machine" lay-filter="Machine"></table>
+								</div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 站内信 -->
+<div id="msg_my" style="display: none;">
+	<form class="layui-form" action="">
+		<div class="layui-form-item msg_box">
+				<label class="layui-form-label">标题</label>
+				<div class="layui-input-inline">
+						<input type="text" name="title" required placeholder="输入发送标题"  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+				</div>
+		</div>		
+		<div class="layui-form-item layui-form-text msg_box" >
+			<label class="layui-form-label">内容</label>
+			<div class="layui-input-inline">
+				<textarea placeholder="输入要发送的内容" name="content" lay-verify="required" style="width:316px;height:176px;" class="layui-textarea"></textarea>
+			</div>
+    </div>
+		<input type="hidden" id="child-p-id"  name="accept_id" value=""/>  
+		<input type="hidden" id="lx_id"  name="accept_type" value="2"/>
+		<div class="layui-form-item" >
+				<div class="layui-input-block">
+						<button class="layui-btn layui-btn-blue" lay-submit lay-filter="msg_form">保存到列表</button>
+				</div>
+		</div>
+  </form>
+</div>
+<include file="Public:footer" />
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/javascript">
+	var lxid =1;
+	var  ADD;
+	
+	
+		layui.config({
+						base: path+'/modules/table/',
+					})
+					layui.use(['form','layer','table'],function(){
+						var $ = layui.$,data,layer=layui.layer,form=layui.form,table=layui.table;
+						//员工列表
+						Machine= table.render({
+								elem: '#Machine',
+								url: "{:U('Part/get_user')}?limit=9999" //数据接口
+								,page: false //开启分页
+								,response: {
+										statusCode: 200 //规定成功的状态码，默认：0
+								}
+								,cols: [[
+										{type: 'checkbox'}
+										,{title: '姓名', field: 'user_name'}
+										, {title: '工号', field: 'user_code'}
+										, {title: '上级单位', field: 'name'}
+								    , {title: '电话', field: 'tel'}
+										
+								]]
+						});
+						//监听搜索
+						$("#search").click(function(){
+								var part_id = $('#tree').val();
+								var search =$('#like').val();
+								data= {part_id:part_id,search:search};
+								Machine.reload({
+										where:data,
+// 										page: {
+// 												curr: 1
+// 										}
+								});
+		
+						})
+					var tLength=0,Uid='';
+					table.on('checkbox(Machine)', function(obj){
+						var checkStatus = table.checkStatus('Machine');
+						var data = checkStatus.data;
+						tLength = checkStatus.data.length;
+						console.log(checkStatus.data) //获取选中行的数据
+						Uid = '';
+						for(var i=0;i<data.length;i++){
+							Uid+=data[i].uid+',';
+						}
+						Uid = Uid.slice(0,Uid.length-1);
+						
+					});
+					$('#add_send').click(function(){
+							if(tLength<=0){
+								layer.msg('请选择员工');
+								return false;
+							}
+							$("#child-p-id").val(Uid);
+							ADD=layer.open({
+								title: '编辑内容',
+								type: 1,
+								content: $('#msg_my'),
+								area: ['480px', '330px'],
+								closeBtn:2,
+								cancel:function(index, layero){
+									$('.msg_box input').val('');
+									$('.msg_box  textarea').val('');
+									layer.close(index)
+								}
+							})
+					})
+					/////////////////////////////////////////////////////
+					//监听发送	
+						form.on('submit(msg_form)',function(data){
+							var data=data.field;
+                            var index_o = layer.load();
+							$.ajax({
+									url:'add.html',
+									type:'POST',
+									data:data,
+									dataType:'json',
+									success:function(res){
+											layer.msg(res.msg);
+                                        layer.close(index_o);
+											if(res.code==200){
+													setTimeout(function(){
+															parent.layui.table.reload('department_table');
+															layer.close(ADD);
+															form.render();
+													},500)
+											}
+									}
+							})
+							return false;
+						})		
+						
+					})		
+					 layui.config({
+					        base: path+'/modules/treeSelect/',
+					    })
+					    layui.use(['treeSelect','form','layer'],function(){
+					        var treeSelect= layui.treeSelect;
+					
+					        treeSelect.render({
+					            // 选择器
+					            elem: '#tree',
+					            // 数据
+					            data: "{:U('Back/select_part')}",
+					            // 异步加载方式：get/post，默认get
+					            type: 'get',
+					            // 占位符
+					            placeholder: '选择部门',
+					            // 是否开启搜索功能：true/false，默认false
+					            search: false,
+					            // 点击回调
+					            click: function(d){
+					                $('#tree').val(d.current.id);
+					
+					            },
+					            // 加载完成后的回调函数
+					            success: function (d) {
+					                console.log(d);
+					                //                选中节点，根据id筛选
+					                //                treeSelect.checkNode('tree', 3);
+					
+					                //                获取zTree对象，可以调用zTree方法
+					                //                var treeObj = treeSelect.zTree('tree');
+					                //                console.log(treeObj);
+					
+					                //                刷新树结构
+					                //                treeSelect.refresh();
+					            }
+					        });
+					    })
+</script>
+</body>
+</html>

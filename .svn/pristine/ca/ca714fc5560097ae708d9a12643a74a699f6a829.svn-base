@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * 员工管理
+ */
+
+namespace Home\Controller;
+class UserController extends BackController
+{
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;         //每页条数
+            $data = M('user')->limit($num * $page, $num)->field('uid,name,code,tel,part_id,login_id,login_time_last,sip,sip_pwd,creat_time,status')->select();
+            foreach ($data as $k => $v) {
+                //部门
+                $part = M('part')->where(['id' => $v['part_id']])->find();
+                $data[$k]['part'] = $part['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('user')->count();
+            echo json_encode($list, true);
+        }
+    }
+
+    public function add()
+    {
+        if (IS_POST) {
+            
+        }
+        //  $data['']
+    }
+}

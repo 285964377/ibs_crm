@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>{$page_title}</title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+	<link rel="stylesheet" href="__ACOM__/layui/css/layui.css" media="all" />
+	<script src="__JS__/jquery-3.2.1.min.js"></script>
+	<style type="text/css">
+		#logo,#edit{padding-right: 60px;padding-top: 20px;}
+		#roles .layui-anim .layui-anim-upbit{height: 80px;}
+		.childer_top input{
+			height:28px;
+			font-size:14px;
+			width:106px;
+			padding:0px 10px;
+		}
+		.childer_top  label{
+			display:inline-block;
+			margin-right:10px;
+			margin-bottom:10px;
+		}
+		.childer_top select{
+			height:32px;
+			font-size:14px;
+			width:60px;
+			padding:0 4px;
+			position:relative;
+		}
+	</style>
+</head>
+<body class="childrenBody">
+	<div class="childer_top layui-fluid">
+            <!--搜索区域-->
+            <label>账号/角色/名称：<input type="text" class="search_input"  placeholder="账号/角色/名称" /></label>
+            <label>所属角色： <select name="city" lay-verify="" class="operator" style="width:155px;"> 
+            		<option value="0">所有</option>
+					  <volist name="role" id="item">
+					  <option value="{$item.id}">{$item.title}</option>
+					  </volist></select>
+            </label>
+            <button class="layui-btn layui-btn-normal search_btn" id="get_serch"><i class="layui-icon">&#xe615;</i>查询</button>
+	<hr>
+	<div class="layui-inline" style="margin-left:10px;margin-bottom:10px;">
+		<button class="layui-btn addBtn" id="red_get"><i class="layui-icon">&#xe654;</i>添加</button>
+	</div>
+	</div>
+	<table id="Machine" lay-filter="Machine"></table>
+	
+	<script type="text/javascript" src="__ACOM__/layui/layui.js"></script>
+	
+	<div id="logo" style="display: none;">
+		<form class="layui-form">
+		  <div class="layui-form-item">
+		    <label class="layui-form-label">登录名：</label>
+		    <div class="layui-input-block">
+		      <input type="text" name="login_id" required  lay-verify="required" placeholder="请输入登录账号" autocomplete="off" class="layui-input">
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		    <label class="layui-form-label">真实名：</label>
+		    <div class="layui-input-block">
+		      <input type="text" name="real_name" required  lay-verify="required" placeholder="请输入真实姓名" autocomplete="off" class="layui-input">
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		    <label class="layui-form-label">角色：</label>
+		    <div class="layui-input-block">
+		      <select name="role_id" required lay-verify="required" lay-filter="roleName" style="height: 40px;">
+					<volist name="role" id="item">
+				  <option value="{$item.id}">{$item.title}</option>
+				  </volist>
+		      </select>
+		    </div>
+		  </div>
+		 	<div class="layui-form-item" style="padding-left: 15px;padding-top: 20px;">
+		 		<label class="layui-form-label">
+		 			<a class="layui-btn" lay-submit="" lay-filter="addOperator">
+						保存
+					</a>
+		 		</label>
+		  	</div>
+		</form>
+	</div>
+	
+	
+	<div id="edit" style="display: none;">
+		<form class="layui-form">
+			<input type="hidden" name="id"  id="edit-id"/>
+		  <div class="layui-form-item">
+		    <label class="layui-form-label">登录名：</label>
+		    <div class="layui-input-block">
+		      <input type="text" name="login_id"  id="edit-login-id"  maxlength="10" required lay-verify="required" placeholder="请输入登录账号" autocomplete="off" class="layui-input">
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		    <label class="layui-form-label">真实名：</label>
+		    <div class="layui-input-block">
+		      <input type="text" name="real_name" id="edit-real-name" maxlength="10"  required lay-verify="required" placeholder="请输入真实姓名" autocomplete="off" class="layui-input">
+		    </div>
+		  </div>
+		  <div class="layui-form-item">
+		    <label class="layui-form-label">角色：</label>
+		    <div class="layui-input-block">
+		      <select name="role_id" id="edit-role-id" required lay-verify="required" lay-filter="roleName" style="height: 40px;">
+					<volist name="role" id="item">
+				  <option value="{$item.id}">{$item.title}</option>
+				  </volist>
+		      </select>
+		    </div>
+		  </div>
+		 	<div class="layui-form-item" style="padding-left: 15px;padding-top: 20px;">
+		 		<label class="layui-form-label">
+		 			<a class="layui-btn" lay-submit="" lay-filter="editOperator">
+						保存
+					</a>
+		 		</label>
+		  	</div>
+		</form>
+	</div>
+	
+	<!--存放默认的权限-->
+	<input type="hidden" name="roleID" id="roleID" value="{$role[0]['id']}" />
+	
+	<script type="text/html" id="cz">
+	  <a class="layui-btn layui-btn-sm" lay-event="edit"><i class="layui-icon">&#xe642;</i>编辑</a>
+	  <a class="layui-btn layui-btn-danger layui-btn-sm" lay-event="reset">重置密码</a>
+	  <a class="layui-btn layui-btn-sm" style="background-color:#393D49;" lay-event="del"><i class="layui-icon">&#xe640;</i>删除</a>
+	</script>
+	
+	<script>
+		$("body").bind("keydown",function(event){  
+           if (event.keyCode == 116) {  
+	         event.preventDefault(); //阻止默认刷新  
+	         location=location;  
+            }  
+        })
+	</script>
+	<script>
+	
+	layui.use(['table','layer','jquery','form'],function(){
+    var table = layui.table;
+  	var layer= layui.layer;
+  	var form = layui.form;
+  	var $ = layui.jquery;
+  	var laypage = layui.laypage;
+  //第一个实例
+  var Machine = table.render({
+    elem: '#Machine'
+    ,url: 'index.html?search_data=1' //数据接口
+    ,page: true //开启分页
+    ,cols: [[ //表头
+      {field: 'login_id', title: '登录账号', height:'200px'},
+      {field: 'real_name', title: '真实姓名', height:'200px'},
+      {field: 'title', title: '所属角色', height:'200px'},
+      {title: '操作', height:'200px',toolbar:'#cz'},
+    ]]
+    ,limit:15
+    ,limits:[15,30,45,60]
+  });
+ //搜索
+  $('.search_btn').click(function(){
+	  	data= {search:$(".search_input").val(),data_type:$(".operator").val()};
+		Machine.reload({
+			where:data,
+			page: {
+				curr: 1 
+			}
+		});
+  })
+  //添加
+  $(".addBtn").click(function(){
+		var index = layui.layer.open({
+			title : "添加管理员",
+			type : 1,
+			content : $('#logo'),
+			area:["500px","400px"]
+		})	
+	});
+	
+	form.on("submit(addOperator)",function(data){
+		var index_o = layer.load();
+		$.ajax({
+			url:'add.html',
+			type:"post",
+			dataType:"json",
+			data:data.field,
+			success:function(res){
+				layer.close(index_o);
+				if(res.code != 'ERROR'){
+					layer.closeAll();
+					Machine.reload();
+					/*删除默认值*/
+					$('#logo').find('input').eq(0).val('');
+					$('#logo').find('input').eq(1).val('');
+					$('#logo').find('input').eq(2).val('');
+				}
+				layer.msg(res.msg);
+			}
+		})
+ 		return false;
+ 	})
+	
+	//编辑提交
+	form.on("submit(editOperator)",function(data){
+		var index_o = layer.load();
+		$.ajax({
+			url:'edit.html',
+			type:"post",
+			dataType:"json",
+			data:data.field,
+			success:function(res){
+				layer.close(index_o);
+				if(res.code != 'ERROR'){
+					layer.closeAll();
+					Machine.reload();
+				}
+				layer.msg(res.msg);
+			}
+		})
+ 		return false;
+ 	})
+	 //监听表格工具
+	table.on('tool(Machine)', function(obj){ 
+		var data = obj.data; //获得当前行数据
+		var layEvent = obj.event;
+		if(layEvent === 'edit'){ //编辑 
+				/*打开时渲染数据*/
+			$('#edit-id').val(data.uid);
+			$('#edit-login-id').val(data.login_id);
+			$('#edit-real-name').val(data.real_name);
+			
+			/*重置select状态*/
+			var op = $('#edit-role-id').find('option');
+			for(var i=0;i<op.length;i++){
+				var This = op.eq(i);
+				if(This.val() == data.role_id){
+					This.attr("selected",true);
+				}else{
+					This.attr('selected',false);
+				}
+			}
+     
+			form.render('select');
+			var index = layui.layer.open({
+				title : "编辑管理员",
+				type : 1,
+				content : $('#edit'),
+				area:["500px","400px"]
+			})	
+		}
+		if(layEvent === 'del'){ //删除
+			layer.confirm('确认要删除吗？',{icon:3, title:'提示信息'}, function(index){
+				var index_o = layer.load();
+		    	$.ajax({
+					url:'delete.html',
+					type:"post", 
+					data:{id:data.uid},
+					dataType:"json",
+					success:function(res){
+						layer.close(index_o);
+						layer.close(index);
+						layer.msg(res.msg);
+						if(res.code==0){
+							Machine.reload();
+						}
+					}
+				})
+		    })
+		}
+		if(layEvent === 'reset'){ //重置密码
+			layer.confirm('确认重置？(重置后为:123456)',{icon:3, title:'提示信息'}, function(index){
+				var index_o = layer.load();
+		    	$.ajax({
+					url:'reset.html',
+					type:"get", 
+					data:{id:data.uid},
+					dataType:"json",
+					success:function(res){
+						layer.close(index_o);
+						layer.close(index);
+						layer.msg(res.msg);
+					}
+				})
+		    })
+		}
+	});	
+	
+	
+	
+	
+});
+
+	</script>
+</body>
+</html>

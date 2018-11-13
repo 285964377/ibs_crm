@@ -1,0 +1,71 @@
+<?php
+
+namespace Home\Controller;
+class OperlogController extends BackController
+{
+
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;        //每页条数
+            if(I('get.time_start')){
+                $s_time = I('get.time_start');
+                $e_time = strtotime(I('get.time_end'));
+                $e_time = date('Y-m-d',$e_time+86400);
+                $where['l.creat_time'] =array('between',array($s_time,$e_time));
+            }
+
+            if(I('get.search')){
+                $complex[]=array(
+                    'u.name'=>array('like',"%".I('get.search')."%")
+                );
+                $where['_complex'] =$complex;
+                $where['_logic'] ='and';
+            }
+
+            $data = M('operation_log as l')
+                ->field('l.*,u.name,u.code')
+                ->join('left join user as u on u.uid=l.user_id')
+                ->where($where)->order('id DESC')
+                ->limit($page*$num,$num)
+                ->select();
+
+            foreach ($data as $k => $v) {
+                $type = explode('/', $v['type'])[0];
+                $controller=$this->get_controller($type);
+                $type = explode('/', $v['type'])[1];
+                $action=$this->get_action($type);
+                $data[$k]['type'] =$controller .":".$action;
+
+            }
+            //print_r($data);
+            $list['code'] = 0;
+            $list['msg'] = '';
+            $list['data'] = $data;
+            $list['count'] = M('operation_log as l')->join('left join public_admin as a on a.uid=l.admin_id')->where($where)->count();
+            echo json_encode($list, true);
+            exit;
+
+        }
+    }
+
+    //layui  selectTree 接口
+    public function linkage()
+    {
+        $data = M('group_rule')->select();
+        foreach ($data as $k => $v) {
+            if ($v['pid'] == 0) {
+                $data[$k]['title'] = $this->get_controller(explode('/', $v['name'])[0]);
+            }
+        }
+        $data = $this->roles($data);
+        echo json_encode($data, true);
+        exit;
+
+    }
+
+}

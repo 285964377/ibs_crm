@@ -1,0 +1,593 @@
+<?php
+/**
+ * 订单
+ */
+
+namespace Home\Controller;
+class OrdersController extends BackController
+{
+    public $where;
+
+    public function _initialize()
+    {
+        parent::_initialize();
+        $this->page = (I('get.page') != '') ? I('get.page') - 1 : 0;
+        $this->num = (I('get.limit') != '') ? I('get.limit') : 10;
+        //查看当前用户的数据查看权限
+        $role = M('group_access')->where('uid=' . session('user'))->getField('group_id');
+        $power = M('group_role')->where('id=' . $role)->getField('show_data');
+        if ($power == 'self') {  //只能查看自己的数据
+            $param['user_id'] = array('eq', session('user'));
+        }
+        if ($power == 'part') {//查看部门数据
+            $part_id = M('user')->where('uid=' . session('user'))->getField('part_id');
+            $my_part_code = M('part')->where('id=' . $part_id)->getField('code');
+            $param['part_code'] = array('like', "%" . $my_part_code . "%");
+        }
+        //公共筛选条件
+        //类型
+        if (I('get.status')) {
+            $param['status'] = array('eq', I('get.status'));
+        }
+        $this->where = $param;
+        $power = M('group_role')->where('id=' . $role)->getField('show_tel');
+        if ($power == 1) {
+            $this->see_tel = 1;
+        } else {
+            $this->see_tel = 2;
+        }
+
+    }
+
+    //操作
+    public function confirm()
+    {
+        $order_id = I('post.id');                            //订单ID
+        $data['status'] = I('post.status');                    //订单状态
+        $data['accept_user'] = I('post.accept_user');        //接收人
+        /*修改订单*/
+        M('orders')->where(['id' => $order_id])->save($data);
+        /*查找商机ID*/
+        $res_id = M('res_orders')->where(['order_id' => $order_id])->getField('res_id');
+        $order_status['order_status'] = I('post.status');    //商机订单状态
+        M('resources')->where(['id' => $res_id])->save($order_status);
+        //查找商机*/
+        $res = M('resources')->where('id=' . $res_id)->find();
+        /*查找订单*/
+        $order = M('orders')->where('id=' . $order_id)->find();
+        if (I('post.status') == 2) {//受理
+            $msg_content = "您的订单已经被拒收";
+            $content = "{$res['name']}" . ',' . '已经拒绝了你的订单' . '单号:' . "{$order['code']}";
+        } else {
+            $msg_content = "您的订单已经审核通过";
+            $content = "{$res['name']}" . ',' . '已经受理了你的订单' . '单号:' . "{$order['code']}";
+        }
+        $this->res_op_log($res_id, $content);
+        //A('Workerman')->send_msg($res['user_id'],'personal',$msg_content);
+        $list['code'] = 200;
+        $list['msg'] = '受理成功';
+        echo json_encode($list, true);
+        die;
+    }
+
+    //跟进
+    public function follow()
+    {
+        $id = I('post.id');//订单ID
+        $data['step'] = I('post.step');//工单状态
+        $data['status'] = I('post.status');
+        $demand = M('demand')->where(['id' => $id])->find();
+        $order = M('orders')->where(['id' => $demand['order_id']])->find();
+        if ($data['status'] == 4) {
+            $where['step'] = array('NEQ', 4);
+            $where['order_id'] = array('eq', $order['id']);
+            $fk = M('demand')->where($where)->select();
+            if (!$fk) {//没有 则已完成订单
+                //将订单修改成已完成订单
+                $status['status'] = 4;//已完成未收款
+                M('orders')->where(['id' => $order['id']])->save($status);
+                $res = M('resources as r')->join('gr_res_orders as g on g.res_id=r.id')->where(['g.order_id' => $order['id']])->find();
+                $res_status['order_status'] = 4;
+                M('resources')->where(['id' => $res['id']])->save($res_status);
+                // A('Workerman')->send_msg($res['user_id'],'personal',$msg_content);//你的订单已经放款完毕,该收钱了
+            }
+        }
+        $demd_id = M('demand')->where(['id' => $id])->save($data);
+        $content = '工单跟进';
+        $this->dmd_op_log($demd_id, $content);
+        $list['code'] = 200;
+        $list['msg'] = '提交成功';
+        echo json_encode($list, true);
+    }
+
+    // 订单_待接收订单
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where['status'] = 1;
+            $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->field('r.*,o.code as o_code,o.status as o_status,o.code as o_code,o.creat_time as o_creat_time,o.user_id as o_user_id,o.accept_user as o_accept_user,o.contract as o_contract,o.dk_money as o_dk_money,o.id as o_id')
+                ->limit($this->num * $this->page, $this->num)
+                ->where(['r.status' => 1])
+                ->select();
+            foreach ($data as $ke => $v) {
+                switch ($v['o_status']) {
+                    case 0;
+                        $data[$ke]['o_status'] = "草稿";
+                        break;
+                    case 1;
+                        $data[$ke]['o_status'] = "待审核";
+                        break;
+                    case 2;
+                        $data[$ke]['o_status'] = "已驳回";
+                        break;
+                    case 3;
+                        $data[$ke]['o_status'] = "审核通过";
+                        break;
+                    case 4;
+                        $data[$ke]['o_status'] = "未收款";
+                        break;
+                    case 5;
+                        $data[$ke]['o_status'] = "已收款";
+                        break;
+                    case 6;
+                        $data[$ke]['o_status'] = "退单待审核";
+                        break;
+                    case 7;
+                        $data[$ke]['o_status'] = "已退单";
+                        break;
+                }
+                //商机类型
+                $res_type = M('restype')->where(['id' => $v['res_type_id']])->find();
+                $data[$ke]['res_type_name'] = $res_type['name'];
+                //下单人
+                $creat_user = M('user')->where(['uid' => $v['creat_user']])->find();
+                $data[$ke]['creat_user_name'] = $creat_user['name'];
+                //处理人
+                $accept_user = M('user')->where(['id' => $v['accept_user']])->find();
+                $data[$ke]['accept_user_name'] = $accept_user['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->field('r.*,o.code as o_code,o.status as o_status,o.code as o_code,o.creat_time as o_creat_time,o.user_id as o_user_id,o.accept_user as o_accept_user,o.contract as o_contract,o.dk_money as o_dk_money')
+                ->where(['r.status' => 1])
+                ->count();
+            echo json_encode($list, true);
+        }
+
+
+    }
+
+    //订单_办理中订单
+    public function index_bl()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where['status'] = 3;
+            $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->field('r.*,o.code as o_code,o.status as o_status,o.code as o_code,o.creat_time as o_creat_time,o.user_id as o_user_id,o.accept_user as o_accept_user,o.contract as o_contract,o.dk_money as o_dk_money,o.id as o_id')
+                ->limit($this->num * $this->page, $this->num)
+                ->where(['r.status' => 1])
+                ->select();
+            foreach ($data as $ke => $v) {
+                switch ($v['o_status']) {
+                    case 0;
+                        $data[$ke]['o_status'] = "草稿";
+                        break;
+                    case 1;
+                        $data[$ke]['o_status'] = "待审核";
+                        break;
+                    case 2;
+                        $data[$ke]['o_status'] = "已驳回";
+                        break;
+                    case 3;
+                        $data[$ke]['o_status'] = "审核通过";
+                        break;
+                    case 4;
+                        $data[$ke]['o_status'] = "未收款";
+                        break;
+                    case 5;
+                        $data[$ke]['o_status'] = "已收款";
+                        break;
+                    case 6;
+                        $data[$ke]['o_status'] = "退单待审核";
+                        break;
+                    case 7;
+                        $data[$ke]['o_status'] = "已退单";
+                        break;
+                }
+                //商机类型
+                $res_type = M('restype')->where(['id' => $v['res_type_id']])->find();
+                $data[$ke]['res_type_name'] = $res_type['name'];
+                //下单人
+                $creat_user = M('user')->where(['uid' => $v['creat_user']])->find();
+                $data[$ke]['creat_user_name'] = $creat_user['name'];
+                //处理人
+                $accept_user = M('user')->where(['id' => $v['accept_user']])->find();
+                $data[$ke]['accept_user_name'] = $accept_user['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->field('r.*,o.code as o_code,o.status as o_status,o.code as o_code,o.creat_time as o_creat_time,o.user_id as o_user_id,o.accept_user as o_accept_user,o.contract as o_contract,o.dk_money as o_dk_money')
+                ->where(['r.status' => 1])
+                ->count();
+            echo json_encode($list, true);
+        }
+    }
+
+// 订单_拒收订单
+    function index_js()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        //2
+        if ($_GET['search_data']) {
+            $where['status'] = 2;
+            $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->field('r.*,o.code as o_code,o.status as o_status,o.code as o_code,o.creat_time as o_creat_time,o.user_id as o_user_id,o.accept_user as o_accept_user,o.contract as o_contract,o.dk_money as o_dk_money,o.id as o_id')
+                ->limit($this->num * $this->page, $this->num)
+                ->where(['r.status' => 1])
+                ->select();
+            foreach ($data as $ke => $v) {
+                switch ($v['o_status']) {
+                    case 0;
+                        $data[$ke]['o_status'] = "草稿";
+                        break;
+                    case 1;
+                        $data[$ke]['o_status'] = "待审核";
+                        break;
+                    case 2;
+                        $data[$ke]['o_status'] = "已驳回";
+                        break;
+                    case 3;
+                        $data[$ke]['o_status'] = "审核通过";
+                        break;
+                    case 4;
+                        $data[$ke]['o_status'] = "未收款";
+                        break;
+                    case 5;
+                        $data[$ke]['o_status'] = "已收款";
+                        break;
+                    case 6;
+                        $data[$ke]['o_status'] = "退单待审核";
+                        break;
+                    case 7;
+                        $data[$ke]['o_status'] = "已退单";
+                        break;
+                }
+                //商机类型
+                $res_type = M('restype')->where(['id' => $v['res_type_id']])->find();
+                $data[$ke]['res_type_name'] = $res_type['name'];
+                //下单人
+                $creat_user = M('user')->where(['uid' => $v['creat_user']])->find();
+                $data[$ke]['creat_user_name'] = $creat_user['name'];
+                //处理人
+                $accept_user = M('user')->where(['id' => $v['accept_user']])->find();
+                $data[$ke]['accept_user_name'] = $accept_user['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->where(['r.status' => 1])
+                ->count();
+            echo json_encode($list, true);
+        }
+    }
+
+// 订单_已完成订单
+    public function index_wc()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where['status'] = 4;
+            $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->field('r.*,o.code as o_code,o.status as o_status,o.code as o_code,o.creat_time as o_creat_time,o.user_id as o_user_id,o.accept_user as o_accept_user,o.contract as o_contract,o.dk_money as o_dk_money,o.id as o_id')
+                ->limit($this->num * $this->page, $this->num)
+                ->where(['r.status' => 1])
+                ->select();
+            foreach ($data as $ke => $v) {
+                switch ($v['o_status']) {
+                    case 0;
+                        $data[$ke]['o_status'] = "草稿";
+                        break;
+                    case 1;
+                        $data[$ke]['o_status'] = "待审核";
+                        break;
+                    case 2;
+                        $data[$ke]['o_status'] = "已驳回";
+                        break;
+                    case 3;
+                        $data[$ke]['o_status'] = "审核通过";
+                        break;
+                    case 4;
+                        $data[$ke]['o_status'] = "未收款";
+                        break;
+                    case 5;
+                        $data[$ke]['o_status'] = "已收款";
+                        break;
+                    case 6;
+                        $data[$ke]['o_status'] = "退单待审核";
+                        break;
+                    case 7;
+                        $data[$ke]['o_status'] = "已退单";
+                        break;
+                }
+                //商机类型
+                $res_type = M('restype')->where(['id' => $v['res_type_id']])->find();
+                $data[$ke]['res_type_name'] = $res_type['name'];
+                //下单人
+                $creat_user = M('user')->where(['uid' => $v['creat_user']])->find();
+                $data[$ke]['creat_user_name'] = $creat_user['name'];
+                //处理人
+                $accept_user = M('user')->where(['id' => $v['accept_user']])->find();
+                $data[$ke]['accept_user_name'] = $accept_user['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->where(['r.status' => 1])
+                ->count();
+            echo json_encode($list, true);
+        }
+
+    }
+
+// 订单_已退单_列表
+    public function index_yt()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where['status'] = 7;
+            $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->field('r.*,o.code as o_code,o.status as o_status,o.code as o_code,o.creat_time as o_creat_time,o.user_id as o_user_id,o.accept_user as o_accept_user,o.contract as o_contract,o.dk_money as o_dk_money,o.id as o_id')
+                ->limit($this->num * $this->page, $this->num)
+                ->where(['r.status' => 1])
+                ->select();
+            foreach ($data as $ke => $v) {
+                switch ($v['o_status']) {
+                    case 0;
+                        $data[$ke]['o_status'] = "草稿";
+                        break;
+                    case 1;
+                        $data[$ke]['o_status'] = "待审核";
+                        break;
+                    case 2;
+                        $data[$ke]['o_status'] = "已驳回";
+                        break;
+                    case 3;
+                        $data[$ke]['o_status'] = "审核通过";
+                        break;
+                    case 4;
+                        $data[$ke]['o_status'] = "未收款";
+                        break;
+                    case 5;
+                        $data[$ke]['o_status'] = "已收款";
+                        break;
+                    case 6;
+                        $data[$ke]['o_status'] = "退单待审核";
+                        break;
+                    case 7;
+                        $data[$ke]['o_status'] = "已退单";
+                        break;
+                }
+                //商机类型
+                $res_type = M('restype')->where(['id' => $v['res_type_id']])->find();
+                $data[$ke]['res_type_name'] = $res_type['name'];
+                //下单人
+                $creat_user = M('user')->where(['uid' => $v['creat_user']])->find();
+                $data[$ke]['creat_user_name'] = $creat_user['name'];
+                //处理人
+                $accept_user = M('user')->where(['id' => $v['accept_user']])->find();
+                $data[$ke]['accept_user_name'] = $accept_user['name'];
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = $data = M('resources as r')
+                ->join('gr_res_orders as g on r.id=g.res_id', 'left')
+                ->join('orders as o on o.id=g.order_id', 'left')
+                ->where(['r.status' => 1])
+                ->count();
+            echo json_encode($list, true);
+        }
+    }
+
+//订单详情
+    public function details()
+    {
+        $id = I('post.id');//订单ID
+        $where['order_id'] = array('eq', $id);
+        //订单信息
+        $order = M('orders')->where(['id' => $id])->find();
+        //借贷人信息
+        $borrow = M('borrow')->where($where)->find();
+        //下单人
+        $order['creat_user_name'] = M('user')->where(['uid' => $order['creat_user']])->getField('name');
+        switch ($order['status']) {
+            case  1;
+                $order['status'] = "待审核";
+                break;
+            case  2;
+                $order['status'] = "已驳回";
+                break;
+            case  3;
+                $order['status'] = "审核通过";
+                break;
+            case  4;
+                $order['status'] = "办理完毕";
+                break;
+            case  5;
+                $order['status'] = "已收款";
+                break;
+            case  6;
+                $order['status'] = "退单待审核";
+                break;
+            case  7;
+                $order['status'] = "已退单";
+                break;
+        }
+        //商机信息
+        $res = M('resources')->where($where)->find();
+        //附件
+        $gr_res_fujian = M('gr_res_fujian')->where(['res_id' => $res['id']])->find();
+        $fujian = M('fujian')->where(['id' => $gr_res_fujian['fujian_id']])->find();
+        //商机类型
+        $res_type = M('restype')->where(['id' => $res['res_type_id']])->getField('name');
+        $data['res_type'] = $res_type;
+        $data['order'] = $order;
+        $data['res'] = $res;
+        $data['borrow'] = $borrow;
+        $data['fujian'] = $fujian;
+        $this->assign('data', $data);
+    }
+
+    //工单
+    public function work()
+    {
+        $id = I('post.id');
+        $demand = M('demand')->where(['id' => $id])->select();
+        foreach ($demand as $k => $value) {
+            $order = M('order')->where(['id' => $id])->find();
+            $accept_user = M('user')->where(['uid' => $order['accept_user']])->getField('name');
+            //流程操作人
+            $data[$k]['accept_user_name'] = $accept_user;
+            //下单时间
+            $data[$k]['creat_time'] = $order['creat_time'];
+            switch ($value['status']) {
+                case 1;
+                    $demand[$k]['status'] = "办理暂缓";
+                    break;
+                case 2;
+                    $demand[$k]['status'] = "办理超期";
+                    break;
+                case 3;
+                    $demand[$k]['status'] = "正常进行中";
+                    break;
+                case 4;
+                    $demand[$k]['status'] = "办理完毕";
+                    break;
+            }
+        }
+        $this->assign('data', $demand);
+    }
+
+//工单列表
+    public function work_index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $demand = M('demand')->select();
+            foreach ($demand as $k => $value) {
+                switch ($value['status']) {
+                    case 1;
+                        $demand[$k]['status'] = '办理暂缓';
+                        break;
+                    case 2;
+                        $demand[$k]['status'] = '办理超期';
+                        break;
+                    case 3;
+                        $demand[$k]['status'] = '正常进行中';
+                        break;
+                    case 4;
+                        $demand[$k]['status'] = '办理完毕';
+                        break;
+                }
+                switch ($value['step']) {
+                    case 1;
+                        $demand[$k]['step'] = "进件";
+                        break;
+                    case 2;
+                        $demand[$k]['step'] = "出件";
+                        break;
+                    case 3;
+                        $demand[$k]['step'] = "银行审批";
+                        break;
+                    case 4;
+                        $demand[$k]['step'] = "放款 ";
+                        break;
+                }
+            }
+        }
+    }
+
+//工单添加
+    public function work_add()
+    {
+        $id = I('get.id');//订单ID
+        $data['money'] = I('post.money');
+        $data['lixi_way'] = I('post.lixi_way');
+        $data['business_type'] = I('post.business_type');
+        $data['dk_type'] = I('post.dk_type');
+        $data['recharge'] = I('post.recharge');
+        $data['channel'] = I('post.channel');
+        $data['order_id'] = $id;
+        $data['code'] = 'GD' . date('Ymd', $_SERVER['REQUEST_TIME']) . str_pad(mt_rand(0, 999), 3, "0", STR_PAD_LEFT) . session('user');
+        $data['product'] = I('post.product');
+        $data['creat_user'] = session('user');
+        M('demand')->add($data);
+        $list['code'] = 200;
+        $list['msg'] = "添加工单成功";
+        echo json_encode($list, true);
+        die;
+    }
+
+//工单删除
+    public function work_delete()
+    {
+        $id = I('get.id');
+        M('demand')->where(['id' => $id])->delete();
+        $list['code'] = 200;
+        $list['msg'] = "删除成功";
+        echo json_encode($list, true);
+        die;
+
+    }
+
+//工单跟进
+    public function work_gj()
+    {
+        $id = I('post.id');//订单ID
+        $data['status'] = I('post.status');
+        $data['step'] = I('post.step');
+        M('demand')->where(['order_id' => $id])->save($data);
+        //获取ID
+        $dmd_id = M('demand')->where(['order_id' => $id])->getField('id');
+        $user = M('user')->where(['uid' => session('name')])->getField('name');
+        $content = "{$user}" . ',' . "跟进工单" . "备注为:" . "{$data['remarks']}";
+        $this->dmd_op_log($dmd_id, $content);
+        $list['code'] = 200;
+        $list['msg'] = "跟进处理完成";
+        echo json_encode($list, true);
+    }
+}

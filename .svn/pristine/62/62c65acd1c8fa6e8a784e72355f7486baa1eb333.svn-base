@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+	<include file="Public:header" />
+	<style>
+		body{
+			text-align:center;
+		}
+		.layui-icon{
+			font-size:360px;
+		}
+		.my_box{
+			top:50%;
+			position: absolute;
+			margin-top:-180px;
+			left:50%;
+			margin-left:-180px;
+		}
+		.my_box p{
+			font-size:20px;
+		}
+	</style>
+	<body style="position: relative;">
+		<div class="my_box">
+			<i class="layui-icon">&#xe69c;</i> 
+			<p>{$tis}</p>
+		</div>	
+	</body>
+	<include file="Public:footer" />
+
+	<script>
+		var a="{$flash}";
+		if(a=='yes'){
+			setTimeout(function(){
+				top.location.reload();
+			},3000)
+		}
+	</script>

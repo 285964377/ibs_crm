@@ -1,0 +1,178 @@
+<?php
+
+namespace Home\Controller;
+
+use Think\Controller;
+
+class FaqController extends Controller
+{
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;         //每页条数
+            $data = M('faq')->limit($page, $num * $page)->select();
+            foreach ($data as $k => $v) {
+                $user = M('user')->where(['id' => $v['user_id']])->field('name')->find();
+                $data[$k]['username'] =$user['name'];
+                if ($v['istop'] == 1) {
+                    $data[$k]['istop'] = "已置顶";
+                } else {
+                    $data[$k]['istop'] = "未置顶";
+                }
+            }
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('faq')->count();
+            echo json_encode($list, true);
+        }
+    }
+
+    public function add()
+    {
+        if (IS_POST) {
+            $data['user_id'] = session('user');
+            $data['title'] = trim(I('post.title'));
+            $data['content'] = I('post.title');
+            $data['type'] = trim(I('post.title'));
+            $check = M('faq')->where(['title' => $data['title']])->find();
+            if ($check) {
+                $list['code'] = 'error';
+                $list['msg'] = '重复的标题';
+                echo json_encode($list, true);
+                exit;
+            }
+            M('faq')->add($data);
+            $list['code'] = 'error';
+            $list['msg'] = '添加FAQ成功';
+            echo json_encode($list, true);
+            exit;
+        }
+
+    }
+
+    /**
+     * 详情
+     */
+    public function details()
+    {
+        $id = I('get.id');
+        $data = M('label')->where(['id' => $id])->find();
+        $this->assign('data', $data);
+    }
+
+    /**
+     * 修改
+     */
+    public function edit()
+    {
+        if (IS_POST) {
+            $id = I('post.id');
+            $data['title'] = trim(I('post.title'));
+            $data['content'] = I('post.title');
+            $data['type'] = trim(I('post.title'));
+            $check = M('faq')->where(['id' => $id])->find();
+            if ($check && $check['id'] != $id) {
+                $list['code'] = 'error';
+                $list['msg'] = '重复的命名';
+                echo json_encode($list, true);
+                exit;
+            }
+            M('faq')->where('id=' . $id)->save($data);
+            $list['code'] = 200;
+            $list['msg'] = '修改成功';
+            echo json_encode($list, true);
+            exit;
+        }
+    }
+
+    /**
+     * 删除
+     */
+    public function delete()
+    {
+        $id = I('get.id');
+        if ($id) {
+            M('faq')->where('id=' . $id)->delete();
+            $list['code'] = 200;
+            $list['msg'] = '删除成功';
+            echo json_encode($list, true);
+            exit;
+        } else {
+            $list['code'] = 'error';
+            $list['msg'] = '参数不存在';
+            echo json_encode($list, true);
+            exit;
+        }
+    }
+
+    /**
+     * 置顶
+     */
+    public function top()
+    {
+        $id = I('get.id');
+        $data['istop'] = 1;
+        M('faq')->where(['id' => $id])->save($data);
+        $list['code'] = 'error';
+        $list['msg'] = '置顶成功';
+        echo json_encode($list, true);
+        exit;
+    }
+
+    /**
+     * 取消置顶
+     */
+    public function can_top()
+    {
+        $id = I('get.id');
+        $data['istop'] = 2;
+        M('faq')->where(['id' => $id])->save($data);
+        $list['code'] = 'error';
+        $list['msg'] = '取消置顶成功';
+        echo json_encode($list, true);
+        exit;
+    }
+
+    //上架
+    public function is_shelf()
+    {
+        $id = I('get.id');
+        if ($id) {
+            $data['is_shelf'] = 1;
+            M('faq')->where(['id' => $id])->save($data);
+            $list['code'] = 'error';
+            $list['msg'] = '上架成功';
+            echo json_encode($list, true);
+            exit;
+        } else {
+            $list['code'] = 200;
+            $list['msg'] = '参数错误';
+            echo json_encode($list, true);
+            exit;
+        }
+
+    }
+
+    //下架
+    public function shelf()
+    {
+        $id = I('get.id');
+        if ($id) {
+            $data['is_shelf'] = 2;
+            M('faq')->where(['id' => $id])->save($data);
+            $list['code'] = 'error';
+            $list['msg'] = '下架成功';
+            echo json_encode($list, true);
+            exit;
+        } else {
+            $list['code'] = 200;
+            $list['msg'] = '参数错误';
+            echo json_encode($list, true);
+            exit;
+        }
+    }
+}

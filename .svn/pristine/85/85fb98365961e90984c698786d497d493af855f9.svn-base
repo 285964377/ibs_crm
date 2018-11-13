@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+		table{
+			font-size:12px;
+			text-align:center;
+		}
+		.layui-table-view .layui-table td, .layui-table-view .layui-table th{
+			text-align:center;
+		}
+		.hide{
+        display:none;
+    }
+    .layui-form-item .layui-input-block{
+        margin-right: 20px;
+    }
+		
+		.layui-table-view .layui-table td {
+			height:56px;
+			line-height:normal;
+		}
+		.layui-table-main .layui-table-cell {
+			height:auto;
+		}
+		.layui-table-fixed  .layui-table-cell{
+			height:auto;
+		}
+		.layui-table-view .layui-table td, .layui-table-view .layui-table th{
+			padding:0;
+			}
+			.layui-form-label{
+				width:auto;
+			}
+			.my_form_box{
+				float:left;
+				display: inline-block;
+			}
+			.nav_list{
+				overflow: hidden;
+				background:#eff3f5;
+				border:1px solid #c6d1d6;
+				padding:7px 10px;
+			}
+			.nav_list li{
+				padding:6px 20px;
+				float:left;
+				margin-right:20px;
+				cursor: pointer;
+			}
+			.nav_list li.active{
+				background:url(__COMMON__/images/top_bck.png) no-repeat;
+				background-size:100% 100%;
+			}
+			.layui-treeSelect .ztree li span.button.switch {
+					position: relative;
+					top: -7px;
+			}
+</style>
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+				<div class="page-content-wrap">
+				<div class="layui-form-item">
+						<form class="layui-form" action="">
+								<div class="layui-inline tool-btn">
+									<a  class="layui-btn layui-btn-small layui-btn-normal lower_excel"><i class="layui-icon">&#xe601;</i>下载Excel</a>
+									<div style="display:inline-block;position: relative;">
+										  <!-- <a  class="layui-btn layui-btn-small layui-btn import_excel"><i class="layui-icon">&#xe62f;</i>导入Excel</a> -->
+											<form  enctype="multipart/form-data"  id="img_btn" style="width:110px;">
+												<input type="file" name="file" accept=".csv,.xls,.xlsx" onchange="upload()"  style="cursor: pointer;" class="get_input_jd" />
+											</form>	
+									</div>
+									<a style="display:none;" class="layui-btn layui-btn-small layui-btn-danger confirm_excel"><i class="layui-icon">&#xe62f;</i>确认上传</a>
+								</div>
+						</form>
+				</div>		
+				<blockquote class="layui-elem-quote layui-quote-nm">
+					<h3>说明：</h3>
+					<br/>
+					<p>导入商机请按照固定模块导入。点击<span class="lower_excel" style="color:#1E9FFF;cursor: pointer;">模板示例	</span>下载Excel</p>
+					<br/>
+					<p>如果导入的商机在系统中已经存在，商机无法导入</p>
+					<br/>
+					<p>导入商机条数一次不超过<span style="color:#FF5722">20W</span>条</p>
+					<div class="dr_box" style="display:none;">
+						<hr/>
+						<p>本次导入总数：<span class="count" style="color:#01AAED"></span>条</p>
+						<br/>
+						<p>有效数据：<span class="usefull" style="color:#FF5722"></span>条（Excel中不重复的数据个数）</p>
+						<br/>
+						<p>无效数据：<span class="useless" style="color:#01AAED"></span>条（Excel中重复的数据个数）</p>
+						<br/>
+						<p>重复数据：<span class="repeat" style="color:#01AAED"></span>条（Excel中与数据库中重复个数）</p>
+						<br/>
+						<p>成功写入：<span class="success" style="color:#FF5722"></span>条</p>
+					</div>	
+				</blockquote>
+				<div  style="width:60%;margin:0 auto;">
+					<div id="get_jdt" class="layui-progress layui-progress-big" style="margin-bottom:20px;display:none;" lay-filter="get_jdt" lay-showPercent="true">
+						<div class="layui-progress-bar layui-bg-blue" lay-percent="0%"></div>
+					</div>
+					<h3 id="get_scz" style="text-align:center;display:none;">上传中</h3>
+					
+				</div>	
+			</div>
+		</div>
+	</div>
+</div>									
+
+	 <include file="Public:footer" />
+	 <script>
+		 var code = sessionStorage.getItem('code');
+			var times,fliess;
+			layui.use(['table','form','element'], function() {
+				var table = layui.table,form=layui.form,element = layui.element;
+				//下载Excel
+				$('.lower_excel').click(function(){
+					GetApi('Customer/dw_export','POST',{'token':code},function(res){
+						console.log(res)
+							if(res.code==200){
+								window.open(Apiurl+'Customer/dw_export.html?token='+code); 
+							}else{
+								layer.msg(res.msg)
+							}
+						},function(){},false)
+				})
+				$('.confirm_excel').click(function(){
+						var index2 = layer.load('2');
+						$('#get_scz').show();
+						flies = $('.get_input_jd').prop('files')[0];
+						fromdata = new FormData(document.getElementById("img_btn"));
+						fromdata.append('file',flies)
+							$.ajax({
+								url:'import.html',
+								type:"post", //get
+								data:fromdata,
+								dataType:"json",
+								processData:false,
+								contentType:false,
+								success:function(res){
+									if(res.code==200){
+										$('#get_scz').text('上传成功')
+										layer.close(index2);
+											fliess = res.file;
+											$.ajax({
+												url:'import.html',
+												type:"post", //get
+												data:{file:res.file},
+												dataType:"json",
+												success:function(res){
+													if(res.code==200){
+														$('.dr_box').fadeIn();
+														$('.count').text(res.count);
+														$('.usefull').text(res.usefull);
+														$('.useless').text(res.useless);
+														$('.repeat').text(res.repeat);
+														$('.success').text(res.success);
+													}else{
+														layer.msg(res.msg);
+														$('#get_jdt').hide();
+														$('#get_scz').hide();
+													}
+												},error:function(){
+													clearInterval(times);
+												}
+											})	
+											setTimeout(function(){
+												times=setInterval(function(){
+													onprogress();
+												},500)
+											},500)
+									}else{
+										layer.msg(res.msg);
+										layer.close(index2);
+										$('#get_scz').hide();
+									}
+								}
+						})
+				});		
+			});
+			function upload(){
+				$('.confirm_excel').show();
+				$('.import_excel').text('重新选择');
+			}
+			function onprogress(){
+				layui.use(['element'], function(){
+					var element = layui.element;
+			    var data={progress:1,file:fliess,};
+					var index2 = layer.load('2');
+					$.ajax({
+						url:'import.html',
+						type:"get", //get
+						data:data,
+						dataType:"json",
+						success:function(res){
+							var zs = res.total;
+							var gs = res.process;
+							var jd = Math.floor((Number(gs)/Number(zs)).toFixed(2)*100)+'%';
+							if(res.step=='success'){
+									clearInterval(times);
+									element.progress('get_jdt', '100%');
+									$('#get_scz').text('导入完成');
+									layer.close(index2);
+							}
+							if(res.step=='error'){
+									clearInterval(times);
+									element.progress('get_jdt', '0%');
+									$('#get_scz').text('导入失败');
+									layer.close(index2);
+							}
+							if(res.step=='loading'){
+								$('#get_scz').text('正在加载Excel');
+							}
+							if(res.step=='decoding'){
+								$('#get_jdt').show();
+								$('#get_scz').text('Excel解码中');
+								element.progress('get_jdt', jd);
+							}
+							if(res.step=='insert'){
+								$('#get_jdt').show();
+								$('#get_scz').text('正在写入数据库');
+										element.progress('get_jdt', jd);
+							}
+						},
+						})
+			})	
+    }
+
+	 </script>
+</body>
+</html>

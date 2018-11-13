@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+				<div class="layui-row">
+					<div class="layui-col-xs5 layui-col-sm5 layui-col-md5">
+						<div style="max-height:426px;width:100%;overflow-y: scroll;">
+							<table class="layui-table">
+							  <colgroup>
+								<col width="33.3%">
+								<col width="33.3%">
+								<col width="33.3%">
+							  </colgroup>
+							  <thead>
+								<tr>
+								  <th>接收人</th>
+								  <th>阅读情况</th>
+								  <th>阅读时间</th>
+								</tr> 
+							  </thead>
+							  
+							  <tbody>
+								<volist name="user" id="item">
+								<tr>
+									<td>{$item.name}({$item.code})</td>
+									<td>{$item.status}</td>
+									<td>{$item.read_time}</td>
+								</tr>
+								</volist>
+							  </tbody>
+							</table>
+						</div>	
+					</div>	
+					<div class="layui-col-xs6 layui-col-sm6 layui-col-md6">
+						<form class="layui-form" action="">
+							<div class="layui-form-item msg_box">
+									<label class="layui-form-label">标题：</label>
+									<div class="layui-input-block">
+											<input type="text"  disabled="disabled" name="title" value="{$data.title}" required placeholder="输入发送标题"  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+									</div>
+							</div>
+							<div class="layui-form-item msg_box">
+									<label class="layui-form-label">发送时间：</label>
+									<div class="layui-input-block">
+											<input type="text"  disabled="disabled" name="title" value="{$data.send_time}" required placeholder="输入发送标题"  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+									</div>
+							</div>
+							<div class="layui-form-item layui-form-text msg_box" >
+								<label class="layui-form-label">内容：</label>
+								<div class="layui-input-block">
+									<textarea placeholder="输入要发送的内容" disabled="disabled" name="content" lay-verify="required" style="height:176px;" class="layui-textarea">{$data.content}</textarea>
+								</div>
+						</div>
+						</form>
+					</div>
+            </div>
+        </div>
+    </div>
+</div>
+<include file="Public:footer" />
+<script type="text/javascript">
+    layui.config({
+        base: path+'/modules/table/',
+    })
+    var datass;
+    layui.use(['form','table','layer','laydate'],function() {
+        var $ = layui.$,form=layui.form, table = layui.table,layer=layui.layer,laydate=layui.laydate;
+    })
+</script>
+</body>
+</html>

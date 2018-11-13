@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+	.layui-form-label{
+		width:auto;
+	}
+	.form-box{
+		padding:0
+	}
+	.layui-table, .layui-table-view{
+		margin-top:0;
+	}
+</style>
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="form-box">
+									<div class="layui-form" action="">
+											<div class="layui-input-inline">
+												<input type="text" name="title" required  lay-verify="required" placeholder="请输入角色名" autocomplete="off" class="layui-input search_input">
+											</div>
+											<button class="layui-btn layui-btn-blue search_btn " id="get_serch"><i class="layui-icon">&#xe615;</i>查询</button>
+											<button class="layui-btn layui-btn-blue addBtn" id="red_get"><i class="layui-icon">&#xe654;</i>添加</button>
+								</div>	
+						</div>
+						<hr/>
+						<div class="table_box">
+							<table id="Machine" lay-filter="Machine"></table>
+						</div>
+					</div>
+		</div>
+	</div>
+</div>									
+	<!--存放默认的权限-->
+	<input type="hidden" name="roleID" id="roleID" value="{$role[0]['id']}" />
+	 <include file="Public:footer" />
+	<script type="text/html" id="cz">
+	  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit"><i class="layui-icon">&#xe642;</i>编辑</a>
+	  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon">&#xe640;</i>删除</a>
+	</script>
+	<script>
+	layui.use(['table','layer','jquery','form'],function(){
+    var table = layui.table;
+  	var layer= layui.layer;
+  	var form = layui.form;
+  	var $ = layui.jquery;
+  	var laypage = layui.laypage;
+  //第一个实例
+  var Machine = table.render({
+    elem: '#Machine'
+    ,url: 'index.html?search_data=1' //数据接口
+    ,page: true //开启分页
+    ,cols: [[ //表头
+      {field: 'title', title: '角色名称', height:'200px'},
+      {field: 'descript', title: '角色描述', height:'200px'},
+		{field: 'creat_time', title: '添加时间', height:'200px'},
+      {title: '操作', height:'200px',toolbar:'#cz'},
+    ]]
+  });
+ //搜索
+  $('.search_btn').click(function(){
+	  	data= {search:$(".search_input").val()};
+		Machine.reload({
+			where:data,
+			page: {
+				curr: 1 
+			}
+		});
+  })
+  //添加
+	$(".addBtn").click(function(){
+		var index = layui.layer.open({
+			title : "添加角色",
+			type : 2,
+			content : "add.html",
+			area:["90%","90%"]
+		})	
+	})
+	
+	 //监听表格工具
+	table.on('tool(Machine)', function(obj){ 
+		var data = obj.data; //获得当前行数据
+		var layEvent = obj.event;
+		if(layEvent === 'edit'){ //编辑 
+				/*打开时渲染数据*/
+			var index = layui.layer.open({
+			title : "添加角色",
+			type : 2,
+			content : "edit.html?id="+data.id,
+			area:["90%","90%"]
+		})	
+		}
+		if(layEvent === 'del'){ //删除
+			layer.confirm('确认要删除吗？',{icon:3, title:'提示信息'}, function(index){
+				var index_o = layer.load();
+		    	$.ajax({
+					url:'delete.html?id='+data.id,
+					type:"get", 
+					dataType:"json",
+					success:function(res){
+						layer.close(index_o);
+						layer.close(index);
+						layer.msg(res.msg);
+						if(res.code==0){
+							Machine.reload();
+						}
+					}
+				})
+		    })
+		}
+	
+	});	
+	
+	
+	
+	
+});
+
+	</script>
+</body>
+</html>

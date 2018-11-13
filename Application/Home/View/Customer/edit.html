@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+	 input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+    input[type="number"]{
+        -moz-appearance: textfield;
+    }
+		.layui-view-body{
+			background:#fff;
+		}
+		.layui-table{
+			margin-top:0
+		}
+		.layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row]{
+			border-width: 1px;
+			border-style: solid;
+			border-color: #c6d1d6;
+		}
+		.layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even){
+			background: url(__COMMON__/images/t_bck.png) repeat-x;
+			background-size:100% 100%;
+		}
+		.layui-table td, .layui-table th{
+			padding:0;
+			text-align:center;
+			line-height: 28px;
+			font-size:12px;
+			color:#000
+		}
+		.layui-form-item{
+			margin-top:0
+		}
+		.sj_form{
+			margin-bottom:10px;
+		}
+		.layui-form-label{
+			width:auto;
+		}
+		.layui-form-mid{
+				padding: 0px 0px !important;
+		}
+		.layui-form-radio{
+			margin:0;
+		}
+		.layui-form-item{
+			clear:none;
+		}
+		.form_list{
+			width:100%;
+			overflow:hidden;
+			margin-bottom:20px;
+		}
+		.form_list li{
+			float:left;
+			padding:10px;
+			border:1px solid #eff3f5;
+			margin-right:10px;
+			margin-top:20px;
+			font-size:12px;
+			cursor: pointer;
+		}
+		.form_list li:hover{
+			background:#eff3f5;
+		}
+</style>
+<div class="layui-content">
+	<form class="layui-form" id="js_adds" action="">
+	<div id="form" class="layui-form layui-row">
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">联系电话<span style="color:#FF5722">*</span></label>
+			<div class="layui-input-inline">
+				<input type="text" name="phone" disabled required  value="{$data.phone}" lay-verify="required" placeholder="请输入手机号码" autocomplete="off" class="layui-input ">
+			</div>
+		</div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">客户名称<span style="color:#FF5722">*</span></label>
+			<div class="layui-input-inline">
+				<input type="text" name="name"  value="{$data.name}" required  lay-verify="required" placeholder="请输入客户名称" autocomplete="off" class="layui-input ">
+			</div>
+		</div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">贷款金额<span style="color:#FF5722">*</span></label>
+			<div class="layui-input-inline">
+				<input type="text" name="money"  value="{$data.money}" required  lay-verify="required" placeholder="请输入贷款金额" autocomplete="off" class="layui-input ">
+			</div>
+		</div>	
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">身份证号&nbsp;</label>
+			<div class="layui-input-inline">
+				<input type="text" name="idcard" lay-verify="identity" value="{$data.idcard}"  placeholder="请输入身份证号码" autocomplete="off" class="layui-input ">
+				<!--<input type="text" name="identity" lay-verify="identity" placeholder="" autocomplete="off" class="layui-input">-->
+			</div>
+		</div>	
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">客户生日&nbsp;</label>
+			<div class="layui-input-inline">
+				<input type="text" name="birth" value="{$data.birth}" id="birth"   placeholder="请选择客户生日" autocomplete="off" class="layui-input ">
+			</div>
+		</div>	
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">客户年龄&nbsp;</label>
+			<div class="layui-input-inline">
+				<input type="number" name="age" value="{$data.age}"  placeholder="请输入客户年龄" autocomplete="off" class="layui-input ">
+			</div>
+		</div>	
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">客户性别&nbsp;</label>
+			<div class="layui-input-inline">
+			<select name="sex" lay-filter="aihao">
+				<option value="1" <if condition="$data['sex'] eq 1">selected</if> >男</option>
+				<option value="2" <if condition="$data['sex'] eq 2">selected</if> >女</option>
+				<option value="0" <if condition="$data['sex'] eq 0">selected</if>>未知</option>
+			</select>
+			</div>
+		</div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">户口所在&nbsp;</label>
+			<div class="layui-input-inline">
+				<input type="text" name="huji"  value="{$data.huji}"  placeholder="请输入户口所在" autocomplete="off" class="layui-input ">
+			</div>
+		</div>	
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">客户地址&nbsp;</label>
+			<div class="layui-input-inline">
+				<input type="text" name="address" value="{$data.address}"  placeholder="请输入客户地址" autocomplete="off" class="layui-input ">
+			</div>
+		</div>	
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">客户邮箱&nbsp;</label>
+			<div class="layui-input-inline">
+				<input type="text" name="email"  value="{$data.email}" lay-verify="email"  placeholder="请输入邮箱" autocomplete="off" class="layui-input ">
+				<!--<input type="text" name="email" lay-verify="email" autocomplete="off" class="layui-input">-->
+			</div>
+		</div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">婚姻状况&nbsp;</label>
+			<div class="layui-input-inline">
+			  <select name="marriage">
+				<option value="0" <if condition="$data['marriage'] eq 0">selected</if> >未知</option>
+				<option value="1" <if condition="$data['marriage'] eq 1">selected</if> >已婚</option>
+				<option value="2" <if condition="$data['marriage'] eq 2">selected</if> >未婚</option>
+				<option value="3" <if condition="$data['marriage'] eq 3">selected</if> >离异</option>
+				<option value="4" <if condition="$data['marriage'] eq 4">selected</if> >丧偶</option>
+				<option value="5" <if condition="$data['marriage'] eq 5">selected</if> >再婚</option>
+			  </select>
+			</div>
+		</div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">客户学历&nbsp;</label>
+			<div class="layui-input-inline">
+			<select name="education" >
+				<option value="0">未知</option>
+				<option value="1">高中以下</option>
+				<option value="2">大专</option>
+				<option value="3">本科</option>
+				<option value="4">硕士及以上</option>
+			</select>
+			</div>
+		</div>
+		<div class="layui-form-item sj_form layui-col-md3 layui-col-xs4">
+			<label class="layui-form-label">子女数量&nbsp;</label>
+			<div class="layui-input-inline">
+				<select name="child">
+					<option value="0"  <if condition="$data['child'] eq 0">selected</if> >0</option>
+					<option value="1" <if condition="$data['child'] eq 1">selected</if>>1</option>
+					<option value="2" <if condition="$data['child'] eq 2">selected</if>>2</option>
+					<option value="3" <if condition="$data['child'] eq 3">selected</if>>3</option>
+					<option value="4" <if condition="$data['child'] eq 4">selected</if>>4</option>
+					<option value="5" <if condition="$data['child'] eq 5">selected</if>>5</option>
+					<option value="6" <if condition="$data['child'] eq 6">selected</if>>6</option>
+				</select>
+			</div>
+		</div>
+		<ul class="form_list">
+			<volist name="label" id="item">
+				<li onclick="fz(this)">{$item.content}</li>
+			</volist>	
+		</ul>
+		<div class="layui-form-item layui-form-text sj_form layui-col-xs4">
+			<label class="layui-form-label">备注信息</label>
+			<div class="layui-input-block" style="margin-left:80px;">
+			  <textarea name="remark" value="{$data.remark}" placeholder="请输入内容" class="layui-textarea">{$data.remark}</textarea>
+			</div>
+		</div>
+		<input type="hidden" value="{$data.id}"  name="id"/>
+		<div class="yc_input"></div>
+		<div style="clear:both"></div>
+		<div class="layui-form-item">
+			<div class="layui-input-block">
+			  <button class="layui-btn layui-btn-blue" lay-submit lay-filter="*">立即提交</button>
+			</div>
+		</div>
+	</div>
+</div>	
+</form>	
+	 <include file="Public:footer" />
+	<script>
+		function fz(obj){
+			var oText = $(obj).parent().next().find('textarea').val()
+			var Text = $(obj).text();
+			oText+=Text;
+			$(obj).parent().next().find('textarea').val(oText);
+		}
+		var tc_box;
+	layui.config({
+		base: path+'/modules/treeSelect/',
+	})
+	layui.use(['table','layer','jquery','form','treeSelect','element','laydate'],function(){
+		var table = layui.table;
+		var layer= layui.layer;
+		var form = layui.form;
+		var $ = layui.jquery;
+		var laypage = layui.laypage;
+		var treeSelect= layui.treeSelect;
+		var element = layui.element;
+		var laydate = layui.laydate;
+		laydate.render({
+			elem: '#birth' 
+		});
+		form.on('submit(*)', function(data){
+			console.log(data.field) 
+			layer.confirm('是否修改客户?', function(index){
+				var index_two = layer.load();
+				$.ajax({
+					url:'edit.html',
+					type:"post", 
+					dataType:"json",
+					data:data.field,
+					success:function(res){
+						layer.msg(res.msg);
+						layer.close(index_two);
+						if(res.code==200){
+							setTimeout(function(){
+								parent.layui.table.reload('Machine');
+								layer.close(index);
+								var my_index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+								parent.layer.close(my_index);
+							},500)
+						}
+					}
+				})
+			});    
+			return false; 
+		});
+	});
+	var myIds = "{$res.id}";
+	var mIname = "{$res.name}";
+	function get_sj(obj){
+		if(myIds!=''){
+			var url="{:U('Resources/details')}?index=1&id="+myIds;
+			var ids ='res_details'+myIds;
+			get_url(this,ids,url,mIname);
+		}
+	}
+	</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<include file="Public:header" />
+<body class="layui-layout-body">
+	<style></style>
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header custom-header">
+            <ul class="layui-nav layui-layout-left">
+                <li class="layui-nav-item slide-sidebar" lay-unselect>
+                    <a href="javascript:;" class="icon-font"><i class="ai ai-menufold"></i></a>
+                </li>
+            </ul>
+
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">{$user.role}:{$user.name}（{$user.code}）-{$user.part_name}</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="{:U('PublishedFaq/index')}">FAQ</a></dd>
+                        <dd><a href="javascript:;">修改密码</a></dd>
+                        <dd><a href="javascript:;">登录坐席</a></dd>
+                        <dd><a href="{:U('Login/login_out')}">登出</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+
+        <div class="layui-side custom-admin">
+            <div class="layui-side-scroll">
+
+                <div class="custom-logo">
+                    <img src="__COMMON__/images/logo.png" alt="" style="height:28px"/>
+                    <h1 style="margin-left:0">{$web_set.title}</h1>
+                </div>
+				 <ul id="Nav" class="layui-nav layui-nav-tree">
+				 	<li class="layui-nav-item layui-nav-itemed">
+						<a href="javascript:;">
+							<i class="layui-icon">&#xe716;</i>
+							<em>客户</em>
+						</a>
+						<dl class="layui-nav-child">
+                            <dd><a href="{:U('Customer/index')}?index=1">待分配</a></dd>
+                        </dl>
+						<dl class="layui-nav-child">
+                            <dd><a href="{:U('Customer/alloted')}?index=1">已分配</a></dd>
+                        </dl>
+						<dl class="layui-nav-child">
+                            <dd><a href="{:U('Customer/import')}?index=1">导入客户</a></dd>
+                        </dl>
+					</li>
+					<if condition="in_array('Resources/index',$power)">
+					<li class="layui-nav-item layui-nav-itemed">
+						<a href="javascript:;">
+							<i class="layui-icon">&#xe716;</i>
+							<em>商机</em>
+						</a>
+						<if condition="in_array('Resources/add',$power)">
+						 <dl class="layui-nav-child">
+                            <dd><a href="{:U('Resources/add')}?index=1">新增商机</a></dd>
+                        </dl>
+						</if>
+						<if condition="in_array('Resources/ing',$power)">
+						<dl class="layui-nav-child">
+							<dd><a href="{:U('Resources/ing')}?index=1">跟进中</a></dd>
+						</dl>
+						</if>
+						<if condition="in_array('Resources/over',$power)">
+						<dl class="layui-nav-child">
+							<dd><a href="{:U('Resources/over')}?index=1">已签单</a></dd>
+						</dl>
+						</if>
+						<if condition="in_array('Resources/res_order',$power)">
+						<dl class="layui-nav-child">
+							<dd><a href="{:U('Resources/res_order')}?index=1">订单列表</a></dd>
+						</dl>
+						</if>
+						<if condition="in_array('Resources/checking',$power)">
+						<dl class="layui-nav-child">
+							<dd><a href="{:U('Resources/checking')}?index=1">待审核</a></dd>
+						</dl>
+						</if>
+						<if condition="in_array('Resources/checked',$power)">
+						<dl class="layui-nav-child">
+							<dd><a href="{:U('Resources/checked')}?index=1">审核被拒</a></dd>
+						</dl>
+						</if>
+						<if condition="in_array('Resources/white',$power)">
+                       	<dl class="layui-nav-child">
+							<dd><a href="{:U('Resources/white')}?index=1">白名单</a></dd>
+						</dl>
+						</if>
+						<if condition="in_array('Resources/out',$power)">
+							<dl class="layui-nav-child">
+							<dd><a href="{:U('Resources/out')}?index=1">事业部库</a></dd>
+						</dl>
+						</if>
+					</li>
+					</if>
+                     <li class="layui-nav-item layui-nav-itemed">
+                         <a href="javascript:;">
+                             <i class="layui-icon">&#xe716;</i>
+                             <em>订单</em>
+                         </a>
+                         <dl class="layui-nav-child">
+                             <dd><a href="{:U('Orders/checking')}?index=1">待接收订单</a></dd>
+                         </dl>
+                         <dl class="layui-nav-child">
+                             <dd><a href="{:U('Orders/ing')}?index=1">办理中订单</a></dd>
+                         </dl>
+                         <dl class="layui-nav-child">
+                             <dd><a href="{:U('Orders/over')}?index=1">已完成订单</a></dd>
+                         </dl>
+						 <dl class="layui-nav-child">
+                             <dd><a href="{:U('Orders/tcheck')}?index=1">退单待审核</a></dd>
+                         </dl>
+                         <dl class="layui-nav-child">
+                             <dd><a href="{:U('Orders/tui')}?index=1">已退订单</a></dd>
+                         </dl>
+                     </li>
+				    <if condition="$basic_menu_power eq 1">
+					<li class="layui-nav-item">
+						<a href="javascript:;">
+							<i class="layui-icon">&#xe716;</i>
+							<em>系统管理</em>
+						</a>
+						<dl class="layui-nav-child">
+							<if condition="in_array('Part/index',$power)">
+							<dd><a href="{:U('Part/index')}?index=1">部门管理</a></dd>
+							</if>
+							<if condition="in_array('User/index',$power)">
+							<dd><a href="{:U('User/index')}?index=1">员工管理</a></dd>
+							</if>
+							<if condition="in_array('Orgin/index',$power)">
+							<dd><a href="{:U('Orgin/index')}?index=1">商机来源管理</a></dd>
+							</if>
+							<if condition="in_array('Wealth/index',$power)">
+							<dd><a href="{:U('Wealth/index')}?index=1">商机资质管理</a></dd>
+							</if>
+							<if condition="in_array('Restype/index',$power)">
+							<dd><a href="{:U('Restype/index')}?index=1">商机类型管理</a></dd>
+							</if>
+							<if condition="in_array('Label/index',$power)">
+							<dd><a href="{:U('Label/index')}?index=1">标签管理</a></dd>
+							</if>
+							<if condition="in_array('Role/index',$power)">
+							<dd><a href="{:U('Role/index')}?index=1">角色管理</a></dd>
+							</if>
+							<if condition="in_array('Faq/index',$power)">
+							<dd><a href="{:U('Faq/index')}?index=1">FAQ管理</a></dd>
+							</if>
+							<if condition="in_array('Msg/index',$power)">
+							<dd><a href="{:U('Msg/index')}?index=1">站内信管理</a></dd>
+							</if>
+							<if condition="in_array('Goods/index',$power)">
+							<dd><a href="{:U('Goods/index')}?index=1">产品管理</a></dd>
+							</if>
+							<if condition="in_array('Change/index',$power)">
+							<dd><a href="{:U('Change/index')}?index=1">流转规则设置</a></dd>
+							</if>
+							<if condition="in_array('Operlog/index',$power)">
+							<dd><a href="{:U('Operlog/index')}?index=1">系统操作日志</a></dd>
+							</if>
+						</dl>
+					</li>
+					</if>
+                </ul>
+            </div>
+        </div>
+        <div class="layui-body">
+             <div class="layui-tab app-container" lay-allowClose="true" lay-filter="tabs">
+                <ul id="appTabs" class="layui-tab-title custom-tab" ></ul>
+                <div id="appTabPage" class="layui-tab-content"></div>
+            </div>
+        </div>
+        <div class="layui-footer">
+            <p>{$web_set.copyright}</p>
+        </div>
+
+        <div class="mobile-mask"></div>
+    </div>
+	<include file="Public:footer" />
+    <script src="__COMMON__/app/index.js" data-main="home"></script>
+</body>
+</html>

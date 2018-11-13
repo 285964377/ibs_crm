@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+    table{
+        font-size:12px;
+        text-align:center;
+    }
+    .layui-table-view .layui-table td, .layui-table-view .layui-table th{
+        text-align:center;
+    }
+    .layui-table-view .layui-table td {
+        height:56px;
+        line-height:normal;
+    }
+    .layui-table-view .layui-table td, .layui-table-view .layui-table th{
+        padding:0;
+    }
+    .nav_list{
+        overflow: hidden;
+        background:#eff3f5;
+        border:1px solid #c6d1d6;
+        padding:7px 10px;
+    }
+    .nav_list li{
+        padding:6px 20px;
+        float:left;
+        margin-right:20px;
+        cursor: pointer;
+    }
+    .nav_list li.active{
+        background:url(__COMMON__/images/top_bck.png) no-repeat;
+        background-size:100% 100%;
+    }
+</style>
+<div class="layui-content">
+    <div class="layui-row">
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="layui-form" >
+                    <div class="layui-form-item" style="margin-top:0">
+                        <ul class="nav_list">
+                            <li class="active" data-name="">全部</li>
+                            <li class="" data-name="today_gj">办理中</li>
+                            <li class="" data-name="today_sm">办理超期</li>
+                            <li class="" data-name="ovet_gj">办理暂缓</li>
+                        </ul>
+                    </div>
+                </div>
+                <table id="Machine" lay-filter="Machine"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<include file="Public:footer" />
+<script type="text/html" id="cz">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit"><i class="layui-icon">&#xe642;</i>编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon">&#xe640;</i>删除</a>
+</script>
+<script id="code" type="text/html">
+    <p lay-event="order_link" style="color:#01AAED;cursor: pointer;">{{d.code}}</p>
+</script>
+<script id="cus" type="text/html">
+    <p>{{d.name}}</p>
+    <p>{{d.phone}}</p>
+</script>
+<script id="user" type="text/html">
+    <p>{{d.user_name?d.user_name:''}}({{d.user_code?d.user_code:'暂无'}})</p>
+</script>
+<script>
+    var Top_name;
+    layui.config({
+        base: path+'/modules/treeSelect/',
+    })
+    layui.use(['table','layer','jquery','laydate'],function(){
+        var table = layui.table;
+        var layer= layui.layer;
+        var $ = layui.jquery;
+        $('.nav_list li').click(function(){
+            $(this).siblings().removeClass('active');
+            $(this).addClass('active');
+            Top_name=$(this).attr('data-name');
+            $('#top_name').val(Top_name);
+        })
+        //第一个实例
+        var Machine = table.render({
+            elem: '#Machine'
+            ,url: 'index.html?search_data=1' //数据接口
+            ,page: true //开启分页
+            ,cols: [[ //表头
+                {type:'checkbox'},
+                {width:80,field: 'o_id', title: '序号'},
+                {width:160,field:'o_code',templet:'#o_code', title: '订单编号'},
+                {width:110,field: 'o_status', title: '状态'},
+                {width:110,field: 'name', title: '客户姓名'},
+                {width:118,field:'res_type_name' ,title: '产品'},
+                {width:120,field: 'o_dk_money', title: '贷款金额(万)'},
+                {width:120,field:'o_creat_time',title: '下单时间'},
+                {width:120,field:'accept_user_name',title: '下单人'},
+                //{title: '操作',toolbar:'#cz',fixed: 'right',width:150}
+            ]]
+            ,limit:15
+
+            ,response: {
+                statusCode: 200
+            }
+        });
+
+        var lengths,idstring;
+//监听左侧表格
+        table.on('toolbar(Machine)', function(obj){
+            var checkStatus = table.checkStatus('Machine');
+            lengths = checkStatus.data.length;//选中个数
+            idstring='';
+            for(var i=0;i<lengths;i++){
+                idstring+=checkStatus.data[i].id+',';
+            }
+            nidstring = idstring.substr(0,idstring.length-1);//ID合集
+            var event  = obj.event;
+        })
+        //监听表格工具
+        table.on('tool(Machine)', function(obj){
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event;
+            if(layEvent === 'edit'){ //编辑
+                /*打开时渲染数据*/
+                var index = layui.layer.open({
+                    title : "添加角色",
+                    type : 2,
+                    content : "edit.html?id="+data.id,
+                    area:["90%","90%"]
+                })
+            }
+            if(layEvent === 'del'){ //删除
+                layer.confirm('确认要删除吗？',{icon:3, title:'提示信息'}, function(index){
+                    var index_o = layer.load();
+                    $.ajax({
+                        url:'delete.html?id='+data.id,
+                        type:"get",
+                        dataType:"json",
+                        success:function(res){
+                            layer.close(index_o);
+                            layer.close(index);
+                            layer.msg(res.msg);
+                            if(res.code==0){
+                                Machine.reload();
+                            }
+                        }
+                    })
+                })
+            }else if(layEvent==='order_link'){
+                var url="{:U('Orders/order_detail')}?index=1&id="+data.id;
+                var ids ='res_details'+data.id;
+                get_url(this,ids,url,data.name);
+            }
+        });
+
+
+
+
+    });
+
+</script>
+</body>
+</html>

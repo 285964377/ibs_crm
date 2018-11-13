@@ -1,0 +1,55 @@
+<?php
+namespace Home\Controller;
+class OperlogController extends BackController {
+	
+	public function index(){
+		if($_GET['index']){
+			$this->display();
+		}
+		if($_GET['search_data']){
+			$page = (I('get.page') != '') ? I('get.page')-1 : 0;    //页码
+			$num = (I('get.limit') != '') ? I('get.limit') : 10;        //每页条数
+			//模糊条件
+			if(I('get.search')){
+				$complex[]=array(
+					'u.name'=>array('like',"%".I('get.search')."%")
+				);
+			}
+		
+			//时间条件
+			if(I('get.time_start')){
+				$s_time = I('get.time_start');
+			}else{
+				$s_time ='1970-01-01';
+			}
+			if(I('get.time_end')){
+				$e_time = strtotime(I('get.time_end'));
+				$e_time = date('Y-m-d',$e_time+86400);
+			}else{
+				$e_time = '2099-12-12';
+			}
+			 $where = array(
+				'l.creat_time'=>array('between',array($s_time,$e_time)),
+				'_complex'=>$complex,
+				 '_logic'=>'and'
+			 );
+			  
+			$data = M('operation_log as l')
+				->field('l.*,u.name,u.code')
+				->join('left join user as u on u.uid=l.user_id')
+				->where($where)->order('id DESC')
+				->limit($page*$num,$num)
+				->select();
+		
+			$list['code'] = 0;
+			$list['msg'] = '';
+			$list['data'] = $data;
+			$list['count'] =  M('operation_log as l')->join('left join public_admin as a on a.uid=l.admin_id')->where($where)->count();
+			echo json_encode($list,true);
+			exit;
+			
+			
+		}
+	}
+
+}

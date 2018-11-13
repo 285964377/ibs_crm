@@ -1,0 +1,181 @@
+<?php
+
+/**
+ * 员工管理
+ */
+
+namespace Home\Controller;
+class UserController extends BackController
+{
+    public function index()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $page = (I('get.page') != '') ? I('get.page') - 1 : 0;    //页码
+            $num = (I('get.limit') != '') ? I('get.limit') : 10;        //每页条数
+            if (I('get.search')) {
+                $complex[] = array(
+                    'u.name' => array('like', "%" . I('get.search') . "%"),
+                    'u.tel' => array('like', "%" . I('get.search') . "%"),
+                    'u.code' => array('like', "%" . I('get.search') . "%"),
+                    '_logic' => 'or'
+                );
+            }
+
+            if (I('get.part_id')) {
+                $code = M('part')->where('id=' . I('get.part_id'))->getField('code');
+                $complex[] = array(
+                    'p.code' => array('like', "%" . $code . "%")
+                );
+            }
+			$complex[]=array(
+				'u.uid' => array('not in', array(session('user'),1))
+			);
+		
+            if ($complex) {
+                $where = array(
+                    '_complex' => $complex,
+                    '_logic' => 'and'
+                );
+            }
+
+            $data = M('user as u')
+                ->field('u.*,p.name as part_name')
+                ->join('left join part as p on p.id=u.part_id')
+                ->where($where)
+                ->limit($num * $page, $num)
+                ->select();
+            $list['code'] = 200;
+            $list['data'] = $data;
+            $list['count'] = M('user as u')->join('left join part as p on p.id=u.part_id')->where($where)->count();
+            echo json_encode($list, true);
+            exit;
+        }
+    }
+
+    public function add()
+    {
+        if (IS_POST) {
+            $data = $_POST;
+            $where['login_id'] = array('eq', I('post.login_id'));
+            $where['code'] = array('eq', I('post.code'));
+			$where['_logic']='or';
+            $admin = M('user')->where($where)->find();
+            if ($admin && $admin['uid'] !=$id) {
+                echo json_encode(["code" => "ERROR", "msg" => "重复的登录账号或工号"], true);
+                exit;
+            }
+            $data['login_pwd'] = md5(123456);
+            $id = M('user')->add($data);
+            $datag['uid'] = $id;
+            $datag['group_id'] = I('post.role_id');
+            M('group_access')->add($datag);
+            $usr = M('user')->where(['uid' =>session('user')])->find();
+            $content = "{$usr['name']}" . '添加员工:' . "{$_POST['name']}";
+            $this->op_log($content);
+            $list['code'] = 200;
+            $list['msg'] = '添加成功';
+            echo json_encode($list, true);
+        }else{
+			$role =M('group_role')->select();
+			$this->assign('role',$role);
+			$this->display();
+		}
+
+    }
+
+   
+    public function edit()
+    {
+        if (IS_POST) {
+            $id = I('post.id');
+            $data = $_POST;
+            $where['login_id'] = array('eq', I('post.login_id'));
+            $where['code'] = array('eq', I('post.code'));
+			$where['_logic']='or';
+            $admin = M('user')->where($where)->find();
+            if ($admin && $admin['uid'] !=$id) {
+                echo json_encode(["code" => "ERROR", "msg" => "重复的登录账号或工号"], true);
+                exit;
+            }
+            M('user')->where(['uid' => $id])->save($data);
+            $usr = M('user')->where(['uid' => $id])->find();
+            $content = '修改员工:' . "{$_POST['name']}";
+            $this->op_log($content);
+            $list['code'] = 200;
+            $list['msg'] = '修改成功';
+            echo json_encode($list, true);
+            die;
+        }else{
+			$id = I('get.id');
+			$data = M('user')->where(['uid' => $id])->find();
+			$data['role_id']=M('group_access')->where('uid='.$data['uid'])->getField('group_id');
+            $this->assign('data', $data);
+			$role =M('group_role')->select();
+			$this->assign('role',$role);
+            $this->display();
+		}
+    }
+
+    /**
+     * 重置密码
+     */
+    public function reset()
+    {
+        $id = I('post.id');
+        if ($id) {
+            $data['login_pwd'] = md5(123456);
+            M('user')->where(['uid'=>$id])->save($data);
+			$re=M('user')->where('uid=' . $id)->find();
+			$content =  '重置员工登录密码:' .$re['name'];
+			$this->op_log($content);
+            $list['code'] = 200;
+            $list['msg'] = '重置成功';
+            echo json_encode($list, true);
+            die;
+        }
+    }
+
+    // 冻结&解冻
+    public function status()
+    {
+        $id = I('post.id');
+        $data['status'] = I('post.status');
+        if ($data['status'] == 1) {
+            $msg = "解冻";
+        } else {
+            $msg = "冻结";
+        }
+		$re=M('user')->where('uid=' . $id)->find();
+        M('user')->where('uid=' . $id)->save($data);
+		$content = $msg. '员工:' .$re['name'];
+		$this->op_log($content);
+        echo json_encode(["code" => 200, "msg" => $msg . '成功'], true);
+		exit;
+    }
+	
+	    //删除员工
+    public function delete()
+    {
+        $id = I('post.id');
+        if ($id) {
+            //被删除人信息
+            $pas_uer = M('user')->where(['uid'=>$id])->find();
+            M('group_access')->where(['uid' =>$id])->delete();
+            M('user')->where(['uid' => $id])->delete();
+			$content = '删除员工:' . "{$pas_uer['name']}";
+            $this->op_log($content);
+            $list['code'] = 200;
+            $list['msg'] = '删除成功';
+            echo json_encode($list, true);
+            die;
+        }else{
+            $list['code'] = "Error";
+            $list['msg'] = '参数错误';
+            echo json_encode($list, true);
+            die;
+        }
+    }
+}

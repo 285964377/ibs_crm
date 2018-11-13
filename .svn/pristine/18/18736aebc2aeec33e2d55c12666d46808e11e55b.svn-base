@@ -1,0 +1,141 @@
+<?php
+
+namespace Home\Controller;
+
+use Think\Controller;
+
+class BackController extends Controller
+{
+    public function _initialize()
+    {
+        A('Auto')->check_login();
+        A('Auto')->check_power();
+    }
+
+    //管理员操作日志
+    public function op_log($content)
+    {
+        $data['type'] = CONTROLLER_NAME . '/' . ACTION_NAME;
+        $data['user_id'] = session("user");
+        $data['ip'] = $_SERVER["REMOTE_ADDR"];
+        $data['content'] = $content;
+        M('operation_log')->add($data);
+    }
+
+    //商机操作记录
+    public function res_op_log($res_id, $content, $type)
+    {
+        $data['controler'] = CONTROLLER_NAME . '/' . ACTION_NAME;
+        $data['user_id'] = session("user");
+        $data['res_id'] = $res_id;
+        $data['type'] = $type;
+        $data['content'] = $content;
+        M('res_op_log')->add($data);
+    }
+
+    public function select_part()
+    {
+        $data = M('part')->field('name,id,pid')->select();
+        $data = $this->roles($data);
+        echo json_encode($data, true);
+        exit;
+    }
+
+    //递归无限极分类
+    public function roles($data, $pid = 0)
+    {
+        $arr = array();
+        foreach ($data as $key => $val) {
+            if ($val['pid'] == $pid) {
+                $arr[$key] = $val;
+                $arr[$key]['children'] = $this->roles($data, $val['id']);
+            }
+        }
+        $arr = array_merge($arr);
+        return $arr;
+    }
+
+    //导出 到excel
+    /*
+    $xlsData= $data;
+    $xlsName  = "中国城市列表";
+    $xlsCell  = array(
+        array('name','名字'),
+        array('pid','上级ID'),
+        array('id','下级ID'),
+    );
+
+    $this->exportE($xlsName,$xlsCell,$xlsData);
+    */
+    public function exportE($xlsName, $xlsCell, $xlsData)
+    {
+        $xlsName .= time();
+        $length = count($xlsData);
+        header('pragma:public');
+        header('Content-type:application/vnd.ms-excel;charset=utf-8;name="' . $xlsName . '.xls"');
+        header("Content-Disposition:attachment;filename=$xlsName.xls");//attachment新窗口打印inline本窗口打印
+        $data .= "<table border=1>";
+        $data .= "<tr>";
+        foreach ($xlsCell as $key => $val) {
+            $data .= "<td>" . $val[1] . "</td>";
+        }
+        $data .= "</tr>";
+
+        for ($i = 0; $i < $length; $i++) {
+            $data .= "<tr>";
+            foreach ($xlsCell as $k => $v) {
+                $data .= "<td>" . $xlsData[$i][$v[0]] . "</td>";
+            }
+            $data .= "</tr>";
+        }
+        /*
+        foreach($xlsData as $key=>$val){
+            $data .= "<tr>";
+            foreach($xlsCell as $k=>$v){
+                $data .= "<td>".$val[$v[0]]."</td>";
+            }
+            $data .= "</tr>";
+        }
+        */
+        $data .= "</table>";
+        exit($data);
+
+    }
+
+    public function get_controller($type)
+    {
+
+            if ($type == "Login") $type = "登录";
+            if ($type == "Part") $type = "部门管理";
+            if ($type == "Wealth") $type = "资质管理";
+            if ($type == "Orgin") $type = "商机来源管理";
+            if ($type == "Restype") $type = "商机类型管理";
+            if ($type == "Label") $type = "标签管理";
+            if ($type == "Faq") $type = "FQA管理";
+            if ($type == "Msg") $type = "站内信管理";
+            if ($type == "Operlog") $type = "操作记录";
+            if ($type == "Goods") $type = "产品管理";
+            if ($type == "User") $type = "员工管理";
+            if ($type == "Resources") $type = "员工管理";
+
+
+        return $type;
+    }
+
+    public function get_action($type)
+    {
+        if ($type == "login") $type = "登录";
+        if ($type == "add") $type = "添加";
+        if ($type == "edit") $type = "修改";
+        if ($type == "delete") $type = "删除";
+        if ($type == "status") $type = "上架/下架&冻结/解冻";
+        if ($type == "details") $type = "详情";
+        if ($type == "send") $type = "发送";
+        if ($type == "edit_table") $type = "修改资质";
+        if ($type == "delete_table") $type = "删除资质";
+        if ($type == "add_field") $type = "添加字段";
+        if ($type == "edit_field") $type = "修改字段";
+        if ($type == "delete_field") $type = "删除字段";
+        return $type;
+    }
+}

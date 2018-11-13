@@ -1,0 +1,24 @@
+<?php
+namespace Home\Controller;
+class OrginController extends BackController
+{
+    //部门列表
+    public function index(){
+        if($_GET['index']){
+            $this->display();
+        }
+        if($_GET['search_data']){
+            $data=M('origin')->select();
+            foreach($data as $key=>$val){
+                foreach($val as $k=>$v){
+                    if($k=='id' || $k=='pid'){
+                        $data[$key][$k]=intval($v);
+                    }
+                }
+            }
+            $list['code']=200;
+            $list['data']=$data;
+            echo json_encode($list,true);
+        }
+    }
+}

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<style>
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+    input[type="number"]{
+        -moz-appearance: textfield;
+    }
+    .layui-view-body{
+        background:#fff;
+    }
+    .layui-table{
+        margin-top:0
+    }
+    .layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row]{
+        border-width: 1px;
+        border-style: solid;
+        border-color: #c6d1d6;
+    }
+    .layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even){
+        background: url(__COMMON__/images/t_bck.png) repeat-x;
+        background-size:100% 100%;
+    }
+    .layui-table td, .layui-table th{
+        padding:0;
+        text-align:center;
+        line-height: 28px;
+        font-size:12px;
+        color:#000
+    }
+    .layui-form-item{
+        clear:none;
+    }
+    .layui-form-mid {
+        line-height: 12px;
+    }
+</style>
+<body class="layui-view-body">
+<div class="layui-content">
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p><span class="fwt">客户属性</span></p></li>
+        </div>
+        <ul class="my_style_table_body">
+
+            <volist name="wealth" id="item">
+                <li class="layui-row">
+                    <div class="layui-col-xs1" style="text-align: right;padding-right:20px;">
+                        <p>
+                            <span>{$wealth.table}</span>
+                        </p>
+                    </div>
+                    <div class="layui-col-xs11"  style="text-align: left;padding-left:20px;position:relative;">
+                        <p>
+							<span>
+							<volist name="wealth.fields" id="fields">
+								<if condition="$fields['value']">
+								{$fields.field_name}：{$fields.value}；
+								</if>
+							</volist>
+							</span>
+                        </p>
+                    </div>
+                </li>
+            </volist>
+            <if condition="!$wealth">
+                <li class="layui-row">
+                    <div class="layui-col-xs12" style="text-align: center;">
+                        <p>
+                            <span>暂无</span>
+                        </p>
+                    </div>
+
+                </li>
+            </if>
+        </ul>
+    </div>
+    <div class="my_style_table">
+        <div class="head_top_table">
+            <li><p><span class="fwt">客户意向</span></p></li>
+        </div>
+        <table class="layui-table">
+            <thead>
+            <tr>
+                <th>产品编号</th>
+                <th>产品名称</th>
+                <th>渠道名称</th>
+                <th>贷款金额</th>
+                <th>贷款利率</th>
+                <th>贷款年限</th>
+                <th>放款周期</th>
+                <th>年龄要求</th>
+                <th>进件条件</th>
+            </tr>
+            </thead>
+            <tbody>
+            <volist name="goods" id="item">
+                <tr>
+                    <td>{$item.code}</td>
+                    <td>{$item.name}</td>
+                    <td>{$item.origin}</td>
+                    <td>{$item.money_start}~{$item.money_end}万元</td>
+                    <td>{$item.ratio_start}%~{$item.ratio_end}%({$item.ratio_type}息)</td>
+                    <td>{$item.dk_time_start}~{$item.dk_time_end}（{$item.dk_time_type}）</td>
+                    <td>{$item.loan_time_start}~{$item.loan_time_end}（{$item.loan_time_type}）</td>
+                    <td>{$item.age_start}~{$item.age_end}</td>
+                    <td>{$item.jinjian}</td>
+                </tr>
+            </volist>
+            <if condition="!$goods">
+                <tr>
+                    <td style="border-right:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;text-align:right;padding-right:25px;">暂无</td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-right:none;border-left:none;"></td>
+                    <td style="border-left:none;"></td>
+                </tr>
+            </if>
+            </tbody>
+        </table>
+    </div>
+    <div class="my_style_table">
+        <form class="layui-form" enctype="multipart/form-data" id="fj_form" lay-filter="car_form">
+            <ul class="head_top_table">
+                <li><p><span class="fwt">合同信息</span></p></li>
+            </ul>
+            <ul class="my_style_table_body">
+                <li class="layui-row">
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
+                        <p>
+                            <span>合同编号：</span>
+                            <span>{$order.contract}</span>
+                        </p>
+                    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
+                        <p>
+                            <span>贷款金额：</span>
+                            <span>{$order.dk_money}万</span>
+                        </p>
+                    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
+                        <p>
+                            <span>贷款时长：</span>
+                            <span>{$order.dk_time}{$order.dk_time_type}</span>
+                        </p>
+                    </div>
+                </li>
+                <li>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
+                        <p>
+                            <span>贷款利率：</span>
+                            <span>{$order.dk_ratio}%{$order.dk_ratio_type}</span>
+                        </p>
+                    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
+                        <p>
+                            <span>定金：</span>
+                            <span>{$order.ding_money}元</span>
+                        </p>
+                    </div>
+                    <div class="layui-col-xs12 layui-col-sm6 layui-col-md4">
+                        <p>
+                            <span>服务费：</span>
+                            <span>{$order.fuwu_money}%</span>
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </form>
+    </div>
+    <div class="my_style_table">
+        <form class="layui-form" enctype="multipart/form-data" id="fj_form" lay-filter="car_form">
+            <ul class="head_top_table">
+                <li><p><span class="fwt">添加工单信息</span></p></li>
+
+            </ul>
+            <ul class="my_style_table_body">
+                <li class="layui-row">
+                    <div id="form" class="layui-form layui-row" style="height: auto" >
+                        <div class="layui-form-item sj_form layui-col-md3 layui-col-xs6 layui-col-sm12">
+                            <label class="layui-form-label">贷款金额(万)</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="money"  required  value="" lay-verify="required" placeholder="请输入贷款金额" autocomplete="off" class="layui-input ">
+                            </div>
+                        </div>
+                        <div class="layui-form-item sj_form layui-col-md3 layui-col-xs6 layui-col-sm12">
+                            <label class="layui-form-label">利息</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="lixi_way" required  value="" lay-verify="required" placeholder="请输入利息" autocomplete="off" class="layui-input ">
+                            </div>
+                        </div>
+                        <div class="layui-form-item sj_form layui-col-md3 layui-col-xs6 layui-col-sm12">
+                            <label class="layui-form-label">手续费(%)</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="recharge"  required  value="" lay-verify="required"   placeholder="请输入手续费" autocomplete="off" class="layui-input ">
+                            </div>
+                        </div>
+                        <div class="layui-form-item sj_form layui-col-md3 layui-col-xs6 layui-col-sm12">
+                            <label class="layui-form-label">产品名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="product" required  value="" lay-verify="required"   placeholder="请输入产品名" autocomplete="off" class="layui-input ">
+                            </div>
+                        </div>
+                        <div class="layui-form-item sj_form layui-col-md3 layui-col-xs6 layui-col-sm12">
+                            <label class="layui-form-label">业务类型</span></label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="business_type" required value=""   lay-verify="required" placeholder="请输入业务类型" autocomplete="off" class="layui-input ">
+                            </div>
+                        </div>
+                        <div class="layui-form-item sj_form layui-col-md3 layui-col-xs6 layui-col-sm12">
+                            <label class="layui-form-label">贷款类型</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="dk_type"  required  value="" lay-verify="required"  placeholder="请输入贷款类型" autocomplete="off" class="layui-input ">
+                            </div>
+                        </div>
+                        <div class="layui-form-item sj_form layui-col-md3 layui-col-xs6 layui-col-sm12">
+                            <label class="layui-form-label">建议渠道</label>
+                            <div class="layui-input-inline" style="margin-bottom: 10px">
+                                <input type="text" name="channel" required  value="" lay-verify="required"   placeholder="请输入渠道" autocomplete="off" class="layui-input ">
+                            </div>
+                        </div>
+                        <div class="yc_input"></div>
+                        <div style="clear:both"></div>
+                    </div>
+                </li>
+            </ul>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <input type="hidden" name="id"  value="{$id}" />
+                    <button class="layui-btn layui-btn-blue" lay-submit lay-filter="*">立即提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<include file="Public:footer" />
+<script>
+    var base_tc;
+    layui.use(['table','layer','jquery','form','element','laydate'],function(){
+        var table = layui.table,layer= layui.layer,form = layui.form,$ = layui.jquery,laypage = layui.laypage,element = layui.element;
+        form.on('submit(*)', function(data){
+            var index_two = layer.load();
+            $.ajax({
+                url:'demand_add.html',
+                type:"post",
+                dataType:"json",
+                data:data.field,
+                success:function(res){
+                    parent.layui.layer.msg(res.msg);
+                    layer.close(index_two);
+                    if(res.code==200){
+                        setTimeout(function(){
+                            parent.location.reload()
+                        },500)
+                    }
+                }
+            })
+            return false;
+        });
+    });
+
+</script>
+</body>
+</html>

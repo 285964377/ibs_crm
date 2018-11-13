@@ -1,0 +1,23 @@
+<?php
+//欢迎页控制器 首页
+namespace Home\Controller;
+class IndexController extends BackController {
+	public function index(){
+	
+		$this->display();
+	}
+		
+		
+	public function wellcom(){
+		$this->display();
+	}
+	
+	
+	public function change_pwd(){
+		$data['pwd'] = MD5(I('post.pwd'));
+		$where['uid'] = array('eq',session('admin_id'));
+		M('admin')->where($where)->save($data);
+		echo json_encode(["code"=>200,"msg"=>'修改成功'],true);
+	}
+	
+}

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+<style>
+	 input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+    input[type="number"]{
+        -moz-appearance: textfield;
+    }
+		.layui-view-body{
+			background:#fff;
+		}
+		.layui-table{
+			margin-top:0
+		}
+		.layui-table td, .layui-table th, .layui-table-col-set, .layui-table-fixed-r, .layui-table-grid-down, .layui-table-header, .layui-table-page, .layui-table-tips-main, .layui-table-tool, .layui-table-total, .layui-table-view, .layui-table[lay-skin=line], .layui-table[lay-skin=row]{
+			border-width: 1px;
+			border-style: solid;
+			border-color: #c6d1d6;
+		}
+		.layui-table thead tr, .layui-table-click, .layui-table-header, .layui-table-hover, .layui-table-mend, .layui-table-patch, .layui-table-tool, .layui-table-total, .layui-table-total tr, .layui-table[lay-even] tr:nth-child(even){
+			background: url(__COMMON__/images/t_bck.png) repeat-x;
+			background-size:100% 100%;
+		}
+		.layui-table td, .layui-table th{
+			padding:0;
+			text-align:center;
+			line-height: 28px;
+			font-size:12px;
+			color:#000
+		}
+		.layui-form-item{
+			margin-top:0
+		}
+		.sj_form{
+			margin-bottom:10px;
+		}
+		.layui-form-label{
+			width:auto;
+		}
+		.layui-form-mid{
+				padding: 0px 0px !important;
+		}
+		.layui-form-radio{
+			margin:0;
+		}
+		.layui-form-item{
+			clear:none;
+		}
+		.my_style_table_body li > div {
+			height:auto;
+		}
+</style>
+<div class="layui-content">
+	<ul class="head_top_table">
+			<li><p><span class="fwt">客户</span>：<span class="blue">{$res.name}</span>( {$cus.code} )</p></li>
+			<li><p><span class="fwt">商机</span>：{$res.res_type} ( {$res.code} )</p></li>
+		</ul>
+	<h2 style="margin-top:20px;font-size:18px;">历史记录</h2>
+	<table class="layui-table" style="margin-top:10px;">
+	  <colgroup>
+		<col width="150">
+		<col width="200">
+		<col>
+	  </colgroup>
+	  <thead>
+		<tr>
+		  <th>认款编号</th>
+		  <th>订单编号</th>
+		  <th>生产子订单</th>
+		  <th>认款金额</th>
+			<th>内部成本</th>
+			<th>外部成本</th>
+		  <th>款项</th>
+		  <th>状态</th>
+		  <th>申请时间</th>
+		  <th>商务</th>
+		  <th>审核时间</th>
+		  <th>复审核人</th>
+		</tr> 
+	  </thead>
+	  <tbody>
+			<volist name="apply_log" id="item">
+		<tr>
+		  <td>{$item.code}</td>
+		  <td>{$item.order}</td>
+		  <td>{$item.demand.code}-{$item.demand.dk_type}-{$item.demand.channel}</td>
+			<td>{$item.money}</td>
+			<td>{$item.cb_nei}</td>
+			<td>{$item.cb_wai}</td>
+			<td>{$item.rk_type}</td>
+			<td>{$item.step}</td>
+			<td>{$item.creat_time}</td>
+			<td>{$item.user}</td>
+			<td>{$item.check_time}</td>
+			<td>{$item.check_user}</td>
+		</tr>
+		</volist>
+		<if condition="!$apply_log">
+			<tr>
+				<td style="border-right:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;text-align:left;">暂无</td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-right:none;border-left:none;"></td>
+				<td style="border-left:none;"></td>
+			</tr>
+		</if>
+	  </tbody>
+	</table>
+	<div class="my_style_table">
+			<div class="head_top_table">
+				<li><p><span class="fwt">申请信息</span></p></li>
+			</div>
+			<ul class="my_style_table_body">
+				<li class="layui-row">
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>认款单号：</span>
+							<span>{$data.code}</span>
+						</p>	
+					</div>
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>金额：</span>
+							<span>{$data.money}</span>		
+						</p>
+					</div>
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>内部成本：</span>
+							<span>{$data.cb_nei}</span>		
+						</p>
+					</div>
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>内部成本：</span>
+							<span>{$data.cb_wai}</span>		
+						</p>
+					</div>
+				</li>
+				<li class="layui-row">
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>款项：</span>
+							<span>{$data.rk_type}</span>
+						</p>	
+					</div>
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>状态：</span>
+							<span>{$data.step}</span>		
+						</p>
+					</div>
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>申请时间：</span>
+							<span>{$data.creat_time}</span>		
+						</p>
+					</div>
+					<div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+						<p>
+							<span>商务：</span>
+							<span>{$data.user}</span>		
+						</p>
+					</div>
+				</li>
+				<li class="layui-row">
+					<div class="layui-col-xs12 layui-col-md4">
+						<p>
+							<span>生产子订单：</span>
+							<span>{$demand.code}</span>
+						</p>	
+					</div>
+					<div class="layui-col-xs12  layui-col-md4">
+						<p>
+							<span>贷款类型：</span>
+							<span>{$demand.dk_type}</span>		
+						</p>
+					</div>
+					<div class="layui-col-xs12  layui-col-md4">
+						<p>
+							<span>渠道：</span>
+							<span>{$demand.channel}</span>		
+						</p>
+					</div>
+				</li>
+				<li >
+					<div class="layui-col-xs12 layui-col-sm12 layui-col-md12" style="padding:20px 0;">
+						<p id="imgs">
+							<span>收款凭证：</span>
+							<span><img src="__WWW__/{$data.url}"  style="width:200px;height:200px;cursor: pointer;"/></span>		
+						</p>
+					</div>
+				</li>
+				<li>
+					<div class="layui-col-xs12 layui-col-sm12 layui-col-md12">
+						<p>
+							<span>备注：</span>
+							<span>{$data.remark}</span>
+						</p>	
+					</div>
+				</li>	
+			</ul>
+		</div>
+
+	
+	
+	
+	
+	
+	
+	<form class="layui-form" id="js_adds" action="">
+		<div class="layui-form-item">
+			<div class="layui-input-block" style="margin-left:0;margin-top:10px;">
+					<a href="javascript:;" id="yes" class="layui-btn-blue layui-btn">同意</a>
+					<a href="javascript:;" id="no"  class="layui-btn-danger layui-btn">拒绝</a>
+			</div>
+		</div>
+	</div>
+</div>	
+</form>	
+	 <include file="Public:footer" />
+	<script>
+		var tc_box,Ids = "{$data.id}";
+	layui.config({
+		base: path+'/modules/treeSelect/',
+	})			
+	layui.use(['table','layer','jquery','form','treeSelect','element','laydate'],function(){
+		var table = layui.table;
+		var layer= layui.layer;
+		var form = layui.form;
+		var $ = layui.jquery;
+		var laypage = layui.laypage;
+		var treeSelect= layui.treeSelect;
+		var element = layui.element;
+		var laydate = layui.laydate;
+		laydate.render({
+			elem: '#birth' 
+		});
+		layer.photos({
+			photos: '#imgs'
+			,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+		}); 
+		var tc_box;
+		$('#no').click(function(){
+			layer.prompt({'formType':	0,'title':'拒绝原因'},function(value, index, elem){
+						var index_o = layer.load();
+						$.ajax({
+							url:"check_last.html",
+							type:'post',
+							data:{'check_remark':value,'status':'2','id':Ids},
+							dataType:"json",
+							success:function(res){
+								layer.close(index_o);
+								layer.msg(res.msg);
+								if(res.code==200){
+									setTimeout(function(){
+										layer.close(index);
+										parent.layui.table.reload('Machine');
+										var my_index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+										parent.layer.close(my_index);
+									},500)
+								}
+							}	
+						})
+					});
+						layer.tips('请填写拒绝原因，否则无法提交哟', '.layui-layer-btn0');
+
+		})
+		$('#yes').click(function(){
+			layer.confirm('是否通过审核?', function(index){
+				var index_two = layer.load();
+				$.ajax({
+					url:'check_last.html',
+					type:"post", 
+					dataType:"json",
+					data:{'status':'1','id':Ids},
+					success:function(res){
+						layer.msg(res.msg);
+						layer.close(index_two);
+						if(res.code==200){
+							setTimeout(function(){
+							parent.layui.table.reload('Machine');
+							layer.close(tc_box);
+							var my_index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+							parent.layer.close(my_index);
+							},500)
+						}
+					}
+				})
+			});    
+		})
+	});
+	</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<?php
+namespace Home\Controller;
+use Think\Controller;
+class BackController extends Controller {
+	public function _initialize(){
+		//A('Auto')->check_login();
+		//A('Auto')->check_power();
+	}
+	
+  
+	
+	
+}

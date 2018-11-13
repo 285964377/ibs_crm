@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+	</style>
+    <div class="layui-content">
+        <div class="layui-row">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="form-box">
+														<button class="layui-btn layui-btn-blue layui-btn-sm add-depart"><i class="layui-icon">&#xe654;</i>新增上级部门</button>
+														<button class="layui-btn layui-btn-primary up-all layui-btn-sm"><i class="layui-icon">&#xe619;</i>全部收起</button>
+														<button class="layui-btn layui-btn-primary down-all layui-btn-sm"><i class="layui-icon">&#xe61a;</i>全部展开</button>
+                    </div>
+										<hr/>
+										<div class="table_box">
+											<div class="test-tree-table" lay-filter="test1"></div>
+										</div>	
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--添加上级部门-->
+    <div id="add-department" style="display: none;">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="name" required  lay-verify="required" placeholder="请输入部门名称" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门代码</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="code" required  lay-verify="required" placeholder="请输入部门代码" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门负责人</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="department-leader" name="" required  lay-verify="required" placeholder="请选择部门负责人" autocomplete="off" class="layui-input choose-leader">
+                    <input  id="department-id" name="leader_id" type="hidden" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-blue" lay-submit lay-filter="Add">立即提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!--添加下级部门-->
+    <div id="add-child-department" style="display: none;">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">上级部门</label>
+                <div class="layui-input-inline">
+                    <input type="text"  id="child-p-name"  disabled autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="name" required  lay-verify="required" placeholder="请输入部门名称" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门代码</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="code" required  lay-verify="required" placeholder="请输入部门代码" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门负责人</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="child-department-leader" name="" required  lay-verify="required" placeholder="请选择部门负责人" autocomplete="off" class="layui-input choose-leader">
+                    <input  id="child-department-id" name="leader_id" type="hidden" class="layui-input">
+                    <input  id="child-p-id" name="pid"   type="hidden" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-blue" lay-submit lay-filter="Add_child">立即提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!--编辑部门-->
+    <div  class="" id="edit-department" style="display: none;">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="edit-input-name" name="name" value="" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+          
+            <div class="layui-form-item">
+                <label class="layui-form-label">抢单</label>
+                 <div class="layui-input-block">
+					  <input type="radio" name="rush" value="1" title="开启">
+					  <input type="radio" name="rush" value="2" title="关闭" checked>
+				</div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">部门负责人</label>
+                <div class="layui-input-inline">
+                    <input type="text"  id="edit-input-leader" value="" name="" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input choose-leader">
+                    <input  id="edit-input-leaderId" name="leader_id" type="hidden" class="layui-input">
+                    <input  id="edit-input-id" name="id" type="hidden" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-blue" lay-submit lay-filter="Edit">立即提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+    <include file="Public:footer" />
+		<script type="text/javascript">
+			layui.config({
+				base: path+'/modules/table/',
+			})
+			layui.use(['treetable','form','layer'],function(){
+				var o = layui.$,treetable = layui.treetable,data,layer=layui.layer,form=layui.form;
+				o.ajax({
+					url:'index.html?search_data=1',
+					dataType:'json',
+					async:false,
+					success:function(res){
+						data=res.data;
+					}
+				})
+				 parttable = treetable.render({
+					elem: '.test-tree-table',
+					data: data,
+					field: 'name',
+					cols: [
+						{
+							field: 'name',
+							title: '部门名称',
+							width: '20%',
+						},
+						{
+							field: 'code',
+							title: '部门代码',
+							width: '20%',
+						},
+						{
+							field: 'user_name',
+							title: '部门负责人',
+							width: '20%',
+						},
+						{
+								field: 'creat_time',
+								title: '创建时间',
+								width: '20%',
+						},
+						{
+							field: 'actions',
+							title: '操作',
+							width: '20%',
+							data: [
+								'<button style="border: none;background: none" onclick="add_child(this)"><i class="layui-icon">&#xe654;</i>添加</button>',
+                                '<button style="border: none;background: none"  onclick="edit(this)"><i class="layui-icon">&#xe642;</i>编辑</button>',
+							],
+						},
+					]
+				});
+				
+
+
+                //添加上级部门
+                o('.add-depart').click(function(){
+                    ADD=layer.open({
+                        title: '新增部门',
+                        type: 1,
+                        content: o('#add-department'),
+                        area: ['330px', '220px']
+                    })
+                })
+
+
+					o('.up-all').click(function(){
+						treetable.all('up');
+					})
+					
+					o('.down-all').click(function(){
+						treetable.all('down');
+					})
+
+                //选择部门负责人
+                o('.choose-leader').click(function(){
+                    layer.open({
+                        title: '选择负责人',
+                        type: 2,
+                        content: 'department-leader.html',
+                        area: ['800px', '500px']
+                    })
+                })
+
+
+                //提交添加上级部门内容
+                form.on('submit(Add)', function(data){
+                    var index_o = layer.load();
+                    var datas = data.field;
+                    o.ajax({
+                        url:'add.html',
+                        data:datas,
+                        type:'post',
+                        dataType:'json',
+                        success:function(res){
+                            layer.close(index_o);
+                            layer.msg(res.msg);
+                            if(res.code==200){
+                                setTimeout(function(){
+                                    layer.closeAll();
+                                    location.reload();
+                                },500)
+                            }
+                        }
+                    })
+                    return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+                });
+
+                //提交添加下级部门内容
+                form.on('submit(Add_child)', function(data){
+                    var index_o = layer.load();
+                    var datas = data.field;
+                    o.ajax({
+                        url:'add.html',
+                        data:datas,
+                        type:'post',
+                        dataType:'json',
+                        success:function(res){
+                            layer.close(index_o);
+                            layer.msg(res.msg);
+                            if(res.code==200){
+                                setTimeout(function(){
+                                    layer.closeAll();
+                                    location.reload();
+                                },500)
+                            }
+                        }
+                    })
+                    return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+                });
+
+                //提交编辑内容
+                form.on('submit(Edit)', function(data){
+                    var index_o = layer.load();
+                    var datas = data.field;
+                    o.ajax({
+                        url:'edit.html',
+                        data:datas,
+                        type:'post',
+                        dataType:'json',
+                        success:function(res){
+                            layer.close(index_o);
+                            layer.msg(res.msg);
+                            if(res.code==200){
+                                setTimeout(function(){
+                                    layer.closeAll();
+                                    location.reload();
+                                },500)
+                            }
+                        }
+                    })
+                    return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+                });
+            });
+            function  add_child(obj){
+                layui.use(['form','layer'],function(){
+                    var o = layui.$,layer=layui.layer,form=layui.form;
+                    layer.open({
+                        title: '新增下级部门',
+                        type: 1,
+                        content: o('#add-child-department'),
+                        area: ['330px', '260px']
+                    })
+										$("#child-department-leader").val('');
+                    var tr =o(obj).parents('tr');
+                    var id=o(tr).attr('data-tb-id');
+                    var name=o(tr).attr('data-name');
+                    document.getElementById("child-p-id").value=id;
+                    document.getElementById("child-p-name").value=name;
+                })
+            }	
+
+            function  edit(obj){
+                layui.use(['form','layer'],function(){
+                    var o = layui.$,layer=layui.layer,form=layui.form;
+                    edit_depart=layer.open({
+                        title:'编辑部门',
+                        type:1,
+                        content:o('#edit-department'),
+                        area:['330px','220px']
+                    })
+               //     console.log(obj);
+                    var tr =o(obj).parents('tr');
+                    var name=o(tr).attr('data-name');
+                    var code=o(tr).find('td').eq(1).find('div').text();
+                    var userName=o(tr).find('td').eq(2).find('div').text();
+                    var leaderId=o(tr).attr('data-leader-id');
+                    var id=o(tr).attr('data-tb-id');
+                    var rush=o(tr).attr('data-rush');
+					$('input[name=rush]').eq(parseInt(rush)-1).removeProp('disabled').prop('checked','checked');
+					form.render('radio')
+					$('#edit-input-rush').val(rush);
+                    document.getElementById("edit-input-name").value=name;
+                    //document.getElementById("edit-input-code").value=code;
+                    document.getElementById("edit-input-leader").value=userName;
+                    document.getElementById("edit-input-leaderId").value=leaderId;
+                    document.getElementById("edit-input-id").value=id;
+                })
+            }
+		</script>
+</body>
+</html>

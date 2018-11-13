@@ -1,0 +1,4 @@
+<script src="__COMMON__/layui/layui.js"></script>
+<script>
+		var path = "__COMMON__";
+</script>

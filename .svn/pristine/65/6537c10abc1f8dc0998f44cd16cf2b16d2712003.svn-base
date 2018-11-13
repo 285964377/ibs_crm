@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<include file="Public:header" />
+<body class="layui-view-body">
+	<style>
+		.layui-form-label{
+			width:auto;
+		}
+		.form-box{
+			padding:0
+		}
+		.layui-table, .layui-table-view{
+			margin-top:0;
+		}
+		.layui-treeSelect .ztree li span.button.switch{
+			position: relative;
+			top:-7px;
+		}
+	</style>
+	<div class="layui-content">
+	    <div class="layui-row">
+				<div class="layui-card">
+						<div class="layui-card-body">
+								<div class="form-box">
+									<div class="layui-form" action="">
+											<div class="layui-input-inline">
+												<input type="text" class="search_input layui-input" id="like"  placeholder="产品名称/产品类型" />
+											</div>
+											<div class="layui-input-inline">
+												<button class="layui-btn layui-btn-blue" lay-submit id="search" lay-filter="search"><i class="layui-icon">&#xe615;</i>查询</button>
+											</div>
+								</div>		
+							</div>
+							<hr/>
+							<div class="table_box">
+								<table id="Machine" lay-filter="Machine"></table>
+							</div>	
+						</div>
+					</div>
+			</div>		
+	</div>		
+	<include file="Public:footer" />
+	<script type="text/html" id="cz">
+	  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="tj"><i class="layui-icon">&#xe608;</i>推荐</a>
+	</script>
+	<script type="text/html" id="sts">
+	    <input type="checkbox" value="{{d.id}}" name="zzz" lay-skin="switch" {{ d.status == 1 ? 'checked' : '' }} lay-text="下架|上架" lay-filter="switchBtn">
+	 </script>
+	<script type="text/html" id="money">
+		{{d.money_start}}万~{{d.money_end}}万
+	</script>
+	<script type="text/html" id="age">
+		{{d.age_start}}~{{d.age_end}}
+	</script>
+	<script type="text/html" id="dk_time">
+		{{d.dk_time_start}}~{{d.dk_time_end}}({{d.dk_time_type}})
+	</script>
+	<script type="text/html" id="loan_time">
+		{{d.loan_time_start}}~{{d.loan_time_end}}({{d.loan_time_type}})
+	</script>
+	<script type="text/html" id="ratio">
+		{{d.ratio_start}}%~{{d.ratio_end}}%({{d.ratio_type}})
+	</script>
+	<script type="text/javascript">
+			layui.config({
+				
+				base: path+'/modules/table/',
+			})
+			var Ids ="{$id}";
+			layui.use(['form','layer','table'],function(){
+				var $ = layui.$,data,layer=layui.layer,form=layui.form,table=layui.table;
+						//产品列表
+						Machine= table.render({
+								elem: '#Machine',
+								url: "add_goods.html?search_data=1" //数据接口
+								,page: true //开启分页
+								,response: {
+										statusCode: 200 //规定成功的状态码，默认：0
+								}
+								,cols: [[
+										{title: '产品名称', field: 'name'}
+										,{title: '产品类型', field: 'type'}
+										,{title: '渠道名称', field: 'origin'}
+										,{title: '进件条件',field:"jinjian"}
+										,{title: '放贷金额', templet:"#money"}
+										,{title: '贷款周期', templet: '#dk_time'}
+										,{title:'贷款利息',templet:'#ratio',width:150}
+										,{title: '放款周期', templet: '#loan_time'}
+										,{title: '年龄',templet:"#age",width:70}
+										,{toolbar: '#cz',title: '操作',width:80}
+								]]
+						});
+						//监听搜索
+						$("#search").click(function(){
+								var search =$('#like').val();
+								data= {search:search};
+								Machine.reload({
+									where:data,
+									page: {
+											curr: 1
+									}
+								});
+						})
+				//监听表格
+				table.on('tool(Machine)', function(obj){
+						var data = obj.data;
+						var layEvent = obj.event;
+						if(layEvent === 'tj'){
+								layer.confirm('是否推荐该产品?', {icon: 3, title:'提示'},function(index){
+									var index_o = layer.load();
+									$.ajax({
+										url:'add_goods.html',
+										type:'POST',
+										data:{'res_id':Ids,'goods_id':data.id},
+										dataType:'json',
+										success:function(res){
+											layer.close(index_o);
+												layer.msg(res.msg);
+												if(res.code==200){
+													setTimeout(function(){
+														parent.location.reload();
+														var index = parent.layer.getFrameIndex(window.name); 
+														parent.layer.close(index);
+													},500)
+											}
+										}
+									})
+								});   
+						}
+				})	
+			})			
+	</script>
+</body>
+</html>

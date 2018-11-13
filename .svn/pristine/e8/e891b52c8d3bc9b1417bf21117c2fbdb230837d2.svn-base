@@ -1,0 +1,579 @@
+<?php
+/*
+商机管理
+*/
+
+namespace Home\Controller;
+class ResourcesController extends BackController
+{
+
+
+    public $page;
+    public $num;
+    public $where;
+    public $see_tel;
+
+    public function _initialize()
+    {
+        parent::_initialize();
+        $this->page = (I('get.page') != '') ? I('get.page') - 1 : 0;
+        $this->num = (I('get.limit') != '') ? I('get.limit') : 10;
+        //查看当前用户的数据查看权限
+        $role = M('group_access')->where('uid=' . session('user'))->getField('group_id');
+        $power = M('group_role')->where('id=' . $role)->getField('show_data');
+        if ($power == 'self') {  //只能查看自己的数据
+            $param['user_id'] = array('eq', session('user'));
+        }
+        if ($power == 'part') {//查看部门数据
+            $part_id = M('user')->where('uid=' . session('user'))->getField('part_id');
+            $my_part_code = M('part')->where('id=' . $part_id)->getField('code');
+            $param['part_code'] = array('like', "%" . $my_part_code . "%");
+        }
+        //公共筛选条件
+        //类型
+        if (I('get.res_type_id')) {
+            $param['res_type_id'] = array('eq', I('get.res_type_id'));
+        }
+        //来源渠道
+        if (I('get.res_type_id')) {
+            $param['origin_id'] = array('eq', I('get.origin_id'));
+        }
+        //客户号码
+        if (I('get.phone')) {
+            $param['phone'] = array('like', "%" . I('get.phone') . "%");
+        }
+        //客户姓名
+        if (I('get.name')) {
+            $param['name'] = array('like', "%" . I('get.name') . "%");
+        }
+        //所属部门
+        if (I('get.patr_id')) {
+            $param['patr_id'] = array('eq', I('get.patr_id'));
+        }
+        //销售阶段
+        if (I('get.stage')) {
+            $param['stage'] = array('eq', I('get.stage'));
+        }
+
+        //贷款金额
+        if (I('get.dk_money_start')) {
+            $param['dk_money'] = array('glt', I('get.dk_money_start'));
+        }
+        if (I('get.dk_money_end')) {
+            $param['dk_money'] = array('elt', I('get.dk_money_end'));
+        }
+        //商机编号
+        if (I('get.code')) {
+            $param['code'] = array('eq', I('get.code'));
+        }
+
+        //创建时间
+        if (I('get.creat_time_start')) {
+            $s_time = I('get.creat_time_start');
+            $e_time = strtotime(I('get.creat_time_end'));
+            $e_time = date('Y-m-d', $e_time + 86400);
+            $where['left(creat_time,10)'] = array('between', array($s_time, $e_time));
+        }
+        $this->where = $param;
+        $power = M('group_role')->where('id=' . $role)->getField('show_tel');
+        if ($power == 1) {
+            $this->see_tel = 1;
+        } else {
+            $this->see_tel = 2;
+        }
+
+    }
+
+    //跟进中商机
+    public function ing()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('ELT', 2);
+            //今日待根跟进
+            if (I('get.today_gj')) {
+                $param['left(next_time,10)'] = array('eq', date('Y-m-d', time()));
+            }
+            //今日预约上门
+            if (I('get.today_sm')) {
+                $param['left(next_time,10)'] = array('eq', date('Y-m-d', time()));
+                $param['left(next_step)'] = array('eq', 4);
+            }
+            //分配时间
+            if (I('get.allot_time_start')) {
+                $s_time = I('get.allot_time_start');
+                $e_time = strtotime(I('get.allot_time_end'));
+                $e_time = date('Y-m-d', $e_time + 86400);
+                $where['left(allot_time,10)'] = array('between', array($s_time, $e_time));
+            }
+            //下次跟进时间
+            if (I('get.next_time_start')) {
+                $s_time = I('get.next_time_start');
+                $e_time = strtotime(I('get.next_time_end'));
+                $e_time = date('Y-m-d', $e_time + 86400);
+                $where['left(next_time,10)'] = array('between', array($s_time, $e_time));
+            }
+
+            $data = M('resources')->where($where)->limit($this->num * $this->page, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+    }
+
+    //已成单商机
+    public function over()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('eq', 3);
+
+            //最后跟进时间
+            if (I('get.last_time')) {
+                $star = I('get.last_time');
+                $end = strtolower(I('get.last_time'));
+                $end = date('Y-m-d', $end);
+                $where['left(last_time,10)'] = array('between', array($star, $end));
+            }
+            // 签单时间
+//            if (){
+//
+//            }
+
+            $data = M('resources')->where($where)->limit($this->num * $this->page, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+
+
+    }
+
+    //待审核商机
+    public function checking()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('eq', 5);
+            //商机编号
+            if (I('get.code')) {
+                $where['code'] = array('eq', I('get.code'));
+            }
+            //下次跟进时间
+            if (I('get.next_time_start')) {
+                $s_time = I('get.next_time_start');
+                $e_time = strtotime(I('get.next_time_end'));
+                $e_time = date('Y-m-d', $e_time + 86400);
+                $where['left(next_time,10)'] = array('between', array($s_time, $e_time));
+            }
+
+            //审核备注
+            if (I('get.check_remark')) {
+                $where['check_remark'] = array('eq', I('get.check_remark'));
+            }
+            $data = M('resources')->where($where)->limit($this->num * $this->page, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+
+    }
+
+    //白名单商机
+    public function white()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            //贷款金额
+            if (I('get.dk_money')) {
+                $where['dk_money'] = array('eq', I('get.dk_money'));
+            }
+            //商机编号
+            if (I('get.code')) {
+                $where['code'] = array('eq', I('get.code'));
+            }
+            $where['status'] = array('eq', 6);
+            $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+    }
+
+    /**
+     * 商机掉库
+     */
+    public function out()
+    {
+        if ($_GET['index']) {
+            $this->display();
+        }
+        if ($_GET['search_data']) {
+            $where = $this->where;
+            $where['status'] = array('eq', 7);
+            $data = M('resources')->where($where)->limit($this->page * $this->num, $this->num)->select();
+            $data = $this->all($data);
+            $list['code'] = 200;
+            $list['data'] = $data;
+            echo json_encode($list, true);
+        }
+
+    }
+
+//查询关联数据全部
+    public function all($data)
+    {
+        foreach ($data as $ke => $values) {
+            if ($this->see_tel == 2) {
+                $data[$ke]['phone'] = substr_replace($values['phone'], '****', 3, 4);
+            }
+            //1通用字段    资质   商机类型 商机来源 来源渠道      商机所属人	所属部门  最新跟进人	最新跟进时间	最新跟进类型 	最新跟进备注
+            /*商机类型*/
+            $res_type = M('restype')->field('name')->where('id=' . $values['res_type_id'])->find();
+            $data[$ke]['res_type'] = $res_type['name'];
+
+            /*商机所属人*/
+            if ($values['user_id']) {
+                $user_name = M('user')->field('uid,name')->where('uid=' . $values['user_id'])->find();
+                $data[$ke]['username'] = $user_name['name'];
+            }
+            /*部门*/
+            if ($values['part_id']) {
+                $part = M('part')->where('id=' . $values['part_id'])->find();
+                $data[$ke]['part'] = $part['name'];
+            }
+            /*商机来源*/
+            $origin = M('origin')->where('id=' . $values['origin_id'])->find();
+            $data[$ke]['origin'] = $origin['name'];
+            /*商机类型*/
+
+            /*(最新跟进)*/
+            $res_op_log = M('res_op_log')->where(['res_id' => $values['id']])->order('id DESC')->select();//操作记录
+            if ($res_op_log) {
+                $data[$ke]['resop_time'] = $res_op_log[0]['creat_time'];
+                $user = M('user')->where('uid=' . $res_op_log[0]['user_id'])->find(); //操作人
+                $data[$ke]['resop_user_name'] = $user['name'];
+                $data[$ke]['resop_user_code'] = $user['code'];
+                $data[$ke]['resop_type'] = $res_op_log[0]['type'];
+                $data[$ke]['resop_content'] = $res_op_log[0]['content'];
+            }
+            /*待审核*/
+            if ($values['status'] == 5) {
+                $apply_user = M('user')->where(['id' => $values['apply_user']])->find();
+                $data[$ke]['apply_user'] = $apply_user['name'];
+                switch ($data[$ke]['apply_type']) {
+                    case 1;
+                        $data[$ke]['apply_type'] = "剔除";
+                        break;
+                    case 2;
+                        $data[$ke]['apply_type'] = "反无效";
+                        break;
+                }
+            } else {
+                unset($values['apply_type']);
+                unset($values['apply_time']);
+                unset($values['apply_user']);
+            }
+            //跟进中
+            /*分配人*/
+            if ($values['allot_user_id']) {
+                $allot_user = M('user')->field('name')->where('uid=' . $values['allot_user_id'])->find();
+                $data[$ke]['allot_name'] = $allot_user['name'];
+                $data[$ke]['allot_code'] = $allot_user['code'];
+            }
+            /*跟进阶段*/
+            //咨询 2犹豫 3意向 4已上门 5签约
+            switch ($values['stage']) {
+                case 1;
+                    $data[$ke]['stage'] = "咨询";
+                    break;
+                case 2;
+                    $data[$ke]['stage'] = "犹豫";
+                    break;
+                case 3;
+                    $data[$ke]['stage'] = "意向";
+                    break;
+                case 4;
+                    $data[$ke]['stage'] = "已上门";
+                    break;
+                case 5;
+                    $data[$ke]['stage'] = "签约";
+                    break;
+                default:
+                    $data[$ke]['stage'] = '未首电';
+            }
+
+            //下次跟进阶段
+            switch ($values['next_step']) {
+                case 1;
+                    $data[$ke]['next_step'] = "咨询";
+                    break;
+                case 2;
+                    $data[$ke]['next_step'] = "犹豫";
+                    break;
+                case 3;
+                    $data[$ke]['next_step'] = "意向";
+                    break;
+                case 4;
+                    $data[$ke]['next_step'] = "已上门";
+                    break;
+                case 5;
+                    $data[$ke]['next_step'] = "签约";
+                    break;
+                default:
+                    $data[$ke]['stage'] = '无';
+            }
+            $wl['res_id'] = array('eq', $values['id']);
+            $wl['type'] = array('eq', '跟进');
+            $res_op_log = M('res_op_log')->where($wl)->order('id DESC')->select();//操作记录
+            if ($res_op_log) {
+                //总跟进次数
+                $count = count($res_op_log);
+                //第一次跟进
+                $first = strtotime($res_op_log[$count - 1]['creat_time']);
+                //最后一次跟进
+                $end = strtotime($res_op_log[0]['creat_time']);
+                //算出跟进率
+                $times = ($end - $first) / (7 * 86400);
+                $frequ = ceil($times) . '周/' . $count . '次';
+                //跟进率
+                $data[$ke]['frequ'] = $frequ;
+                $data[$ke]['resop_time'] = $res_op_log[0]['creat_time'];
+                $user = M('user')->where('uid=' . $res_op_log[0]['user_id'])->find(); //操作人
+                $data[$ke]['resop_user_name'] = $user['name'];
+                $data[$ke]['resop_user_code'] = $user['code'];
+                $data[$ke]['resop_type'] = $res_op_log[0]['type'];
+                $data[$ke]['resop_content'] = $res_op_log[0]['content'];
+            }
+            //订单
+            if ($values['order_id']) {
+                $order = M('orders')->where('id=' . $values['order_id'])->find();
+                $data[$ke]['order'] = $order['code'];
+                $data[$ke]['order_status'] = $order['status'];
+                switch ($data[$ke]['order_status']) {
+                    case 1;
+                        $data[$ke]['order_status'] = "草稿";
+                        break;
+                    case 2;
+                        $data[$ke]['order_status'] = "待审核 ";
+                        break;
+                    case 3;
+                        $data[$ke]['order_status'] = "已驳回";
+                        break;
+                    case 4;
+                        $data[$ke]['order_status'] = "办理中";
+                        break;
+                }
+                $order_user = M('user')->where(['id' => $order['creat_user']])->field('name')->find();
+                $accept_user = M('user')->where(['id' => $order['accept_user']])->field('name')->find();
+                $data[$ke]['order_creat_time'] = $order['creat_time'];
+                $data[$ke]['order_creat_user'] = $order_user['name'];
+                $data[$ke]['order_accept_user'] = $accept_user['name'];
+            }
+            switch ($values['status']) {
+                case 1;
+                    $data[$ke]['status'] = '待首电';
+                    break;
+                case 2;
+                    $data[$ke]['status'] = '跟进中';
+                    break;
+            }
+
+            switch ($values['out_type']) {
+                case 1;
+                    $data[$ke]['out_type'] = '超期未首电';
+                    break;
+                case 2;
+                    $data[$ke]['out_type'] = '超期未跟进';
+                    break;
+                case 3;
+                    $data[$ke]['out_type'] = '反无效掉库';
+                    break;
+                case 4;
+                    $data[$ke]['out_type'] = '退单掉库';
+                    break;
+                case 5;
+                    $data[$ke]['out_type'] = '保护过期';
+                    break;
+            }
+        }
+        return $data;
+    }
+
+    /*
+     * 剔除审核->进入白名单
+    */
+    public function tcheck()
+    {
+        $id = I('post.id');
+        $data['check_uer'] = session('user');
+        $data['check_remark'] = I('post.check_remark');
+        $data['check_time'] = date('Y-m-d H:i:s');
+        $res = M('resources')->where(['id' => $id])->find();
+        $apply_user = M('user')->where(['uid' => $res['apply_user']])->find();//申请人
+        $user = M('user')->where(['uid' => session('user')])->find();//操作人
+        $type = '商机剔除审核';
+        //Workmerman
+        $user_msg['user_id'] = $res['apply_user'];
+        $user_msg['title'] = "审核结果通知";
+        if (I('post.status') == 1) {
+            $data['status'] = 6;
+            $data['user_id'] = 0;
+            $data['guess_out_time'] = null;
+            $data['next_step'] = null;
+            $data['next_time'] = null;
+            $data['last_time'] = null;
+            $data['stage'] = 0;
+            $data['allot_user_id'] = 0;
+            $data['allot_time'] = null;
+            $data['white_time'] = date('Y-m-d H:i:s', time());
+            //  xx 审核了 XX 的商机剔除申请
+            $content = "{$user['name']}" . '通过:' . "{$apply_user['name']}" . "的商机剔除申请。商机编号{$res['code']}";
+            $list['msg'] = '已同意';
+            $user_msg['content'] = "你申请的商机剔除审核已经通过。商机编号{$res['code']}";
+        } else {
+            //审核未通过 商机修改为跟进中
+            $data['status'] = 2;
+            $content = "{$user['name']}" . '拒绝:' . "{$apply_user['name']}" . "的商机剔除申请。商机编号{$res['code']}";
+            $list['msg'] = '已拒绝';
+            $user_msg['content'] = "你申请的商机剔除审核已经被拒。商机编号{$res['code']}";
+
+        };
+        M('resources')->where(['id' => $id])->save($data);
+        $this->res_op_log($id, $content, $type);
+        // A('Workerman')->send_msg($user_msg['user_id'],$user_msg['title'], $user_msg['content']);
+        $list['code'] = 200;
+        echo json_encode($list, true);
+        die();
+    }
+
+    /**
+     * 反无效 ->掉库
+     */
+    public function fcheck()
+    {
+        $id = I('post.id');
+        $data['check_remark'] = I('post.check_remark');
+        $data['check_time'] = date('Y-m-d H:i:s');
+        $res = M('resources')->where(['id' => $id])->find();
+        $apply_user = M('user')->where(['uid' => $res['apply_user']])->find();//申请人
+        $user = M('user')->where(['uid' => session('user')])->find();//操作人
+        $type = '商机反无效审核';
+        if (I('post.status') == 1) {
+            $data['status'] = 7;
+            $data['out_type'] = 3;// 反无效掉库
+            $data['user_id'] = 0;
+            $data['real_out_time'] = date('Y-m-d H:i:s', time());
+            $data['next_step'] = null;
+            $data['next_time'] = null;
+            $data['origin_id'] = null;
+            $data['order_id'] = null;
+            $data['stage'] = null;
+            $data['allot_user_id'] = null;
+            $data['allot_time'] = null;
+            $data['user_id'] = null;
+            $data['white_time'] = null;
+            $content = "{$user['name']}" . '同意:' . "{$apply_user['name']}" . "的反无效申请。商机编号{$res['code']}";
+            $list['msg'] = '已同意';
+            $user_msg['content'] = "你申请的反无效已经通过审核。商机编号{$res['code']}";
+        } else {
+            $data['status'] = 2;
+            $content = "{$user['name']}" . '拒绝了:' . "{$apply_user['name']}" . "的反无效申请。商机编号{$res['code']}";
+            $list['msg'] = '已拒绝';
+            $user_msg['content'] = "你申请的反无效审核已经拒绝。商机编号{$res['code']}";
+        }
+        M('resources')->where(['id' => $id])->save($data);
+        $this->res_op_log($id, $content, $type);
+        // A('Workerman')->send_msg($user_msg['user_id'],$user_msg['title'], $user_msg['content']);
+        $list['code'] = 200;
+        echo json_encode($list, true);
+        die();
+    }
+
+    /**
+     * 剔除
+     */
+    public function tichu_res()
+    {
+        $id = I('post.id');
+        $data['status'] = 5;
+        $data['apply_type'] = 1;
+        $data['check_time'] = null;
+        $data['user_id'] = session('user');
+        $res = M('resources')->where(['id' => $id])->find();
+        $name = M('user')->where(['id' => $res['user_id']])->find();
+        $content = $name['name'] . "({$name['code']})" . '申请剔除商机:' . "{$res['code']}";
+        M('resources')->where(['id' => $id])->save($data);
+        $type = '申请剔除';
+        $this->res_op_log($id, $content, $type);
+        $list['code'] = 200;
+        $list['msg'] = '申请成功';
+        echo json_encode($list, true);
+        die();
+        //"王伟 (201654)生申请 剔除商机:SJ2153435445"
+    }
+
+    /**
+     * 反无效
+     */
+    public function fan_res()
+    {
+        $id = I('post.id');
+        $data['user_id'] = session('user');
+        $data['status'] = 4;
+        $data['check_time'] = null;
+        $data['apply_type'] = 2;
+        $data['white_time'] = null;
+        M('resources')->where(['id' => $id])->save($data);
+        $res = M('resources')->where(['id' => $id])->find();
+        $name = M('user')->where(['id' => $res['user_id']])->find();
+        M('resources')->where(['id' => $id])->save($data);
+        $content = $name['name'] . "({$name['code']})" . '申请反无效:' . "{$res['code']}";
+        $type = '反无效申请';
+        $this->res_op_log($id, $content, $type);
+        $list['code'] = 200;
+        $list['msg'] = '申请成功';
+    }
+
+    public function add()
+    {
+
+        $tel = I('post.tel');
+        if (!$tel) {
+            $list['code'] = "Error";
+            $list['msg'] = '缺少参数手机号';
+            echo json_encode($list, true);
+            die;
+        }
+        $phone = M('resources')->where(['phone' => $tel])->find();
+        if ($phone) {
+            $list['code'] = "Error";
+            $list['msg'] = '手机号已经存在';
+            echo json_encode($list, true);
+            die;
+        }
+        $data = $_POST;
+        $data['code'] = 'SJ' . date('Ymd', $_SERVER['REQUEST_TIME']) . str_pad(mt_rand(0, 999), 3, "0", STR_PAD_LEFT) . session('user');
+        $user = M('user')->where(['uid' => session('user')])->find();
+        $data['part_id'] = $user['part_id'];
+        $data['user_id'] = $user['uid'];
+
+
+    }
+}

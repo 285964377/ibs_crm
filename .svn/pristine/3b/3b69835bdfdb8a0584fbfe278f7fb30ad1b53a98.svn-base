@@ -1,0 +1,4 @@
+.layui-treeSelect .ztree li span.button.switch{
+	position: relative;
+	top:-7px;
+}
