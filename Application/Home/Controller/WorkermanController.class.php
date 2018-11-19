@@ -2,7 +2,7 @@
 namespace Home\Controller;
 use \GatewayWorker\Lib\Gateway;
 use Think\Controller;
-Gateway::$registerAddress = '172.16.1.78:1236';
+Gateway::$registerAddress = '';
 /*
 默认端口
 Gateway::$registerAddress = '127.0.0.1:1236';
